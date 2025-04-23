@@ -6,6 +6,9 @@ import {
   IconMoodHappy,
   IconTypography,
   IconUserPlus,
+  IconScriptMinus,
+  IconBrandAirtable,
+  IconArrowAutofitRight
 } from "@tabler/icons-react";
 
 import { uniqueId } from "lodash";
@@ -64,10 +67,23 @@ const Menuitems = [
   //   icon: IconMoodHappy,
   //   href: "/icons",
   // },
+  
   {
     id: uniqueId(),
-    title: "Sample Page",
-    icon: IconAperture,
+    title: "Input Pengiriman",
+    icon: IconScriptMinus,
+    href: "/input-pengiriman",
+  },
+  {
+    id: uniqueId(),
+    title: "Inventory Barang",
+    icon: IconBrandAirtable,
+    href: "/inventory-barang",
+  },
+  {
+    id: uniqueId(),
+    title: "Penerimaan Barang",
+    icon: IconArrowAutofitRight,
     href: "/sample-page",
   },
 ];
