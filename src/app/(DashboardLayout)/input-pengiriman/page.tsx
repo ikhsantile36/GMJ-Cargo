@@ -1,168 +1,511 @@
-'use client';
+"use client";
 
-import { useState } from 'react';
+import { useEffect, useState } from "react";
 import {
-  Typography,
-  TextField,
+  Box,
   Button,
   Grid,
-  Paper,
-  MenuItem
-} from '@mui/material';
+  TextField,
+  InputLabel,
+  FormControl,
+  Select,
+  MenuItem,
+  SelectChangeEvent,
+  RadioGroup,
+  FormControlLabel,
+  Radio,
+} from "@mui/material";
+import PageContainer from "@/app/(DashboardLayout)/components/container/PageContainer";
+import DashboardCard from "@/app/(DashboardLayout)/components/shared/DashboardCard";
+import { TarifWilayah } from "@/app/types/tarif-wilayah";
 
-import PageContainer from '@/app/(DashboardLayout)/components/container/PageContainer';
-import DashboardCard from '@/app/(DashboardLayout)/components/shared/DashboardCard';
+type Props = {
+  data: TarifWilayah[];
+};
 
-const kotaList = ['MAKASSAR', 'LUWUK', 'GORONTALO', 'KOLAKA', 'UNAHA', 'KENDARI'];
-
-const InputPengiriman = () => {
-  const [form, setForm] = useState({
-    namaPengirim: '',
-    nomorTelepon: '',
-    panjang: '',
-    lebar: '',
-    tinggi: '',
-    berat: '',
-    alamat: '',
-    kota: ''
+const SamplePage = () => {
+  const [formData, setFormData] = useState({
+    jenis: "",
+    nama_pengirim: "",
+    nomor_hp_pengirim: "",
+    alamat_pengiriman: "",
+    wilayah: "",
+    panjang: "",
+    lebar: "",
+    tinggi: "",
+    jumlah_barang: 0,
+    volume_rb: 0,
+    volume_akhir: 0,
+    kategori_barang: "",
+    metode_penghitungan: "volume",
+    barang: [{ panjang: "", lebar: "", tinggi: "" }],
   });
 
-  const [biaya, setBiaya] = useState<number | null>(null);
+  const [wilayahOptions, setWilayahOptions] = useState<TarifWilayah[]>([]);
+  const [jenisOptions, setJenisOptions] = useState<string[]>([]);
+  const [tarifVendor, setTarifVendor] = useState<any[]>([]);
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
-    setForm(prev => ({ ...prev, [name]: value }));
+    setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
-  const hitungBiaya = () => {
-    const { panjang, lebar, tinggi, berat, kota } = form;
-
-    const volume = (parseFloat(panjang) || 0) * (parseFloat(lebar) || 0) * (parseFloat(tinggi) || 0);
-    const beratAsli = parseFloat(berat) || 0;
-    const volumeBerat = volume / 6000;
-    const beratDikenakan = Math.max(beratAsli, volumeBerat);
-    const biayaPerKg = 10000;
-
-    const biayaDimensi = beratDikenakan * biayaPerKg;
-    const biayaKota = kotaList.includes(kota.toUpperCase()) ? 0 : 0;
-
-    setBiaya(biayaDimensi + biayaKota);
+  const handleSelectChange = (e: SelectChangeEvent<string>) => {
+    const { value } = e.target;
+    const selectedWilayah = wilayahOptions.find((w) => w.wilayah === value);
+    setFormData((prev) => ({
+      ...prev,
+      wilayah: value,
+      volume_rb: selectedWilayah?.volume_rb || 0,
+    }));
   };
+
+  const calculateVolume = () => {
+    let totalVolume = 0;
+    let biaya = 0;
+
+    // Fungsi pengecekan dengan toleransi floating point
+    interface RangeChecker {
+      (value: number, min: number, max: number): boolean;
+    }
+
+    const isWithinRange: RangeChecker = (value, min, max) => {
+      const epsilon = 0.000001;
+      return value + epsilon >= min && value - epsilon <= max;
+    };
+
+    // Hitung total volume (p x l x t / 1.000.000) * volume_rb
+    formData.barang.forEach((barang) => {
+      const panjang = Number(barang.panjang);
+      const lebar = Number(barang.lebar);
+      const tinggi = Number(barang.tinggi);
+
+      const volume =
+        ((panjang * lebar * tinggi) / 1000000) * formData.volume_rb;
+      totalVolume += volume;
+    });
+
+    if (formData.jenis === "vendor" && tarifVendor.length > 0) {
+      // Hitung avgRawVolume dengan rumus validasi tarif (p x l x t / 10.000)
+      const avgRawVolume =
+        formData.barang.reduce((acc, curr) => {
+          const p = Number(curr.panjang);
+          const l = Number(curr.lebar);
+          const t = Number(curr.tinggi);
+          return acc + (p * l * t) / 1000000;
+        }, 0) / formData.barang.length;
+
+      // Cari tarif yang cocok dengan rentang volume_min dan volume_max (safe check)
+      const tarif = tarifVendor.find((t) => {
+        if (t.volume_max == null) {
+          return avgRawVolume + 0.000001 >= t.volume_min;
+        }
+        return isWithinRange(avgRawVolume, t.volume_min, t.volume_max);
+      });
+
+      if (tarif) {
+        if (
+          formData.barang.length >= 2 &&
+          tarif.biaya_diskon &&
+          tarif.biaya_diskon > 0
+        ) {
+          biaya = tarif.biaya_diskon;
+        } else {
+          biaya = tarif.biaya_perBarang;
+        }
+      }
+    }
+
+    return {
+      volume: Math.round(totalVolume * 1000) / 1000, // round 3 desimal
+      biaya,
+    };
+  };
+
+  const calculateBerat = () => {
+    const { kategori_barang, wilayah } = formData;
+    const selectedWilayah = wilayahOptions.find((w) => w.wilayah === wilayah);
+
+    if (!selectedWilayah) return 0;
+
+    let rb = 0;
+    if (kategori_barang === "ringan") {
+      rb = selectedWilayah.benda_ringan_rb;
+    } else if (kategori_barang === "berat") {
+      rb = selectedWilayah.benda_berat_rb;
+    }
+
+    // Hitung total volume dari semua barang: (p * l * t) / 4000 * rb
+    const totalBerat = formData.barang.reduce((acc, curr) => {
+      const p = Number(curr.panjang);
+      const l = Number(curr.lebar);
+      const t = Number(curr.tinggi);
+      const berat = ((p * l * t) / 4000) * rb;
+      return acc + berat;
+    }, 0);
+
+    return isNaN(totalBerat) ? 0 : totalBerat;
+  };
+
+  const handleBarangChange = (
+    index: number,
+    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
+  ) => {
+    const { name, value } = e.target;
+    const updatedBarang = [...formData.barang];
+    if (name === "panjang" || name === "lebar" || name === "tinggi") {
+      updatedBarang[index][name as "panjang" | "lebar" | "tinggi"] = value;
+    }
+    setFormData((prev) => ({ ...prev, barang: updatedBarang }));
+  };
+
+  const tambahBarang = () => {
+    setFormData((prev) => ({
+      ...prev,
+      barang: [...prev.barang, { panjang: "", lebar: "", tinggi: "" }],
+    }));
+  };
+
+  const hapusBarang = (index: number) => {
+    const updated = formData.barang.filter((_, i) => i !== index);
+    setFormData((prev) => ({ ...prev, barang: updated }));
+  };
+
+  const handleMetodeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const metode = e.target.value;
+    setFormData((prev) => ({
+      ...prev,
+      metode_penghitungan: metode,
+      kategori_barang: metode === "volume" ? "" : prev.kategori_barang,
+    }));
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+
+    const { volume, biaya } = calculateVolume();
+    const volume_akhir = volume;
+    const berat = calculateBerat();
+    const jumlah_barang = formData.barang.length;
+
+    const selectedWilayah = wilayahOptions.find(
+      (w) => w.wilayah === formData.wilayah
+    );
+
+    if (!selectedWilayah) {
+      alert("Wilayah tidak ditemukan.");
+      return;
+    }
+
+    if (
+      formData.metode_penghitungan === "volume" &&
+      volume_akhir < selectedWilayah.cost_minimum
+    ) {
+      alert(
+        `Harga akhir (${volume_akhir.toFixed(
+          2
+        )}) lebih kecil dari cost minimum wilayah (${
+          selectedWilayah.cost_minimum
+        }).`
+      );
+      return;
+    }
+
+    if (formData.metode_penghitungan === "berat" && berat < 50) {
+      alert(
+        `Berat barang hanya ${berat.toFixed(
+          2
+        )} kg. Minimal pengiriman adalah 50 kg.`
+      );
+      return;
+    }
+
+    try {
+      const payload = {
+        ...formData,
+        volume_akhir,
+        berat: berat.toFixed(2),
+        biaya,
+        jumlah_barang,
+      };
+
+      delete (payload as any).barang; // jika Anda belum simpan per item
+
+      if (formData.metode_penghitungan === "volume") {
+        delete payload.kategori_barang;
+      }
+
+      const res = await fetch("/api/pengiriman", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      });
+
+      if (!res.ok) throw new Error("Gagal menyimpan data");
+      alert("Data berhasil disimpan!");
+    } catch (error) {
+      alert("Terjadi kesalahan saat menyimpan data.");
+      console.error(error);
+    }
+  };
+
+  useEffect(() => {
+    const fetchWilayah = async () => {
+      const res = await fetch("/api/tarif_wilayah");
+      const data = await res.json();
+      setWilayahOptions(data);
+
+      const uniqueJenis = Array.from(
+        new Set(data.map((item: any) => item.jenis))
+      ) as string[];
+      setJenisOptions(uniqueJenis);
+    };
+    fetchWilayah();
+  }, []);
+
+  useEffect(() => {
+    const fetchTarifVendor = async () => {
+      const res = await fetch("/api/tarif-volume");
+      const data = await res.json();
+      setTarifVendor(data);
+      console.log("Tarif Vendor:", data);
+    };
+    fetchTarifVendor();
+  }, []);
 
   return (
-    <PageContainer title="Input Pengiriman" description="Form pengiriman barang">
-      <DashboardCard title="Input Pengiriman">
-        <Grid container spacing={2}>
-          <Grid item xs={12} sm={6}>
-            <TextField
-              fullWidth
-              label="Nama Pengirim"
-              name="namaPengirim"
-              value={form.namaPengirim}
-              onChange={handleChange}
-            />
-          </Grid>
-          <Grid item xs={12} sm={6}>
-            <TextField
-              fullWidth
-              label="Nomor Telepon"
-              name="nomorTelepon"
-              value={form.nomorTelepon}
-              onChange={handleChange}
-              type="tel"
-            />
-          </Grid>
-
-          <Grid item xs={6}>
-            <TextField
-              fullWidth
-              label="Panjang (cm)"
-              name="panjang"
-              value={form.panjang}
-              onChange={handleChange}
-              type="number"
-            />
-          </Grid>
-          <Grid item xs={6}>
-            <TextField
-              fullWidth
-              label="Lebar (cm)"
-              name="lebar"
-              value={form.lebar}
-              onChange={handleChange}
-              type="number"
-            />
-          </Grid>
-          <Grid item xs={6}>
-            <TextField
-              fullWidth
-              label="Tinggi (cm)"
-              name="tinggi"
-              value={form.tinggi}
-              onChange={handleChange}
-              type="number"
-            />
-          </Grid>
-          <Grid item xs={6}>
-            <TextField
-              fullWidth
-              label="Berat (kg)"
-              name="berat"
-              value={form.berat}
-              onChange={handleChange}
-              type="number"
-            />
-          </Grid>
-
-          <Grid item xs={12}>
-            <TextField
-              select
-              fullWidth
-              label="Kota Tujuan"
-              name="kota"
-              value={form.kota}
-              onChange={handleChange}
-            >
-              {kotaList.map((kota) => (
-                <MenuItem key={kota} value={kota}>
-                  {kota}
-                </MenuItem>
-              ))}
-            </TextField>
-          </Grid>
-
-          <Grid item xs={12}>
-            <TextField
-              fullWidth
-              multiline
-              rows={3}
-              label="Alamat Tujuan"
-              name="alamat"
-              value={form.alamat}
-              onChange={handleChange}
-            />
-          </Grid>
-
-          <Grid item xs={12}>
-            <Button variant="contained" color="primary" onClick={hitungBiaya}>
-              Hitung Biaya Kirim
-            </Button>
-          </Grid>
-
-          {biaya !== null && (
-            <Grid item xs={12}>
-              <Paper elevation={3} sx={{ padding: 2, backgroundColor: '#f9f9f9' }}>
-                <Typography variant="h6">Estimasi Biaya Kirim:</Typography>
-                <Typography variant="body1" color="secondary">
-                  Rp {biaya.toLocaleString('id-ID')}
-                </Typography>
-              </Paper>
+    <PageContainer
+      title="Input Pengiriman"
+      description="Form input data pengiriman"
+    >
+      <DashboardCard title="Form Pengiriman">
+        <form onSubmit={handleSubmit}>
+          <Grid container spacing={2}>
+            <Grid item xs={12} md={6}>
+              <TextField
+                fullWidth
+                label="Nama Pengirim"
+                name="nama_pengirim"
+                value={formData.nama_pengirim}
+                onChange={handleChange}
+              />
             </Grid>
-          )}
-        </Grid>
+            <Grid item xs={12} md={6}>
+              <TextField
+                fullWidth
+                label="Nomor HP"
+                name="nomor_hp_pengirim"
+                value={formData.nomor_hp_pengirim}
+                onChange={handleChange}
+              />
+            </Grid>
+            <Grid item xs={12}>
+              <TextField
+                fullWidth
+                multiline
+                rows={3}
+                label="Alamat Pengiriman"
+                name="alamat_pengiriman"
+                value={formData.alamat_pengiriman}
+                onChange={handleChange}
+              />
+            </Grid>
+
+            <Grid item xs={12} md={6}>
+              <FormControl fullWidth>
+                <InputLabel id="jenis-label">Jenis</InputLabel>
+                <Select
+                  labelId="jenis-label"
+                  name="jenis"
+                  value={formData.jenis}
+                  onChange={(e) =>
+                    setFormData((prev) => ({
+                      ...prev,
+                      jenis: e.target.value,
+                    }))
+                  }
+                >
+                  {jenisOptions.map((item) => (
+                    <MenuItem key={item} value={item}>
+                      {item}
+                    </MenuItem>
+                  ))}
+                </Select>
+              </FormControl>
+            </Grid>
+            <Grid item xs={12} md={6}>
+              <FormControl fullWidth>
+                <InputLabel id="wilayah-label">Wilayah Tujuan</InputLabel>
+                <Select
+                  labelId="wilayah-label"
+                  value={formData.wilayah}
+                  onChange={handleSelectChange}
+                >
+                  {wilayahOptions.map((item) => (
+                    <MenuItem key={item.id} value={item.wilayah}>
+                      {item.wilayah}
+                    </MenuItem>
+                  ))}
+                </Select>
+              </FormControl>
+            </Grid>
+
+            <Grid item xs={12}>
+              <FormControl component="fieldset">
+                <RadioGroup
+                  row
+                  value={formData.metode_penghitungan}
+                  onChange={handleMetodeChange}
+                >
+                  <FormControlLabel
+                    value="volume"
+                    control={<Radio />}
+                    label="Hitung berdasarkan Volume"
+                  />
+                  <FormControlLabel
+                    value="berat"
+                    control={<Radio />}
+                    label="Hitung berdasarkan Berat"
+                  />
+                </RadioGroup>
+              </FormControl>
+            </Grid>
+
+            {formData.metode_penghitungan === "berat" && (
+              <Grid item xs={12} >
+                <FormControl fullWidth>
+                  <InputLabel id="kategori-barang-label">
+                    Kategori Barang
+                  </InputLabel>
+                  <Select
+                    labelId="kategori-barang-label"
+                    value={formData.kategori_barang}
+                    onChange={(e) =>
+                      setFormData((prev) => ({
+                        ...prev,
+                        kategori_barang: e.target.value,
+                      }))
+                    }
+                  >
+                    <MenuItem value="ringan">Benda Ringan</MenuItem>
+                    <MenuItem value="berat">Benda Berat</MenuItem>
+                  </Select>
+                </FormControl>
+              </Grid>
+            )}
+
+            {formData.barang.map((item, index) => (
+              <Grid
+                container
+                spacing={1}
+                key={index}
+                alignItems="center"
+                sx={{ mb: 1 , ml : 2 , mt : 1 }}
+              >
+                <Grid item xs={3}>
+                  <TextField
+                    fullWidth
+                    label="Panjang (cm)"
+                    name="panjang"
+                    type="number"
+                    value={item.panjang}
+                    onChange={(e) => handleBarangChange(index, e)}
+                  />
+                </Grid>
+                <Grid item xs={3}>
+                  <TextField
+                    fullWidth
+                    label="Lebar (cm)"
+                    name="lebar"
+                    type="number"
+                    value={item.lebar}
+                    onChange={(e) => handleBarangChange(index, e)}
+                  />
+                </Grid>
+                <Grid item xs={3}>
+                  <TextField
+                    fullWidth
+                    label="Tinggi (cm)"
+                    name="tinggi"
+                    type="number"
+                    value={item.tinggi}
+                    onChange={(e) => handleBarangChange(index, e)}
+                  />
+                </Grid>
+                <Grid item xs={3}>
+                  <Button
+                    variant="outlined"
+                    color="error"
+                    onClick={() => hapusBarang(index)}
+                    disabled={formData.barang.length === 1}
+                  >
+                    Hapus
+                  </Button>
+                </Grid>
+              </Grid>
+            ))}
+
+            <Button variant="contained" onClick={tambahBarang} sx={{ mt: 1 }}>
+              + Tambah Barang
+            </Button>
+
+            <Grid item xs={12}>
+              {formData.metode_penghitungan === "volume" ? (
+                <Box mt={2}>
+                  <strong>Total Volume:</strong>{" "}
+                  {Number(calculateVolume().volume.toFixed(3)).toLocaleString(
+                    "id-ID",
+                    {
+                      minimumFractionDigits: 2,
+                      maximumFractionDigits: 3,
+                    }
+                  )}{" "}
+                  m³
+                  <br />
+                  <strong>Jumlah Barang:</strong> {formData.barang.length}
+                  <br />
+                  <strong>Biaya Satuan:</strong> Rp{" "}
+                  {calculateVolume().biaya.toLocaleString("id-ID")}
+                  <br />
+                  <strong>Total Biaya:</strong> Rp{" "}
+                  {(
+                    calculateVolume().biaya * formData.barang.length
+                  ).toLocaleString("id-ID")}
+                </Box>
+              ) : (
+                <Box
+                  mt={2}
+                  p={2}
+                  border="1px solid #e0e0e0"
+                  borderRadius={2}
+                  bgcolor="#f9f9f9"
+                >
+                  <strong>Kategori Barang:</strong>{" "}
+                  {formData.kategori_barang || "-"}
+                  <br />
+                  <strong>Total Berat:</strong> {calculateBerat().toFixed(2)} kg
+                  <br />
+                  {calculateBerat() < 50 && (
+                    <span style={{ color: "red", fontStyle: "italic" }}>
+                      Minimal berat pengiriman adalah 50 kg
+                    </span>
+                  )}
+                </Box>
+              )}
+            </Grid>
+
+            <Grid item xs={12}>
+              <Box display="flex" justifyContent="flex-end">
+                <Button type="submit" variant="contained" color="primary">
+                  Simpan Data
+                </Button>
+              </Box>
+            </Grid>
+          </Grid>
+        </form>
       </DashboardCard>
     </PageContainer>
   );
 };
 
-export default InputPengiriman;
+export default SamplePage;

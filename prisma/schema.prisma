@@ -1,0 +1,75 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+model Tarif_wilayah {
+  id              Int     @id @default(autoincrement())
+  jenis           String? @db.VarChar(50)
+  wilayah         String  @db.VarChar(100)
+  benda_ringan_rb Int?
+  benda_berat_rb  Int?
+  volume_rb       Int?
+  cost_minimum    Int?
+  estimasi        String? @db.VarChar(50)
+
+  pengiriman       Pengiriman[]
+}
+
+model Tarif_volume_vendor {
+  id              Int      @id @default(autoincrement())
+  volume_min      Float
+  volume_max      Float?
+  biaya_perBarang Float
+  biaya_diskon    Float?
+  keterangan      String?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+}
+
+model User {
+  id        Int       @id @default(autoincrement())
+  username  String    @unique(map: "User_username_key")
+  email     String    @unique(map: "User_email_key")
+  password  String
+  nomor_hp  String?   @unique(map: "User_nomor_hp_unique_key")
+  createdAt DateTime  @default(now())
+  role      user_role @default(USER)
+
+  pengiriman Pengiriman[] @relation("UserToPengiriman")
+}
+
+model Pengiriman {
+  id                  Int      @id @default(autoincrement())
+  nama_pengirim       String
+  jenis               String
+  alamat_pengiriman   String
+  wilayah             String
+  panjang             Float
+  lebar               Float
+  tinggi              Float
+  volume_rb           Float
+  volume_akhir        Float
+  berat               Float
+  metode_penghitungan String
+  kategori_barang     String?
+  jumlah_barang      Int
+  createdAt           DateTime @default(now())
+  nomor_hp_pengirim   String
+
+  tarifWilayah        Tarif_wilayah @relation(fields: [tarifWilayahId], references: [id])
+  tarifWilayahId      Int
+
+  user   User? @relation("UserToPengiriman", fields: [userId], references: [id])
+  userId Int?
+}
+
+enum user_role {
+  SUPERADMIN
+  ADMIN
+  USER
+}

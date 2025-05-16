@@ -1,4 +1,5 @@
-import React from "react";
+"use client";
+import React, { useState } from "react";
 import {
   Box,
   Typography,
@@ -9,7 +10,7 @@ import {
   Checkbox,
 } from "@mui/material";
 import Link from "next/link";
-
+import { useRouter } from "next/navigation";
 import CustomTextField from "@/app/(DashboardLayout)/components/forms/theme-elements/CustomTextField";
 
 interface loginType {
@@ -18,81 +19,143 @@ interface loginType {
   subtext?: JSX.Element | JSX.Element[];
 }
 
-const AuthLogin = ({ title, subtitle, subtext }: loginType) => (
-  <>
-    {title ? (
-      <Typography fontWeight="700" variant="h2" mb={1}>
-        {title}
-      </Typography>
-    ) : null}
+const AuthLogin = ({ title, subtitle, subtext }: loginType) => {
+  const [form, setForm] = useState({ username: "", password: "" });
+  const [error, setError] = useState<string | null>(null);
+  const router = useRouter();
 
-    {subtext}
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setForm({ ...form, [e.target.name]: e.target.value });
+  };
 
-    <Stack>
-      <Box>
-        <Typography
-          variant="subtitle1"
-          fontWeight={600}
-          component="label"
-          htmlFor="username"
-          mb="5px"
-        >
-          Username
+  const handleLogin = async () => {
+    if (!form.username || !form.password) {
+      setError("Username dan password wajib diisi.");
+      return;
+    }
+
+    console.log("Kirim login request:", form);
+
+    try {
+      const res = await fetch("/api/auth/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(form),
+      });
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        console.error("Login gagal:", res.status, data);
+        setError(data.message || "Login gagal. Coba lagi.");
+        return;
+      }
+
+      // Simpan ke localStorage
+      localStorage.setItem("token", data.token);
+      localStorage.setItem("username", data.user.username);
+      localStorage.setItem("role", data.user.role);
+
+      // Redirect berdasarkan role
+      switch (data.user.role) {
+        case "SUPERADMIN":
+        case "ADMIN":
+        default:
+          router.push("/");
+      }
+    } catch (error) {
+      console.error("Network error:", error);
+      setError("Terjadi kesalahan koneksi.");
+    }
+  };
+
+  return (
+    <>
+      {title && (
+        <Typography fontWeight="700" variant="h2" mb={1}>
+          {title}
         </Typography>
-        <CustomTextField variant="outlined" fullWidth />
-      </Box>
-      <Box mt="25px">
-        <Typography
-          variant="subtitle1"
-          fontWeight={600}
-          component="label"
-          htmlFor="password"
-          mb="5px"
-        >
-          Password
-        </Typography>
-        <CustomTextField type="password" variant="outlined" fullWidth />
-      </Box>
-      <Stack
-        justifyContent="space-between"
-        direction="row"
-        alignItems="center"
-        my={2}
-      >
-        <FormGroup>
-          <FormControlLabel
-            control={<Checkbox defaultChecked />}
-            label="Remeber this Device"
+      )}
+
+      {subtext}
+
+      <Stack>
+        <Box>
+          <Typography
+            variant="subtitle1"
+            fontWeight={600}
+            component="label"
+            htmlFor="username"
+          >
+            Username
+          </Typography>
+          <CustomTextField
+            id="username"
+            variant="outlined"
+            fullWidth
+            name="username"
+            value={form.username}
+            onChange={handleChange}
           />
-        </FormGroup>
-        <Typography
-          component={Link}
-          href="/"
-          fontWeight="500"
-          sx={{
-            textDecoration: "none",
-            color: "primary.main",
-          }}
+        </Box>
+        <Box mt="25px">
+          <Typography
+            variant="subtitle1"
+            fontWeight={600}
+            component="label"
+            htmlFor="password"
+          >
+            Password
+          </Typography>
+          <CustomTextField
+            id="password"
+            type="password"
+            variant="outlined"
+            fullWidth
+            name="password"
+            value={form.password}
+            onChange={handleChange}
+          />
+        </Box>
+
+        <Stack
+          justifyContent="space-between"
+          direction="row"
+          alignItems="center"
+          my={2}
         >
-          Forgot Password ?
-        </Typography>
+          <FormGroup>
+            <FormControlLabel
+              control={<Checkbox defaultChecked />}
+              label="Ingatkan saya"
+            />
+          </FormGroup>
+          <Typography
+            component={Link}
+            href="/"
+            fontWeight="500"
+            sx={{ textDecoration: "none", color: "primary.main" }}
+          >
+            Lupa Password?
+          </Typography>
+        </Stack>
       </Stack>
-    </Stack>
-    <Box>
-      <Button
-        color="primary"
-        variant="contained"
-        size="large"
-        fullWidth
-        component={Link}
-        href="/"
-        type="submit"
-      >
-        Sign In
-      </Button>
-    </Box>
-    {subtitle}
-  </>
-);
+
+      <Box>
+        <Button variant="contained" fullWidth onClick={handleLogin}>
+          Masuk
+        </Button>
+      </Box>
+
+      {error && (
+        <Typography color="error" mt={2}>
+          {error}
+        </Typography>
+      )}
+
+      {subtitle}
+    </>
+  );
+};
 
 export default AuthLogin;

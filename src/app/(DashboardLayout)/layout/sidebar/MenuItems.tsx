@@ -6,9 +6,12 @@ import {
   IconMoodHappy,
   IconTypography,
   IconUserPlus,
+  IconMap2 ,
+  IconCash ,
+  IconPackageImport ,
   IconScriptMinus,
-  IconBrandAirtable,
-  IconArrowAutofitRight
+  IconArrowAutofitRight,
+  IconTruckDelivery
 } from "@tabler/icons-react";
 
 import { uniqueId } from "lodash";
@@ -16,7 +19,7 @@ import { uniqueId } from "lodash";
 const Menuitems = [
   {
     navlabel: true,
-    subheader: "Home",
+    subheader: "Welcome to Dashboard GMJ",
   },
 
   {
@@ -67,24 +70,30 @@ const Menuitems = [
   //   icon: IconMoodHappy,
   //   href: "/icons",
   // },
-  
+
   {
     id: uniqueId(),
     title: "Input Pengiriman",
-    icon: IconScriptMinus,
+    icon: IconPackageImport ,
     href: "/input-pengiriman",
   },
   {
     id: uniqueId(),
     title: "Inventory Barang",
-    icon: IconBrandAirtable,
+    icon: IconTruckDelivery,
     href: "/inventory-barang",
   },
   {
     id: uniqueId(),
-    title: "Penerimaan Barang",
-    icon: IconArrowAutofitRight,
-    href: "/sample-page",
+    title: "Manajemen Wilayah",
+    icon: IconMap2 ,
+    href: "/manajemen-wilayah",
+  },
+  {
+    id: uniqueId(),
+    title: "Harga Vendor",
+    icon: IconCash ,
+    href: "/harga-vendor",
   },
 ];
 
