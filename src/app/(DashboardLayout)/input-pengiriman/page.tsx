@@ -63,6 +63,7 @@ const SamplePage = () => {
   const calculateVolume = () => {
     let totalVolume = 0;
     let biaya = 0;
+    let biayaPerBarangSatuan = 0;
 
     // Fungsi pengecekan dengan toleransi floating point
     interface RangeChecker {
@@ -80,13 +81,14 @@ const SamplePage = () => {
       const lebar = Number(barang.lebar);
       const tinggi = Number(barang.tinggi);
 
+      // perhitungan GMJ
       const volume =
         ((panjang * lebar * tinggi) / 1000000) * formData.volume_rb;
       totalVolume += volume;
     });
 
+    // VOlume kubikasi
     if (formData.jenis === "vendor" && tarifVendor.length > 0) {
-      // Hitung avgRawVolume dengan rumus validasi tarif (p x l x t / 10.000)
       const avgRawVolume =
         formData.barang.reduce((acc, curr) => {
           const p = Number(curr.panjang);
@@ -95,7 +97,6 @@ const SamplePage = () => {
           return acc + (p * l * t) / 1000000;
         }, 0) / formData.barang.length;
 
-      // Cari tarif yang cocok dengan rentang volume_min dan volume_max (safe check)
       const tarif = tarifVendor.find((t) => {
         if (t.volume_max == null) {
           return avgRawVolume + 0.000001 >= t.volume_min;
@@ -104,6 +105,7 @@ const SamplePage = () => {
       });
 
       if (tarif) {
+        biayaPerBarangSatuan = tarif.biaya_perBarang;
         if (
           formData.barang.length >= 2 &&
           tarif.biaya_diskon &&
@@ -117,9 +119,59 @@ const SamplePage = () => {
     }
 
     return {
-      volume: Math.round(totalVolume * 1000) / 1000, // round 3 desimal
+      volume: Math.round(totalVolume * 1000) / 1000,
       biaya,
+      biayaPerBarangSatuan,
     };
+  };
+
+  const { volume, biaya, biayaPerBarangSatuan } = calculateVolume();
+
+  const getVolumePerItem = (barang: {
+    panjang: string;
+    lebar: string;
+    tinggi: string;
+  }) => {
+    const p = Number(barang.panjang);
+    const l = Number(barang.lebar);
+    const t = Number(barang.tinggi);
+    if (isNaN(p) || isNaN(l) || isNaN(t)) return 0;
+
+    return (p * l * t) / 1000000; // Volume m³
+  };
+
+  const getBiayaPerBarang = (barang: {
+    panjang: string;
+    lebar: string;
+    tinggi: string;
+  }) => {
+    const p = Number(barang.panjang);
+    const l = Number(barang.lebar);
+    const t = Number(barang.tinggi);
+    if (isNaN(p) || isNaN(l) || isNaN(t)) return 0;
+
+    const volumeM3 = (p * l * t) / 1000000; // volume dalam m³
+
+    // Jika jenis vendor, gunakan tarifVendor
+    if (formData.jenis === "vendor" && tarifVendor.length > 0) {
+      const tarif = tarifVendor.find((t) => {
+        if (t.volume_max == null) return volumeM3 >= t.volume_min;
+        return volumeM3 >= t.volume_min && volumeM3 <= t.volume_max;
+      });
+
+      if (tarif) {
+        if (formData.barang.length >= 2 && tarif.biaya_diskon > 0) {
+          return tarif.biaya_diskon;
+        }
+        return tarif.biaya_perBarang;
+      }
+    }
+
+    // Jika bukan vendor, hitung berdasar volume dan volume_rb
+    const volume_rb = formData.volume_rb || 0;
+    const tarifPerM3 = 1; // <-- Ganti sesuai jika ada tarif per m³
+
+    return volumeM3 * volume_rb * tarifPerM3;
   };
 
   const calculateBerat = () => {
@@ -372,7 +424,7 @@ const SamplePage = () => {
             </Grid>
 
             {formData.metode_penghitungan === "berat" && (
-              <Grid item xs={12} >
+              <Grid item xs={12}>
                 <FormControl fullWidth>
                   <InputLabel id="kategori-barang-label">
                     Kategori Barang
@@ -394,65 +446,93 @@ const SamplePage = () => {
               </Grid>
             )}
 
-            {formData.barang.map((item, index) => (
-              <Grid
-                container
-                spacing={1}
-                key={index}
-                alignItems="center"
-                sx={{ mb: 1 , ml : 2 , mt : 1 }}
-              >
-                <Grid item xs={3}>
-                  <TextField
-                    fullWidth
-                    label="Panjang (cm)"
-                    name="panjang"
-                    type="number"
-                    value={item.panjang}
-                    onChange={(e) => handleBarangChange(index, e)}
-                  />
-                </Grid>
-                <Grid item xs={3}>
-                  <TextField
-                    fullWidth
-                    label="Lebar (cm)"
-                    name="lebar"
-                    type="number"
-                    value={item.lebar}
-                    onChange={(e) => handleBarangChange(index, e)}
-                  />
-                </Grid>
-                <Grid item xs={3}>
-                  <TextField
-                    fullWidth
-                    label="Tinggi (cm)"
-                    name="tinggi"
-                    type="number"
-                    value={item.tinggi}
-                    onChange={(e) => handleBarangChange(index, e)}
-                  />
-                </Grid>
-                <Grid item xs={3}>
-                  <Button
-                    variant="outlined"
-                    color="error"
-                    onClick={() => hapusBarang(index)}
-                    disabled={formData.barang.length === 1}
-                  >
-                    Hapus
-                  </Button>
-                </Grid>
-              </Grid>
-            ))}
+            {formData.barang.map((item, index) => {
+              const volumeItem =
+                getVolumePerItem(item) * formData.volume_rb || 0;
+              const isLastItem = index === formData.barang.length - 1;
 
-            <Button variant="contained" onClick={tambahBarang} sx={{ mt: 1 }}>
-              + Tambah Barang
-            </Button>
+              return (
+                <Box key={index} mb={2}>
+                  <Grid
+                    container
+                    spacing={2}
+                    alignItems="center"
+                    sx={{ ml: 2, mt: 2 }}
+                  >
+                    <Grid item xs={12} sm={3}>
+                      <TextField
+                        fullWidth
+                        label="Panjang (cm)"
+                        name="panjang"
+                        type="number"
+                        value={item.panjang}
+                        onChange={(e) => handleBarangChange(index, e)}
+                      />
+                    </Grid>
+                    <Grid item xs={12} sm={3}>
+                      <TextField
+                        fullWidth
+                        label="Lebar (cm)"
+                        name="lebar"
+                        type="number"
+                        value={item.lebar}
+                        onChange={(e) => handleBarangChange(index, e)}
+                      />
+                    </Grid>
+                    <Grid item xs={12} sm={3}>
+                      <TextField
+                        fullWidth
+                        label="Tinggi (cm)"
+                        name="tinggi"
+                        type="number"
+                        value={item.tinggi}
+                        onChange={(e) => handleBarangChange(index, e)}
+                      />
+                    </Grid>
+                    <Grid item xs={12} sm={3}>
+                      <Button
+                        fullWidth
+                        variant="outlined"
+                        color="error"
+                        onClick={() => hapusBarang(index)}
+                        disabled={formData.barang.length === 1}
+                      >
+                        Hapus
+                      </Button>
+                    </Grid>
+                  </Grid>
+
+                  <Box
+                    mt={1}
+                    color="gray"
+                    sx={{ ml: 5, display: "flex", gap: 2 }}
+                  >
+                    <em>
+                      Volume Barang {index + 1}: {volumeItem.toFixed(2)} m³
+                    </em>
+                    <br />
+                    <span>
+                      Biaya Satuan: Rp{" "}
+                      {getBiayaPerBarang(item).toLocaleString("id-ID")}
+                    </span>
+                  </Box>
+
+                  {/* Tombol tambah hanya muncul setelah barang terakhir */}
+                  {isLastItem && (
+                    <Box mt={2} sx={{ ml: 2, mt: 2 }}>
+                      <Button variant="contained" onClick={tambahBarang}>
+                        + Tambah Barang
+                      </Button>
+                    </Box>
+                  )}
+                </Box>
+              );
+            })}
 
             <Grid item xs={12}>
               {formData.metode_penghitungan === "volume" ? (
                 <Box mt={2}>
-                  <strong>Total Volume:</strong>{" "}
+                  <strong>Total Volume GMJ :</strong>{" "}
                   {Number(calculateVolume().volume.toFixed(3)).toLocaleString(
                     "id-ID",
                     {

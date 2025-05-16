@@ -74,7 +74,7 @@ export default function FormTarifVolumeVendor() {
         biaya_per_barang_diskon: "",
         keterangan: "",
       });
-      fetchTarifData(); // Refresh list
+      fetchTarifData(); 
     } else {
       alert("Gagal menyimpan: " + (result.message || result.error));
     }
