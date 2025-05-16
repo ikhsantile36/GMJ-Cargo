@@ -23,6 +23,8 @@ type Props = {
   data: TarifWilayah[];
 };
 
+let totalBiaya: number = 0;
+
 const SamplePage = () => {
   const [formData, setFormData] = useState({
     jenis: "",
@@ -127,6 +129,41 @@ const SamplePage = () => {
 
   const { volume, biaya, biayaPerBarangSatuan } = calculateVolume();
 
+  
+  const getBiayaPerBarang = (barang: {
+    panjang: string;
+    lebar: string;
+    tinggi: string;
+  }) => {
+    const p = Number(barang.panjang);
+    const l = Number(barang.lebar);
+    const t = Number(barang.tinggi);
+    if (isNaN(p) || isNaN(l) || isNaN(t)) return 0;
+    
+    const volumeM3 = (p * l * t) / 1000000; // volume dalam m³
+    
+    // Jika jenis vendor, gunakan tarifVendor
+    if (formData.jenis === "vendor" && tarifVendor.length > 0) {
+      const tarif = tarifVendor.find((t) => {
+        if (t.volume_max == null) return volumeM3 >= t.volume_min;
+        return volumeM3 >= t.volume_min && volumeM3 <= t.volume_max;
+      });
+      
+      if (tarif) {
+        if (formData.barang.length >= 2 && tarif.biaya_diskon > 0) {
+          return tarif.biaya_diskon;
+        }
+        return tarif.biaya_perBarang;
+      }
+    }
+    
+    // Jika bukan vendor, hitung berdasar volume dan volume_rb
+    const volume_rb = formData.volume_rb || 0;
+    const tarifPerM3 = 1; // <-- Ganti sesuai jika ada tarif per m³
+    
+    return volumeM3 * volume_rb * tarifPerM3;
+  };
+
   const getVolumePerItem = (barang: {
     panjang: string;
     lebar: string;
@@ -140,44 +177,31 @@ const SamplePage = () => {
     return (p * l * t) / 1000000; // Volume m³
   };
 
-  const getBiayaPerBarang = (barang: {
-    panjang: string;
-    lebar: string;
-    tinggi: string;
-  }) => {
-    const p = Number(barang.panjang);
-    const l = Number(barang.lebar);
-    const t = Number(barang.tinggi);
-    if (isNaN(p) || isNaN(l) || isNaN(t)) return 0;
+  const getTotalBiayaDanVolume = () => {
+  let totalBiaya = 0;
+  let totalVolume = 0;
 
-    const volumeM3 = (p * l * t) / 1000000; // volume dalam m³
+  formData.barang.forEach((barang) => {
+    const volumePerItem = getVolumePerItem(barang);
+    const biayaPerItem = getBiayaPerBarang(barang);
 
-    // Jika jenis vendor, gunakan tarifVendor
-    if (formData.jenis === "vendor" && tarifVendor.length > 0) {
-      const tarif = tarifVendor.find((t) => {
-        if (t.volume_max == null) return volumeM3 >= t.volume_min;
-        return volumeM3 >= t.volume_min && volumeM3 <= t.volume_max;
-      });
+    totalVolume += volumePerItem;
+    totalBiaya += biayaPerItem;
+  });
 
-      if (tarif) {
-        if (formData.barang.length >= 2 && tarif.biaya_diskon > 0) {
-          return tarif.biaya_diskon;
-        }
-        return tarif.biaya_perBarang;
-      }
-    }
-
-    // Jika bukan vendor, hitung berdasar volume dan volume_rb
-    const volume_rb = formData.volume_rb || 0;
-    const tarifPerM3 = 1; // <-- Ganti sesuai jika ada tarif per m³
-
-    return volumeM3 * volume_rb * tarifPerM3;
+  return {
+    totalBiaya: Math.round(totalBiaya * 100) / 100,   // dibulatkan ke 2 angka di belakang koma
+    totalVolume: Math.round(totalVolume * 1000) / 1000, // dibulatkan ke 3 angka di belakang koma
   };
+};
 
+
+
+  
   const calculateBerat = () => {
     const { kategori_barang, wilayah } = formData;
     const selectedWilayah = wilayahOptions.find((w) => w.wilayah === wilayah);
-
+    
     if (!selectedWilayah) return 0;
 
     let rb = 0;
@@ -508,11 +532,15 @@ const SamplePage = () => {
                     sx={{ ml: 5, display: "flex", gap: 2 }}
                   >
                     <em>
-                      Volume Barang {index + 1}: {volumeItem.toFixed(2)} m³
+                      Volume Barang {index + 1}: {getVolumePerItem(item).toLocaleString("id-ID")} m³
                     </em>
                     <br />
                     <span>
-                      Biaya Satuan: Rp{" "}
+                      Biaya : Rp{" "}
+                      {volumeItem.toFixed(2)}
+                    </span>
+                    <span>
+                      Biaya Vendor: Rp{" "}
                       {getBiayaPerBarang(item).toLocaleString("id-ID")}
                     </span>
                   </Box>
@@ -532,7 +560,7 @@ const SamplePage = () => {
             <Grid item xs={12}>
               {formData.metode_penghitungan === "volume" ? (
                 <Box mt={2}>
-                  <strong>Total Volume GMJ :</strong>{" "}
+                  {/* <strong>Total Volume GMJ :</strong>{" "}
                   {Number(calculateVolume().volume.toFixed(3)).toLocaleString(
                     "id-ID",
                     {
@@ -540,17 +568,18 @@ const SamplePage = () => {
                       maximumFractionDigits: 3,
                     }
                   )}{" "}
-                  m³
-                  <br />
+                  m³ */}
+                  {/* <br /> */}
                   <strong>Jumlah Barang:</strong> {formData.barang.length}
                   <br />
-                  <strong>Biaya Satuan:</strong> Rp{" "}
+                  {/* <strong>Biaya Satuan:</strong> Rp{" "}
                   {calculateVolume().biaya.toLocaleString("id-ID")}
-                  <br />
-                  <strong>Total Biaya:</strong> Rp{" "}
-                  {(
-                    calculateVolume().biaya * formData.barang.length
-                  ).toLocaleString("id-ID")}
+                  <br /> */}
+                 <strong>Total Biaya:</strong> Rp{" "}
+                  {formData.barang
+                    .reduce((total, barang) => total + getBiayaPerBarang(barang), 0)
+                    .toLocaleString("id-ID")}
+
                 </Box>
               ) : (
                 <Box
