@@ -173,27 +173,59 @@ const SamplePage = () => {
     const l = Number(barang.lebar);
     const t = Number(barang.tinggi);
     if (isNaN(p) || isNaN(l) || isNaN(t)) return 0;
-
+    
     return (p * l * t) / 1000000; // Volume m³
   };
+  
+  const getBiayaGMJ = (barang: { panjang: string; lebar: string; tinggi: string }) => {
+    const p = Number(barang.panjang);
+    const l = Number(barang.lebar);
+    const t = Number(barang.tinggi);
+  
+    if (isNaN(p) || isNaN(l) || isNaN(t)) return 0;
+  
+    const volumeM3 = (p * l * t) / 1000000;
+  
+    // Ambil volume_rb dari selectedWilayah berdasarkan formData.wilayah
+    const selectedWilayah = wilayahOptions.find(
+      (w) => w.wilayah === formData.wilayah
+    );
+  
+    const volume_rb = selectedWilayah?.volume_rb || 0;
+  
+    return volumeM3 * volume_rb;
+  };
+  
+  
+
 
   const getTotalBiayaDanVolume = () => {
-  let totalBiaya = 0;
   let totalVolume = 0;
+  let totalBiayaVendor = 0;
+  let totalBiayaGMJ = 0;
 
   formData.barang.forEach((barang) => {
     const volumePerItem = getVolumePerItem(barang);
-    const biayaPerItem = getBiayaPerBarang(barang);
+    const biayaPerItemVendor = getBiayaPerBarang(barang);
+    const biayaPerItemGMJ = getBiayaGMJ(barang);
 
     totalVolume += volumePerItem;
-    totalBiaya += biayaPerItem;
+    totalBiayaVendor += biayaPerItemVendor;
+    totalBiayaGMJ += biayaPerItemGMJ;
   });
 
+  const totalSemuaBiaya = totalBiayaVendor + totalBiayaGMJ;
+
   return {
-    totalBiaya: Math.round(totalBiaya * 100) / 100,   // dibulatkan ke 2 angka di belakang koma
-    totalVolume: Math.round(totalVolume * 1000) / 1000, // dibulatkan ke 3 angka di belakang koma
+    totalBiayaVendor: Math.round(totalBiayaVendor * 100) / 100,
+    totalBiayaGMJ: Math.round(totalBiayaGMJ * 100) / 100,
+    totalSemuaBiaya: Math.round(totalSemuaBiaya * 100) / 100,
+    totalVolume: Math.round(totalVolume * 1000) / 1000,
   };
 };
+
+
+const { totalBiayaVendor, totalBiayaGMJ, totalSemuaBiaya, totalVolume } = getTotalBiayaDanVolume();
 
 
 
@@ -575,10 +607,10 @@ const SamplePage = () => {
                   {/* <strong>Biaya Satuan:</strong> Rp{" "}
                   {calculateVolume().biaya.toLocaleString("id-ID")}
                   <br /> */}
-                 <strong>Total Biaya:</strong> Rp{" "}
-                  {formData.barang
-                    .reduce((total, barang) => total + getBiayaPerBarang(barang), 0)
-                    .toLocaleString("id-ID")}
+                  <strong>Total Biaya Vendor:</strong> Rp {totalBiayaVendor.toLocaleString("id-ID")} <br />
+                  <strong>Total Biaya GMJ:</strong> Rp {totalBiayaGMJ.toLocaleString("id-ID")} <br />
+                  <strong>Total Biaya Seluruhnya:</strong> Rp {totalSemuaBiaya.toLocaleString("id-ID")} <br />
+                  <strong>Total Volume:</strong> {totalVolume} m³
 
                 </Box>
               ) : (
@@ -592,7 +624,7 @@ const SamplePage = () => {
                   <strong>Kategori Barang:</strong>{" "}
                   {formData.kategori_barang || "-"}
                   <br />
-                  <strong>Total Berat:</strong> {calculateBerat().toFixed(2)} kg
+                  <strong>Total Berat: Rp.</strong> {calculateBerat().toFixed(2)} 
                   <br />
                   {calculateBerat() < 50 && (
                     <span style={{ color: "red", fontStyle: "italic" }}>

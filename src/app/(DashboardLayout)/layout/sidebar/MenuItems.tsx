@@ -19,7 +19,7 @@ import { uniqueId } from "lodash";
 const Menuitems = [
   {
     navlabel: true,
-    subheader: "Welcome to Dashboard GMJ",
+    subheader: "Sistem Informasi Pengiriman dan Pelacakan Barang",
   },
 
   {
