@@ -19,7 +19,7 @@ import { uniqueId } from "lodash";
 const Menuitems = [
   {
     navlabel: true,
-    subheader: "Sistem Informasi Pengiriman & Pelacakan Barang",
+    subheader: `Sistem Informasi Pengiriman\n&\nPelacakan Barang`,
   },
 
   {

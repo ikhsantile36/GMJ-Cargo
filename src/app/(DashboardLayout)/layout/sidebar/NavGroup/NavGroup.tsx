@@ -1,5 +1,4 @@
 import PropTypes from 'prop-types';
-// mui imports
 import { ListSubheader, styled, Theme } from '@mui/material';
 
 type NavGroup = {
@@ -21,14 +20,12 @@ const NavGroup = ({ item }: ItemType) => {
       color: theme.palette.text.primary,
       lineHeight: '26px',
       padding: '3px 12px',
+      textAlign: 'center',
+      whiteSpace: 'pre-line', // Penting agar \n berubah jadi line break
     }),
   );
-  return (
-    <ListSubheader sx={{ textAlign: 'center' }}>
-      {item.subheader}
-    </ListSubheader>
 
-  );
+  return <ListSubheaderStyle>{item.subheader}</ListSubheaderStyle>;
 };
 
 NavGroup.propTypes = {
