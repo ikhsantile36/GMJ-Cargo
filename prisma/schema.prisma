@@ -48,9 +48,11 @@ model Pengiriman {
   alamat_pengiriman   String
   wilayah             String
   volume_rb           Float
-  total_volume_gmj    Float
+  total_volume        Float  
+  total_biaya_gmj     Float   
+  total_biaya_vendor  Float  
   berat               Float?
-  biaya               Float
+  biaya               Float 
   metode_penghitungan String
   kategori_barang     String?
   jumlah_barang       Int

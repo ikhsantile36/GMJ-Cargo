@@ -33,8 +33,10 @@ const SamplePage = () => {
     biaya: 0,
     jumlah_barang: 0,
     volume_rb: 0,
-    total_volume_gmj: 0,
-    kategori_barang: "",
+    total_volume: 0,
+    total_biaya_gmj: 0,
+    total_biaya_vendor: 0,
+    kategori_barang: "-",
     metode_penghitungan: "volume",
     barang: [{ panjang: "", lebar: "", tinggi: "" }],
   });
@@ -281,11 +283,11 @@ const SamplePage = () => {
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
-    const { totalSemuaBiaya } = getTotalBiayaDanVolume();
+    const { totalSemuaBiaya, totalBiayaVendor , totalVolume} = getTotalBiayaDanVolume();
     e.preventDefault();
 
     const { volume, biaya } = calculateVolume();
-    const total_volume_gmj = volume;
+    const total_biaya_gmj = volume;
     const berat = calculateBerat();
     const jumlah_barang = formData.barang.length;
 
@@ -300,10 +302,10 @@ const SamplePage = () => {
 
     if (
       formData.metode_penghitungan === "volume" &&
-      total_volume_gmj < selectedWilayah.cost_minimum
+      total_biaya_gmj < selectedWilayah.cost_minimum
     ) {
       alert(
-        `Harga akhir (${total_volume_gmj.toFixed(
+        `Harga akhir (${total_biaya_gmj.toFixed(
           2
         )}) lebih kecil dari cost minimum wilayah (${
           selectedWilayah.cost_minimum
@@ -323,13 +325,19 @@ const SamplePage = () => {
 
     try {
       const result = calculateVolume();
+      
       const payload = {
         ...formData,
-        berat: berat.toFixed(2),
-        total_volume_gmj: result.volume,
+        // berat: berat.toFixed(2),
+        berat: parseFloat(berat.toFixed(2)),
+        total_volume: totalVolume,
+        total_biaya_gmj: result.volume,
+        total_biaya_vendor: totalBiayaVendor,
         biaya: totalSemuaBiaya,
         jumlah_barang,
       };
+
+      
 
       const res = await fetch("/api/pengiriman", {
         method: "POST",
@@ -364,7 +372,6 @@ const SamplePage = () => {
       const res = await fetch("/api/tarif-volume");
       const data = await res.json();
       setTarifVendor(data);
-      console.log("Tarif Vendor:", data);
     };
     fetchTarifVendor();
   }, []);
