@@ -18,6 +18,7 @@ import {
   TableHead,
   TableRow,
   Paper,
+  TablePagination,
 } from "@mui/material";
 import PageContainer from "@/app/(DashboardLayout)/components/container/PageContainer";
 import DashboardCard from "@/app/(DashboardLayout)/components/shared/DashboardCard";
@@ -34,6 +35,18 @@ const SamplePage = () => {
   });
 
   const [data, setData] = useState<any[]>([]); // Data dari backend
+  const [page, setPage] = useState(0);
+  const [rowsPerPage, setRowsPerPage] = useState(10);
+
+  const handleChangePage = (event:any, newPage:any) => {
+    setPage(newPage);
+  };
+
+  const handleChangeRowsPerPage = (event:any) => {
+    setRowsPerPage(parseInt(event.target.value, 10));
+    setPage(0);
+  };
+
 
   const fetchData = async () => {
     try {
@@ -202,8 +215,10 @@ const SamplePage = () => {
                 <TableCell>Estimasi</TableCell>
               </TableRow>
             </TableHead>
-            <TableBody>
-              {data.map((row) => (
+           <TableBody>
+            {data
+              .slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
+              .map((row) => (
                 <TableRow key={row.id}>
                   <TableCell>{row.jenis}</TableCell>
                   <TableCell>{row.wilayah}</TableCell>
@@ -214,8 +229,18 @@ const SamplePage = () => {
                   <TableCell>{row.estimasi}</TableCell>
                 </TableRow>
               ))}
-            </TableBody>
+          </TableBody>
+
           </Table>
+          <TablePagination
+            rowsPerPageOptions={[5, 10, 25]}
+            component="div"
+            count={data.length}
+            rowsPerPage={rowsPerPage}
+            page={page}
+            onPageChange={handleChangePage}
+            onRowsPerPageChange={handleChangeRowsPerPage}
+          />
         </Paper>
       </DashboardCard>
     </PageContainer>

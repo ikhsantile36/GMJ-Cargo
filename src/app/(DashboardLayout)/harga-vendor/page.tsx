@@ -12,6 +12,7 @@ import {
   TableBody,
   Typography,
   Box,
+  TablePagination,
 } from "@mui/material";
 import PageContainer from "@/app/(DashboardLayout)/components/container/PageContainer";
 import DashboardCard from "@/app/(DashboardLayout)/components/shared/DashboardCard";
@@ -26,6 +27,17 @@ export default function FormTarifVolumeVendor() {
   });
 
   const [tarifList, setTarifList] = useState([]);
+  const [page, setPage] = useState(0);
+  const [rowsPerPage, setRowsPerPage] = useState(10);
+
+    const handleChangePage = (event:any, newPage:any) => {
+      setPage(newPage);
+    };
+
+    const handleChangeRowsPerPage = (event:any) => {
+      setRowsPerPage(parseInt(event.target.value, 10));
+      setPage(0);
+    };
 
   useEffect(() => {
     fetchTarifData();
@@ -171,17 +183,28 @@ export default function FormTarifVolumeVendor() {
                 </TableRow>
               </TableHead>
               <TableBody>
-                {tarifList.map((item: any, index: number) => (
-                  <TableRow key={index}>
-                    <TableCell>{item.volume_min}</TableCell>
-                    <TableCell>{item.volume_max ?? "-"}</TableCell>
-                    <TableCell>{item.biaya_perBarang}</TableCell>
-                    <TableCell>{item.biaya_diskon ?? "-"}</TableCell>
-                    <TableCell>{item.keterangan ?? "-"}</TableCell>
-                  </TableRow>
-                ))}
+                {tarifList
+                  .slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
+                  .map((item: any, index: number) => (
+                    <TableRow key={index}>
+                      <TableCell>{item.volume_min}</TableCell>
+                      <TableCell>{item.volume_max ?? "-"}</TableCell>
+                      <TableCell>{item.biaya_perBarang}</TableCell>
+                      <TableCell>{item.biaya_diskon ?? "-"}</TableCell>
+                      <TableCell>{item.keterangan ?? "-"}</TableCell>
+                    </TableRow>
+                  ))}
               </TableBody>
             </Table>
+            <TablePagination
+              rowsPerPageOptions={[5, 10, 25]}
+              component="div"
+              count={tarifList.length}
+              rowsPerPage={rowsPerPage}
+              page={page}
+              onPageChange={handleChangePage}
+              onRowsPerPageChange={handleChangeRowsPerPage}
+            />
           </Paper>
         )}
       </DashboardCard>
