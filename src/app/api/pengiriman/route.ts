@@ -1,51 +1,53 @@
-import { NextResponse } from "next/server";
-import { PrismaClient } from "@prisma/client";
+import { NextRequest, NextResponse } from "next/server";
+import { prisma } from "@/lib/prisma"; // pastikan path sesuai dengan project kamu
 
-const prisma = new PrismaClient();
-
-export async function POST(req: Request) {
+export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
 
     const {
       jenis,
       nama_pengirim,
+      nomor_hp_pengirim,
       alamat_pengiriman,
       wilayah,
-      panjang,
-      lebar,
-      tinggi,
+      biaya,
+      jumlah_barang,
       volume_rb,
-      volume_akhir,
-      berat,
-      metode_penghitungan,
+      total_volume_gmj,
       kategori_barang,
-      nomor_hp,
+      metode_penghitungan,
+      barang,
+      berat,
     } = body;
 
-    const pengiriman = await prisma.pengiriman.create({
+    const beratFloat = berat !== undefined && berat !== null && berat !== ''
+  ? parseFloat(berat)
+  : null;
+
+    const result = await prisma.pengiriman.create({
       data: {
         jenis,
         nama_pengirim,
+        nomor_hp_pengirim,
         alamat_pengiriman,
         wilayah,
-        panjang: parseFloat(panjang),
-        lebar: parseFloat(lebar),
-        tinggi: parseFloat(tinggi),
+        biaya,
+        jumlah_barang,
         volume_rb,
-        volume_akhir,
-        berat: parseFloat(berat),
+        total_volume_gmj,
+        kategori_barang,
         metode_penghitungan,
-        kategori_barang: metode_penghitungan === "berat" ? kategori_barang : null,
-        nomor_hp_pengirim: nomor_hp,
+        barang,
+        berat: beratFloat ?? 0,
       },
     });
 
-    return NextResponse.json(pengiriman, { status: 201 });
+    return NextResponse.json({ success: true, data: result }, { status: 201 });
   } catch (error) {
-    console.error("Error saat membuat pengiriman:", error);
+    console.error("POST /api/pengiriman error:", error);
     return NextResponse.json(
-      { error: "Gagal membuat pengiriman" },
+      { success: false, message: "Terjadi kesalahan pada server." },
       { status: 500 }
     );
   }

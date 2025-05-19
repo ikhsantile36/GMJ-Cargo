@@ -23,8 +23,6 @@ type Props = {
   data: TarifWilayah[];
 };
 
-let totalBiaya: number = 0;
-
 const SamplePage = () => {
   const [formData, setFormData] = useState({
     jenis: "",
@@ -32,12 +30,10 @@ const SamplePage = () => {
     nomor_hp_pengirim: "",
     alamat_pengiriman: "",
     wilayah: "",
-    panjang: "",
-    lebar: "",
-    tinggi: "",
+    biaya: 0,
     jumlah_barang: 0,
     volume_rb: 0,
-    volume_akhir: 0,
+    total_volume_gmj: 0,
     kategori_barang: "",
     metode_penghitungan: "volume",
     barang: [{ panjang: "", lebar: "", tinggi: "" }],
@@ -67,7 +63,6 @@ const SamplePage = () => {
     let biaya = 0;
     let biayaPerBarangSatuan = 0;
 
-    // Fungsi pengecekan dengan toleransi floating point
     interface RangeChecker {
       (value: number, min: number, max: number): boolean;
     }
@@ -92,12 +87,14 @@ const SamplePage = () => {
     // VOlume kubikasi
     if (formData.jenis === "vendor" && tarifVendor.length > 0) {
       const avgRawVolume =
-        formData.barang.reduce((acc, curr) => {
-          const p = Number(curr.panjang);
-          const l = Number(curr.lebar);
-          const t = Number(curr.tinggi);
-          return acc + (p * l * t) / 1000000;
-        }, 0) / formData.barang.length;
+        formData.barang.length > 0
+          ? formData.barang.reduce((acc, curr) => {
+              const p = Number(curr.panjang);
+              const l = Number(curr.lebar);
+              const t = Number(curr.tinggi);
+              return acc + (p * l * t) / 1000000;
+            }, 0) / formData.barang.length
+          : 0;
 
       const tarif = tarifVendor.find((t) => {
         if (t.volume_max == null) {
@@ -129,7 +126,6 @@ const SamplePage = () => {
 
   const { volume, biaya, biayaPerBarangSatuan } = calculateVolume();
 
-  
   const getBiayaPerBarang = (barang: {
     panjang: string;
     lebar: string;
@@ -139,16 +135,16 @@ const SamplePage = () => {
     const l = Number(barang.lebar);
     const t = Number(barang.tinggi);
     if (isNaN(p) || isNaN(l) || isNaN(t)) return 0;
-    
-    const volumeM3 = (p * l * t) / 1000000; // volume dalam m³
-    
+
+    const volumeM3 = (p * l * t) / 1000000;
+
     // Jika jenis vendor, gunakan tarifVendor
     if (formData.jenis === "vendor" && tarifVendor.length > 0) {
       const tarif = tarifVendor.find((t) => {
         if (t.volume_max == null) return volumeM3 >= t.volume_min;
         return volumeM3 >= t.volume_min && volumeM3 <= t.volume_max;
       });
-      
+
       if (tarif) {
         if (formData.barang.length >= 2 && tarif.biaya_diskon > 0) {
           return tarif.biaya_diskon;
@@ -156,11 +152,10 @@ const SamplePage = () => {
         return tarif.biaya_perBarang;
       }
     }
-    
-    // Jika bukan vendor, hitung berdasar volume dan volume_rb
+
     const volume_rb = formData.volume_rb || 0;
-    const tarifPerM3 = 1; // <-- Ganti sesuai jika ada tarif per m³
-    
+    const tarifPerM3 = 1;
+
     return volumeM3 * volume_rb * tarifPerM3;
   };
 
@@ -173,67 +168,64 @@ const SamplePage = () => {
     const l = Number(barang.lebar);
     const t = Number(barang.tinggi);
     if (isNaN(p) || isNaN(l) || isNaN(t)) return 0;
-    
-    return (p * l * t) / 1000000; // Volume m³
+
+    return (p * l * t) / 1000000;
   };
-  
-  const getBiayaGMJ = (barang: { panjang: string; lebar: string; tinggi: string }) => {
+
+  const getBiayaGMJ = (barang: {
+    panjang: string;
+    lebar: string;
+    tinggi: string;
+  }) => {
     const p = Number(barang.panjang);
     const l = Number(barang.lebar);
     const t = Number(barang.tinggi);
-  
+
     if (isNaN(p) || isNaN(l) || isNaN(t)) return 0;
-  
+
     const volumeM3 = (p * l * t) / 1000000;
-  
-    // Ambil volume_rb dari selectedWilayah berdasarkan formData.wilayah
+
     const selectedWilayah = wilayahOptions.find(
       (w) => w.wilayah === formData.wilayah
     );
-  
+
     const volume_rb = selectedWilayah?.volume_rb || 0;
-  
+
     return volumeM3 * volume_rb;
   };
-  
-  
-
 
   const getTotalBiayaDanVolume = () => {
-  let totalVolume = 0;
-  let totalBiayaVendor = 0;
-  let totalBiayaGMJ = 0;
+    let totalVolume = 0;
+    let totalBiayaVendor = 0;
+    let totalBiayaGMJ = 0;
 
-  formData.barang.forEach((barang) => {
-    const volumePerItem = getVolumePerItem(barang);
-    const biayaPerItemVendor = getBiayaPerBarang(barang);
-    const biayaPerItemGMJ = getBiayaGMJ(barang);
+    formData.barang.forEach((barang) => {
+      const volumePerItem = getVolumePerItem(barang);
+      const biayaPerItemVendor = getBiayaPerBarang(barang);
+      const biayaPerItemGMJ = getBiayaGMJ(barang);
 
-    totalVolume += volumePerItem;
-    totalBiayaVendor += biayaPerItemVendor;
-    totalBiayaGMJ += biayaPerItemGMJ;
-  });
+      totalVolume += volumePerItem;
+      totalBiayaVendor += biayaPerItemVendor;
+      totalBiayaGMJ += biayaPerItemGMJ;
+    });
 
-  const totalSemuaBiaya = totalBiayaVendor + totalBiayaGMJ;
+    const totalSemuaBiaya = totalBiayaVendor + totalBiayaGMJ;
 
-  return {
-    totalBiayaVendor: Math.round(totalBiayaVendor * 100) / 100,
-    totalBiayaGMJ: Math.round(totalBiayaGMJ * 100) / 100,
-    totalSemuaBiaya: Math.round(totalSemuaBiaya * 100) / 100,
-    totalVolume: Math.round(totalVolume * 1000) / 1000,
+    return {
+      totalBiayaVendor: Math.round(totalBiayaVendor * 100) / 100,
+      totalBiayaGMJ: Math.round(totalBiayaGMJ * 100) / 100,
+      totalSemuaBiaya: Math.round(totalSemuaBiaya * 100) / 100,
+      totalVolume: Math.round(totalVolume * 1000) / 1000,
+    };
   };
-};
 
+  const { totalBiayaVendor, totalBiayaGMJ, totalSemuaBiaya, totalVolume } =
+    getTotalBiayaDanVolume();
 
-const { totalBiayaVendor, totalBiayaGMJ, totalSemuaBiaya, totalVolume } = getTotalBiayaDanVolume();
-
-
-
-  
   const calculateBerat = () => {
     const { kategori_barang, wilayah } = formData;
     const selectedWilayah = wilayahOptions.find((w) => w.wilayah === wilayah);
-    
+
     if (!selectedWilayah) return 0;
 
     let rb = 0;
@@ -289,10 +281,11 @@ const { totalBiayaVendor, totalBiayaGMJ, totalSemuaBiaya, totalVolume } = getTot
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
+    const { totalSemuaBiaya } = getTotalBiayaDanVolume();
     e.preventDefault();
 
     const { volume, biaya } = calculateVolume();
-    const volume_akhir = volume;
+    const total_volume_gmj = volume;
     const berat = calculateBerat();
     const jumlah_barang = formData.barang.length;
 
@@ -307,10 +300,10 @@ const { totalBiayaVendor, totalBiayaGMJ, totalSemuaBiaya, totalVolume } = getTot
 
     if (
       formData.metode_penghitungan === "volume" &&
-      volume_akhir < selectedWilayah.cost_minimum
+      total_volume_gmj < selectedWilayah.cost_minimum
     ) {
       alert(
-        `Harga akhir (${volume_akhir.toFixed(
+        `Harga akhir (${total_volume_gmj.toFixed(
           2
         )}) lebih kecil dari cost minimum wilayah (${
           selectedWilayah.cost_minimum
@@ -329,19 +322,14 @@ const { totalBiayaVendor, totalBiayaGMJ, totalSemuaBiaya, totalVolume } = getTot
     }
 
     try {
+      const result = calculateVolume();
       const payload = {
         ...formData,
-        volume_akhir,
         berat: berat.toFixed(2),
-        biaya,
+        total_volume_gmj: result.volume,
+        biaya: totalSemuaBiaya,
         jumlah_barang,
       };
-
-      delete (payload as any).barang; // jika Anda belum simpan per item
-
-      if (formData.metode_penghitungan === "volume") {
-        delete payload.kategori_barang;
-      }
 
       const res = await fetch("/api/pengiriman", {
         method: "POST",
@@ -564,16 +552,19 @@ const { totalBiayaVendor, totalBiayaGMJ, totalSemuaBiaya, totalVolume } = getTot
                     sx={{ ml: 5, display: "flex", gap: 2 }}
                   >
                     <em>
-                      Volume Barang {index + 1}: {getVolumePerItem(item).toLocaleString("id-ID")} m³
+                      Volume Barang {index + 1}:{" "}
+                      {getVolumePerItem(item).toLocaleString("id-ID")} m³
                     </em>
                     <br />
                     <span>
                       Biaya : Rp{" "}
-                      {volumeItem.toFixed(2)}
+                      {Math.round(volumeItem).toLocaleString("id-ID")}
                     </span>
                     <span>
                       Biaya Vendor: Rp{" "}
-                      {getBiayaPerBarang(item).toLocaleString("id-ID")}
+                      {Math.round(getBiayaPerBarang(item)).toLocaleString(
+                        "id-ID"
+                      )}
                     </span>
                   </Box>
 
@@ -604,14 +595,17 @@ const { totalBiayaVendor, totalBiayaGMJ, totalSemuaBiaya, totalVolume } = getTot
                   {/* <br /> */}
                   <strong>Jumlah Barang:</strong> {formData.barang.length}
                   <br />
+                  <strong>Total Volume:</strong> {totalVolume} m³
+                  <br />
                   {/* <strong>Biaya Satuan:</strong> Rp{" "}
                   {calculateVolume().biaya.toLocaleString("id-ID")}
                   <br /> */}
-                  <strong>Total Biaya Vendor:</strong> Rp {totalBiayaVendor.toLocaleString("id-ID")} <br />
-                  <strong>Total Biaya GMJ:</strong> Rp {totalBiayaGMJ.toLocaleString("id-ID")} <br />
-                  <strong>Total Biaya Seluruhnya:</strong> Rp {totalSemuaBiaya.toLocaleString("id-ID")} <br />
-                  <strong>Total Volume:</strong> {totalVolume} m³
-
+                  <strong>Total Biaya Vendor:</strong> Rp{" "}
+                  {Math.round(totalBiayaVendor).toLocaleString("id-ID")} <br />
+                  <strong>Total Biaya GMJ:</strong> Rp{" "}
+                  {Math.round(totalBiayaGMJ).toLocaleString("id-ID")} <br />
+                  <strong>Total Biaya Seluruhnya:</strong> Rp{" "}
+                  {Math.round(totalSemuaBiaya).toLocaleString("id-ID")} <br />
                 </Box>
               ) : (
                 <Box
@@ -624,7 +618,8 @@ const { totalBiayaVendor, totalBiayaGMJ, totalSemuaBiaya, totalVolume } = getTot
                   <strong>Kategori Barang:</strong>{" "}
                   {formData.kategori_barang || "-"}
                   <br />
-                  <strong>Total Berat: Rp.</strong> {calculateBerat().toFixed(2)} 
+                  <strong>Total Berat: Rp.</strong>{" "}
+                  {calculateBerat().toFixed(2)}
                   <br />
                   {calculateBerat() < 50 && (
                     <span style={{ color: "red", fontStyle: "italic" }}>

@@ -16,8 +16,6 @@ model Tarif_wilayah {
   volume_rb       Int?
   cost_minimum    Int?
   estimasi        String? @db.VarChar(50)
-
-  pengiriman       Pengiriman[]
 }
 
 model Tarif_volume_vendor {
@@ -49,20 +47,16 @@ model Pengiriman {
   jenis               String
   alamat_pengiriman   String
   wilayah             String
-  panjang             Float
-  lebar               Float
-  tinggi              Float
   volume_rb           Float
-  volume_akhir        Float
-  berat               Float
+  total_volume_gmj    Float
+  berat               Float?
+  biaya               Float
   metode_penghitungan String
   kategori_barang     String?
-  jumlah_barang      Int
+  jumlah_barang       Int
+  barang              Json
   createdAt           DateTime @default(now())
   nomor_hp_pengirim   String
-
-  tarifWilayah        Tarif_wilayah @relation(fields: [tarifWilayahId], references: [id])
-  tarifWilayahId      Int
 
   user   User? @relation("UserToPengiriman", fields: [userId], references: [id])
   userId Int?
@@ -71,5 +65,6 @@ model Pengiriman {
 enum user_role {
   SUPERADMIN
   ADMIN
+  OPERATOR
   USER
 }
