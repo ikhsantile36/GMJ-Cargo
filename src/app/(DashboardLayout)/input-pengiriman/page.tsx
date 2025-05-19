@@ -437,14 +437,17 @@ const SamplePage = () => {
                   value={formData.wilayah}
                   onChange={handleSelectChange}
                 >
-                  {wilayahOptions.map((item) => (
-                    <MenuItem key={item.id} value={item.wilayah}>
-                      {item.wilayah}
-                    </MenuItem>
-                  ))}
+                  {wilayahOptions
+                    .filter((item) => item.jenis === formData.jenis) // ⬅️ Filter berdasarkan jenis
+                    .map((item) => (
+                      <MenuItem key={item.id} value={item.wilayah}>
+                        {item.wilayah}
+                      </MenuItem>
+                    ))}
                 </Select>
               </FormControl>
             </Grid>
+
 
             <Grid item xs={12}>
               <FormControl component="fieldset">
