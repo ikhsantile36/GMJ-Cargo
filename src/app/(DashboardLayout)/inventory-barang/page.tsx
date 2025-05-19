@@ -26,48 +26,46 @@ type InventoryStatus =
   | "butuh validasi"
   | "telah selesai";
 
-type MuiColor = 'default' | 'primary' | 'secondary' | 'error' | 'info' | 'success' | 'warning';
+type MuiColor =
+  | "default"
+  | "primary"
+  | "secondary"
+  | "error"
+  | "info"
+  | "success"
+  | "warning";
 
 const statusList: {
-  key: string;
+  key: InventoryStatus;
   label: string;
   icon: React.ReactElement;
   color: MuiColor;
 }[] = [
-  { key: 'sedang_dikirim', label: 'Sedang Dikirim', icon: <LocalShippingIcon />, color: 'info' },
-  { key: 'telah_diterima', label: 'Telah Diterima', icon: <CheckCircleIcon />, color: 'success' },
-  { key: 'butuh_validasi', label: 'Butuh Validasi', icon: <ErrorIcon />, color: 'warning' },
-  { key: 'telah_selesai', label: 'Telah Selesai', icon: <DoneAllIcon />, color: 'default' },
-];
-
-const statusConfig: Record<
-  InventoryStatus,
   {
-    color: "info" | "success" | "warning" | "default";
-    icon: React.ReactElement;
-  }
-> = {
-  "sedang dikirim": { color: "info", icon: <LocalShippingIcon /> },
-  "telah diterima": { color: "success", icon: <CheckCircleIcon /> },
-  "butuh validasi": { color: "warning", icon: <ErrorIcon /> },
-  "telah selesai": { color: "default", icon: <DoneAllIcon /> },
-};
-
-// Fungsi untuk mengubah enum Prisma menjadi label readable
-const formatStatus = (status: string): InventoryStatus => {
-  switch (status) {
-    case "sedang_dikirim":
-      return "sedang dikirim";
-    case "telah_diterima":
-      return "telah diterima";
-    case "butuh_validasi":
-      return "butuh validasi";
-    case "telah_selesai":
-      return "telah selesai";
-    default:
-      return "butuh validasi";
-  }
-};
+    key: "sedang dikirim",
+    label: "Sedang Dikirim",
+    icon: <LocalShippingIcon />,
+    color: "info",
+  },
+  {
+    key: "telah diterima",
+    label: "Telah Diterima",
+    icon: <CheckCircleIcon />,
+    color: "success",
+  },
+  {
+    key: "butuh validasi",
+    label: "Butuh Validasi",
+    icon: <ErrorIcon />,
+    color: "warning",
+  },
+  {
+    key: "telah selesai",
+    label: "Telah Selesai",
+    icon: <DoneAllIcon />,
+    color: "default",
+  },
+];
 
 export default function InventoryPage() {
   const [data, setData] = useState<InventoryItem[]>([]);
@@ -78,6 +76,7 @@ export default function InventoryPage() {
     fetch("/api/pengiriman")
       .then((res) => res.json())
       .then((res) => {
+        console.log("Data dari API:", res); 
         setData(res);
         setLoading(false);
       })
@@ -87,7 +86,8 @@ export default function InventoryPage() {
       });
   }, []);
 
-  const filteredData = data.filter((item) => item.status_barang === filter);
+  // const filteredData = data.filter((item) => item.status_barang === filter);
+  const filteredData = data; 
 
   return (
     <Box p={4}>
@@ -101,9 +101,9 @@ export default function InventoryPage() {
             key={status.key}
             label={status.label}
             icon={status.icon}
-            color={formatStatus(status.key) === filter ? status.color : "default"}
-            variant={filter === status.key ? "filled" : "outlined"}
-            onClick={() => setFilter(formatStatus(status.key))}
+            color={status.key === filter ? status.color : "default"}
+            variant={status.key === filter ? "filled" : "outlined"}
+            onClick={() => setFilter(status.key)}
           />
         ))}
       </Stack>
@@ -124,50 +124,42 @@ export default function InventoryPage() {
               </TableRow>
             </TableHead>
             <TableBody>
-              {filteredData.map((item) => {
-                const formattedStatus = formatStatus(
-                  item.status_barang || "butuh_validasi"
-                );
-                const config = statusConfig[formattedStatus];
+              {filteredData.length === 0 ? (
+                <TableRow>
+                  <TableCell colSpan={4} align="center">
+                    Tidak ada data dengan status ini.
+                  </TableCell>
+                </TableRow>
+              ) : (
+                filteredData.map((item) => {
+                  const statusItem = statusList.find(
+                    (s) => s.key === item.status_barang
+                  );
 
-                return (
-                  <TableRow key={item.id}>
-                    <TableCell>{item.nama_pengirim}</TableCell>
-                    <TableCell>{item.nomor_hp_pengirim}</TableCell>
-                    <TableCell>
-                      <pre style={{ margin: 0, fontSize: 12 }}>
-                        {JSON.stringify(item.barang, null, 2)}
-                      </pre>
-                    </TableCell>
-                    <TableCell>
-                      <Chip
-                        icon={
-                          statusList.find((s) => s.key === item.status_barang)
-                            ?.icon
-                        }
-                        label={
-                          statusList.find((s) => s.key === item.status_barang)
-                            ?.label || item.status_barang
-                        }
-                        color={
-                          (statusList.find((s) => s.key === item.status_barang)
-                            ?.color as
-                            | "info"
-                            | "success"
-                            | "warning"
-                            | "default"
-                            | "primary"
-                            | "secondary"
-                            | "error"
-                            | undefined) || "default"
-                        }
-                        variant="outlined"
-                        size="small"
-                      />
-                    </TableCell>
-                  </TableRow>
-                );
-              })}
+                  return (
+                    <TableRow key={item.id}>
+                      <TableCell>{item.nama_pengirim}</TableCell>
+                      <TableCell>{item.nomor_hp_pengirim}</TableCell>
+                      <TableCell>
+                        <Typography fontSize={13}>
+                          Panjang: {item.barang.panjang} cm<br />
+                          Lebar: {item.barang.lebar} cm<br />
+                          Tinggi: {item.barang.tinggi} cm
+                        </Typography>
+                      </TableCell>
+                      <TableCell>
+                        <Chip
+                          icon={statusItem?.icon}
+                          label={statusItem?.label || item.status_barang}
+                          color={(statusItem?.color as MuiColor) || "default"}
+                          variant="outlined"
+                          size="small"
+                        />
+                      </TableCell>
+                    </TableRow>
+                  );
+                })
+              )}
             </TableBody>
           </Table>
         </Paper>

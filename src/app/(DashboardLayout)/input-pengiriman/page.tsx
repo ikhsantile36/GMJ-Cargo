@@ -197,29 +197,32 @@ const SamplePage = () => {
   };
 
   const getTotalBiayaDanVolume = () => {
-    let totalVolume = 0;
-    let totalBiayaVendor = 0;
-    let totalBiayaGMJ = 0;
+  let totalVolume = 0;
+  let totalBiayaVendor = 0;
+  let totalBiayaGMJ = 0;
 
-    formData.barang.forEach((barang) => {
-      const volumePerItem = getVolumePerItem(barang);
-      const biayaPerItemVendor = getBiayaPerBarang(barang);
-      const biayaPerItemGMJ = getBiayaGMJ(barang);
+  const isVendor = formData.jenis === "vendor";
 
-      totalVolume += volumePerItem;
-      totalBiayaVendor += biayaPerItemVendor;
-      totalBiayaGMJ += biayaPerItemGMJ;
-    });
+  formData.barang.forEach((barang) => {
+    const volumePerItem = getVolumePerItem(barang);
+    const biayaPerItemVendor = isVendor ? getBiayaPerBarang(barang) : 0;
+    const biayaPerItemGMJ = getBiayaGMJ(barang);
 
-    const totalSemuaBiaya = totalBiayaVendor + totalBiayaGMJ;
+    totalVolume += volumePerItem;
+    totalBiayaVendor += biayaPerItemVendor;
+    totalBiayaGMJ += biayaPerItemGMJ;
+  });
 
-    return {
-      totalBiayaVendor: Math.round(totalBiayaVendor * 100) / 100,
-      totalBiayaGMJ: Math.round(totalBiayaGMJ * 100) / 100,
-      totalSemuaBiaya: Math.round(totalSemuaBiaya * 100) / 100,
-      totalVolume: Math.round(totalVolume * 1000) / 1000,
-    };
+  const totalSemuaBiaya = totalBiayaVendor + totalBiayaGMJ;
+
+  return {
+    totalBiayaVendor: Math.round(totalBiayaVendor * 100) / 100,
+    totalBiayaGMJ: Math.round(totalBiayaGMJ * 100) / 100,
+    totalSemuaBiaya: Math.round(totalSemuaBiaya * 100) / 100,
+    totalVolume: Math.round(totalVolume * 1000) / 1000,
   };
+};
+
 
   const { totalBiayaVendor, totalBiayaGMJ, totalSemuaBiaya, totalVolume } =
     getTotalBiayaDanVolume();
@@ -570,12 +573,13 @@ const SamplePage = () => {
                       Biaya : Rp{" "}
                       {Math.round(volumeItem).toLocaleString("id-ID")}
                     </span>
-                    <span>
-                      Biaya Vendor: Rp{" "}
-                      {Math.round(getBiayaPerBarang(item)).toLocaleString(
-                        "id-ID"
-                      )}
-                    </span>
+                   {formData.jenis === "vendor" && (
+                      <span>
+                        Biaya Vendor: Rp{" "}
+                        {Math.round(getBiayaPerBarang(item)).toLocaleString("id-ID")}
+                      </span>
+                    )}
+
                   </Box>
 
                   {/* Tombol tambah hanya muncul setelah barang terakhir */}
@@ -610,8 +614,13 @@ const SamplePage = () => {
                   {/* <strong>Biaya Satuan:</strong> Rp{" "}
                   {calculateVolume().biaya.toLocaleString("id-ID")}
                   <br /> */}
-                  <strong>Total Biaya Vendor:</strong> Rp{" "}
-                  {Math.round(totalBiayaVendor).toLocaleString("id-ID")} <br />
+                 {formData.jenis === "vendor" && (
+                    <Box>
+                      <strong>Total Biaya Vendor:</strong> Rp{" "}
+                      {Math.round(totalBiayaVendor).toLocaleString("id-ID")} <br />
+                    </Box>
+                  )}
+
                   <strong>Total Biaya GMJ:</strong> Rp{" "}
                   {Math.round(totalBiayaGMJ).toLocaleString("id-ID")} <br />
                   <strong>Total Biaya Seluruhnya:</strong> Rp{" "}

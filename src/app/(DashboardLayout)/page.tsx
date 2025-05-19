@@ -12,7 +12,7 @@ import MonthlyEarnings from "@/app/(DashboardLayout)/components/dashboard/Monthl
 const Dashboard = () => {
   return (
     <PageContainer title="Dashboard" description="this is Dashboard">
-      {/* <Box>
+      <Box>
         <Grid container spacing={3}>
           <Grid item xs={12} lg={8}>
             <SalesOverview />
@@ -37,8 +37,8 @@ const Dashboard = () => {
             <Blog />
           </Grid>
         </Grid>
-      </Box> */}
-      <Box sx={{ p: 4 }}>
+      </Box>
+      {/* <Box sx={{ p: 4 }}>
         <Typography variant="h4" gutterBottom>
           Dashboard Ekspedisi
         </Typography>
@@ -46,7 +46,7 @@ const Dashboard = () => {
           Selamat datang di dashboard ekspedisi. Silakan pilih menu
           untuk mulai mengelola data pengiriman.
         </Typography>
-      </Box>
+      </Box> */}
     </PageContainer>
   );
 };

@@ -11,7 +11,7 @@ import {
   IconPackageImport ,
   IconScriptMinus,
   IconArrowAutofitRight,
-  IconTruckDelivery
+  IconTruckDelivery 
 } from "@tabler/icons-react";
 
 import { uniqueId } from "lodash";
@@ -19,7 +19,7 @@ import { uniqueId } from "lodash";
 const Menuitems = [
   {
     navlabel: true,
-    subheader: "Sistem Informasi Pengiriman dan Pelacakan Barang",
+    subheader: "Sistem Informasi Pengiriman & Pelacakan Barang",
   },
 
   {

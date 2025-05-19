@@ -24,7 +24,10 @@ const NavGroup = ({ item }: ItemType) => {
     }),
   );
   return (
-    <ListSubheaderStyle>{item.subheader}</ListSubheaderStyle>
+    <ListSubheader sx={{ textAlign: 'center' }}>
+      {item.subheader}
+    </ListSubheader>
+
   );
 };
 
