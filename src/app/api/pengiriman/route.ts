@@ -56,3 +56,16 @@ export async function POST(req: NextRequest) {
     );
   }
 }
+
+export async function GET() {
+  try {
+    const data = await prisma.pengiriman.findMany();
+    return NextResponse.json(data, { status: 200 });
+  } catch (error) {
+    console.error("GET /api/pengiriman error:", error);
+    return NextResponse.json(
+      { success: false, message: "Terjadi kesalahan pada server." },
+      { status: 500 }
+    );
+  }
+}

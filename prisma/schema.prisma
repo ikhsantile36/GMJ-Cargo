@@ -42,26 +42,34 @@ model User {
 }
 
 model Pengiriman {
-  id                  Int      @id @default(autoincrement())
+  id                  Int           @id @default(autoincrement())
   nama_pengirim       String
   jenis               String
   alamat_pengiriman   String
   wilayah             String
   volume_rb           Float
-  total_volume        Float  
-  total_biaya_gmj     Float   
-  total_biaya_vendor  Float  
+  total_volume        Float
+  total_biaya_gmj     Float
+  total_biaya_vendor  Float
   berat               Float?
-  biaya               Float 
+  biaya               Float
   metode_penghitungan String
   kategori_barang     String?
   jumlah_barang       Int
   barang              Json
-  createdAt           DateTime @default(now())
+  status_barang       StatusBarang? @default(sedang_dikirim)
+  createdAt           DateTime      @default(now())
   nomor_hp_pengirim   String
 
   user   User? @relation("UserToPengiriman", fields: [userId], references: [id])
   userId Int?
+}
+
+enum StatusBarang {
+  sedang_dikirim
+  telah_diterima
+  butuh_validasi
+  telah_selesai
 }
 
 enum user_role {
