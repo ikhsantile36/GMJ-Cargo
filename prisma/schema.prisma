@@ -41,8 +41,16 @@ model User {
   pengiriman Pengiriman[] @relation("UserToPengiriman")
 }
 
+enum user_role {
+  SUPERADMIN
+  ADMIN
+  OPERATOR
+  USER
+}
+
 model Pengiriman {
   id                  Int           @id @default(autoincrement())
+  nomor_resi          String        @unique
   nama_pengirim       String
   jenis               String
   alamat_pengiriman   String
@@ -63,6 +71,8 @@ model Pengiriman {
 
   user   User? @relation("UserToPengiriman", fields: [userId], references: [id])
   userId Int?
+
+  inventory Inventory[]
 }
 
 enum StatusBarang {
@@ -72,9 +82,12 @@ enum StatusBarang {
   telah_selesai
 }
 
-enum user_role {
-  SUPERADMIN
-  ADMIN
-  OPERATOR
-  USER
+model Inventory {
+  id           Int      @id @default(autoincrement())
+  nomor_resi   String
+  lokasi       String
+  waktu_update DateTime @default(now())
+  keterangan   String?
+
+  pengiriman Pengiriman @relation(fields: [nomor_resi], references: [nomor_resi], onDelete: Cascade)
 }

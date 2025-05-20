@@ -37,6 +37,7 @@ const SamplePage = () => {
     total_biaya_gmj: 0,
     total_biaya_vendor: 0,
     kategori_barang: "-",
+    status_barang: "sedang_dikirim",
     metode_penghitungan: "volume",
     barang: [{ panjang: "", lebar: "", tinggi: "" }],
   });
@@ -338,6 +339,7 @@ const SamplePage = () => {
         total_biaya_vendor: totalBiayaVendor,
         biaya: totalSemuaBiaya,
         jumlah_barang,
+        status_barang: "sedang_dikirim",
       };
 
       
@@ -468,12 +470,12 @@ const SamplePage = () => {
                 >
                   <FormControlLabel
                     value="volume"
-                    control={<Radio />}
+                    control={<Radio color="warning"/>}
                     label="Hitung berdasarkan Volume"
                   />
                   <FormControlLabel
                     value="berat"
-                    control={<Radio />}
+                    control={<Radio color="warning"/>}
                     label="Hitung berdasarkan Berat"
                   />
                 </RadioGroup>
@@ -585,7 +587,7 @@ const SamplePage = () => {
                   {/* Tombol tambah hanya muncul setelah barang terakhir */}
                   {isLastItem && (
                     <Box mt={2} sx={{ ml: 2, mt: 2 }}>
-                      <Button variant="contained" onClick={tambahBarang}>
+                      <Button variant="contained" onClick={tambahBarang} color="warning">
                         + Tambah Barang
                       </Button>
                     </Box>
@@ -651,7 +653,7 @@ const SamplePage = () => {
 
             <Grid item xs={12}>
               <Box display="flex" justifyContent="flex-end">
-                <Button type="submit" variant="contained" color="primary">
+                <Button type="submit" variant="contained" color="warning">
                   Simpan Data
                 </Button>
               </Box>

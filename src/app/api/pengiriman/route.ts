@@ -21,6 +21,7 @@ export async function POST(req: NextRequest) {
       metode_penghitungan,
       barang,
       berat,
+      status_barang,
     } = body;
 
     const beratFloat = berat !== undefined && berat !== null && berat !== ''
@@ -44,6 +45,7 @@ export async function POST(req: NextRequest) {
         metode_penghitungan,
         barang,
         berat: beratFloat ?? 0,
+        status_barang,
       },
     });
 
