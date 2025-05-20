@@ -11,11 +11,11 @@ const SidebarItems = ({ toggleMobileSidebar }: any) => {
 
   return (
     <Box sx={{ px: 3 }}>
-      <List sx={{ pt: 0 }} className="sidebarNav" component="div">
+      <List sx={{ pt: 4 }} className="sidebarNav" component="div">
         {Menuitems.map((item) => {
           // {/********SubHeader**********/}
           if (item.subheader) {
-            return <NavGroup item={item} key={item.subheader} />;
+            return null;
 
             // {/********If Sub Menu**********/}
             /* eslint no-else-return: "off" */

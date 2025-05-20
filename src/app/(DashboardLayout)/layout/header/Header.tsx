@@ -60,6 +60,7 @@ const Header = ({toggleMobileSidebar}: ItemType) => {
           </Badge>
 
         </IconButton>
+        <h2>Sistem Informasi Pengiriman Dan Pelacakan Barang</h2>
         <Box flexGrow={1} />
         <Stack spacing={1} direction="row" alignItems="center">
           {/* <Button variant="contained" component={Link} href="/authentication/login"   disableElevation color="primary" >

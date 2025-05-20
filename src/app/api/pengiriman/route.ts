@@ -6,6 +6,7 @@ export async function POST(req: NextRequest) {
     const body = await req.json();
 
     const {
+      nomor_resi,
       jenis,
       nama_pengirim,
       nomor_hp_pengirim,
@@ -30,6 +31,7 @@ export async function POST(req: NextRequest) {
 
     const result = await prisma.pengiriman.create({
       data: {
+        nomor_resi,
         jenis,
         nama_pengirim,
         nomor_hp_pengirim,

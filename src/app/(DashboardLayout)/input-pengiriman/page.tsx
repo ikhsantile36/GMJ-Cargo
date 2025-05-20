@@ -25,6 +25,7 @@ type Props = {
 
 const SamplePage = () => {
   const [formData, setFormData] = useState({
+    nomor_resi: "-",
     jenis: "",
     nama_pengirim: "",
     nomor_hp_pengirim: "",
@@ -45,6 +46,8 @@ const SamplePage = () => {
   const [wilayahOptions, setWilayahOptions] = useState<TarifWilayah[]>([]);
   const [jenisOptions, setJenisOptions] = useState<string[]>([]);
   const [tarifVendor, setTarifVendor] = useState<any[]>([]);
+
+
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
@@ -127,6 +130,10 @@ const SamplePage = () => {
     };
   };
 
+
+  const generateNomorResi = () => {
+  return `RESI-${Date.now()}`;
+};
   const { volume, biaya, biayaPerBarangSatuan } = calculateVolume();
 
   const getBiayaPerBarang = (barang: {
@@ -289,6 +296,7 @@ const SamplePage = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     const { totalSemuaBiaya, totalBiayaVendor , totalVolume} = getTotalBiayaDanVolume();
     e.preventDefault();
+    const resiBaru = generateNomorResi();
 
     const { volume, biaya } = calculateVolume();
     const total_biaya_gmj = volume;
@@ -340,6 +348,7 @@ const SamplePage = () => {
         biaya: totalSemuaBiaya,
         jumlah_barang,
         status_barang: "sedang_dikirim",
+        nomor_resi: resiBaru,
       };
 
       

@@ -1,5 +1,6 @@
 export interface InventoryItem {
   id: number;
+  nomor_resi: string;
   jumlah_barang: number;
   nomor_hp_pengirim: string;
   nama_pengirim: string;

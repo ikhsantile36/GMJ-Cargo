@@ -18,11 +18,11 @@ import { uniqueId } from "lodash";
 
 const Menuitems = [
   {
-    navlabel: true,
+    navlabel: false,
     subheader: `Sistem Informasi Pengiriman\n&\nPelacakan Barang`,
   },
 
-  {
+  {  
     id: uniqueId(),
     title: "Dashboard",
     icon: IconLayoutDashboard,
