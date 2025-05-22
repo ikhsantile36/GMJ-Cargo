@@ -12,6 +12,7 @@ import {
   IconScriptMinus,
   IconArrowAutofitRight,
   IconTruckDelivery,
+  IconPackage,
 } from "@tabler/icons-react";
 
 import { uniqueId } from "lodash";
@@ -26,7 +27,7 @@ const Menuitems = [
     title: "Dashboard",
     icon: IconLayoutDashboard,
     href: "/",
-    allowedRoles: ["SUPERADMIN", "USER"],
+    allowedRoles: ["SUPERADMIN"],
   },
 
   {
@@ -43,6 +44,13 @@ const Menuitems = [
     href: "/inventory-barang",
     allowedRoles: ["SUPERADMIN", "USER"],
   },
+  // {
+  //   id: uniqueId(),
+  //   title: "Penerimaan Barang",
+  //   icon: IconPackage,
+  //   href: "/penerimaan-barang",
+  //   allowedRoles: ["USER"],
+  // },
   {
     id: uniqueId(),
     title: "Manajemen Wilayah",

@@ -28,7 +28,9 @@ import VisibilityIcon from "@mui/icons-material/Visibility";
 import { useEffect, useState } from "react";
 import { Pengiriman } from "@/app/types/pengiriman";
 import { useRouter } from "next/navigation";
-import { Inventory } from "@/app/types/inventory"; // pastikan path benar
+import { Inventory } from "@/app/types/inventory";
+import jwt from "jsonwebtoken";
+import { User } from "@prisma/client";
 
 type InventoryStatus =
   | "sedang_dikirim"
@@ -85,6 +87,11 @@ export default function InventoryPage() {
   const [selectedItem, setSelectedItem] = useState<Pengiriman | null>(null);
   const [openDialog, setOpenDialog] = useState(false);
   const [inventoryHistory, setInventoryHistory] = useState<Inventory[]>([]);
+  const [userRole, setUserRole] = useState<string | null>(null);
+
+  type Props = {
+    data: User[];
+  };
 
   useEffect(() => {
     fetch("/api/pengiriman")
@@ -103,7 +110,25 @@ export default function InventoryPage() {
       });
   }, []);
 
-  const filteredData = data.filter((item) => item.status_barang === filter);
+  useEffect(() => {
+    const token = localStorage.getItem("token");
+    if (token) {
+      try {
+        const decoded = jwt.decode(token) as User | null;
+        if (decoded && decoded.role) {
+          setUserRole(decoded.role.toUpperCase()); // UPPERCASE biar seragam
+        }
+      } catch (err) {
+        console.error("Gagal decode token:", err);
+      }
+    }
+  }, []);
+
+  // const filteredData = data.filter((item) => item.status_barang === filter);
+  const filteredData =
+    userRole === "USER"
+      ? data
+      : data.filter((item) => item.status_barang === filter);
 
   const handleOpenDialog = async (item: Pengiriman) => {
     setSelectedItem(item);
@@ -130,27 +155,34 @@ export default function InventoryPage() {
         Manajemen Inventori Barang
       </Typography>
 
-      <Stack direction="row" spacing={2} my={3} justifyContent="space-between">
-        <Stack direction="row" spacing={2} flexWrap="wrap">
-          {statusList.map((status) => (
-            <Chip
-              key={status.key}
-              label={status.label}
-              icon={status.icon}
-              color={status.key === filter ? status.color : "default"}
-              variant={status.key === filter ? "filled" : "outlined"}
-              onClick={() => setFilter(status.key)}
-            />
-          ))}
+      {userRole !== "USER" && (
+        <Stack
+          direction="row"
+          spacing={2}
+          my={3}
+          justifyContent="space-between"
+        >
+          <Stack direction="row" spacing={2} flexWrap="wrap">
+            {statusList.map((status) => (
+              <Chip
+                key={status.key}
+                label={status.label}
+                icon={status.icon}
+                color={status.key === filter ? status.color : "default"}
+                variant={status.key === filter ? "filled" : "outlined"}
+                onClick={() => setFilter(status.key)}
+              />
+            ))}
+          </Stack>
         </Stack>
-      </Stack>
+      )}
 
       {loading ? (
         <Box mt={4} display="flex" justifyContent="center">
           <CircularProgress />
         </Box>
       ) : (
-        <Paper elevation={2}>
+        <Paper elevation={2} sx={{ mt: userRole === "USER" ? 4 : 0 }}>
           <Table>
             <TableHead>
               <TableRow>
@@ -208,15 +240,33 @@ export default function InventoryPage() {
                         </Button>
                       </TableCell>
                       <TableCell align="center">
-                        <Button
-                          variant="outlined"
-                          color="warning"
-                          onClick={() =>
-                            router.push(`/inventory-barang/update/${item.id}`)
-                          }
-                        >
-                          Update
-                        </Button>
+                        {userRole === "USER" ? (
+                          item.status_barang === "telah_diterima" ? (
+                            <Button
+                              variant="outlined"
+                              color="primary"
+                              onClick={() =>
+                                router.push(`/penerimaan-barang`)
+                              }
+                            >
+                              Update
+                            </Button>
+                          ) : (
+                            "-"
+                          )
+                        ) : item.status_barang === "sedang_dikirim" ? (
+                          <Button
+                            variant="outlined"
+                            color="warning"
+                            onClick={() =>
+                              router.push(`/inventory-barang/update/${item.id}`)
+                            }
+                          >
+                            Update
+                          </Button>
+                        ) : (
+                          "-"
+                        )}
                       </TableCell>
                     </TableRow>
                   );
@@ -318,7 +368,9 @@ export default function InventoryPage() {
                             variant="subtitle2"
                             noWrap
                           >
-                            {new Date(log.waktu_update).toLocaleDateString("id-ID")}
+                            {new Date(log.waktu_update).toLocaleDateString(
+                              "id-ID"
+                            )}
                           </Typography>
                           <Typography variant="body2" noWrap>
                             Lokasi:{" "}
