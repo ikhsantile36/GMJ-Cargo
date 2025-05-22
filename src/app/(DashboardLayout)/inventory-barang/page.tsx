@@ -17,6 +17,8 @@ import {
   DialogTitle,
   DialogContent,
   DialogActions,
+  Grid,
+  Divider,
 } from "@mui/material";
 import LocalShippingIcon from "@mui/icons-material/LocalShipping";
 import CheckCircleIcon from "@mui/icons-material/CheckCircle";
@@ -24,7 +26,9 @@ import ErrorIcon from "@mui/icons-material/Error";
 import DoneAllIcon from "@mui/icons-material/DoneAll";
 import VisibilityIcon from "@mui/icons-material/Visibility";
 import { useEffect, useState } from "react";
-import { InventoryItem } from "@/app/types/inventory";
+import { Pengiriman } from "@/app/types/pengiriman";
+import { useRouter } from "next/navigation";
+import { Inventory } from "@/app/types/inventory"; // pastikan path benar
 
 type InventoryStatus =
   | "sedang_dikirim"
@@ -51,34 +55,36 @@ const statusList: {
     key: "sedang_dikirim",
     label: "Sedang Dikirim",
     icon: <LocalShippingIcon />,
-    color: "info",
+    color: "warning",
   },
   {
     key: "telah_diterima",
     label: "Telah Diterima",
     icon: <CheckCircleIcon />,
-    color: "success",
+    color: "primary",
   },
   {
     key: "butuh_validasi",
     label: "Butuh Validasi",
     icon: <ErrorIcon />,
-    color: "warning",
+    color: "error",
   },
   {
     key: "telah_selesai",
     label: "Telah Selesai",
     icon: <DoneAllIcon />,
-    color: "default",
+    color: "success",
   },
 ];
 
 export default function InventoryPage() {
-  const [data, setData] = useState<InventoryItem[]>([]);
+  const router = useRouter();
+  const [data, setData] = useState<Pengiriman[]>([]);
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState<InventoryStatus>("sedang_dikirim");
-  const [selectedItem, setSelectedItem] = useState<InventoryItem | null>(null);
+  const [selectedItem, setSelectedItem] = useState<Pengiriman | null>(null);
   const [openDialog, setOpenDialog] = useState(false);
+  const [inventoryHistory, setInventoryHistory] = useState<Inventory[]>([]);
 
   useEffect(() => {
     fetch("/api/pengiriman")
@@ -94,16 +100,23 @@ export default function InventoryPage() {
         setData(parsedData);
         setLoading(false);
         console.log("datanya adalah", res);
-      })
-     
-
+      });
   }, []);
 
   const filteredData = data.filter((item) => item.status_barang === filter);
 
-  const handleOpenDialog = (item: InventoryItem) => {
+  const handleOpenDialog = async (item: Pengiriman) => {
     setSelectedItem(item);
     setOpenDialog(true);
+
+    try {
+      const res = await fetch(`/api/inventory?nomor_resi=${item.nomor_resi}`);
+      const data = await res.json();
+      setInventoryHistory(data);
+    } catch (error) {
+      console.error("Gagal memuat history:", error);
+      setInventoryHistory([]);
+    }
   };
 
   const handleCloseDialog = () => {
@@ -130,9 +143,6 @@ export default function InventoryPage() {
             />
           ))}
         </Stack>
-        <Button variant="contained" color="primary">
-          Update
-        </Button>
       </Stack>
 
       {loading ? (
@@ -144,11 +154,12 @@ export default function InventoryPage() {
           <Table>
             <TableHead>
               <TableRow>
-                <TableCell >Nama Pengirim</TableCell>
-                <TableCell align="center">Nomor HP</TableCell>
-                <TableCell align="center">Jumlah Barang</TableCell>
+                <TableCell>Nama Pengirim</TableCell>
+                <TableCell align="center">Nomor Resi</TableCell>
+                <TableCell align="center">Alamat Pengiriman</TableCell>
                 <TableCell align="center">Status</TableCell>
-                <TableCell align="center">View</TableCell>
+                <TableCell align="center">View Detail</TableCell>
+                <TableCell align="center">Update</TableCell>
               </TableRow>
             </TableHead>
             <TableBody>
@@ -166,11 +177,19 @@ export default function InventoryPage() {
 
                   return (
                     <TableRow key={item.id}>
-                      <TableCell >{item.nama_pengirim}</TableCell>
-                      <TableCell align="center">
-                        {item.nomor_hp_pengirim}
+                      <TableCell>{item.nama_pengirim}</TableCell>
+                      <TableCell align="center">{item.nomor_resi}</TableCell>
+                      <TableCell
+                        align="center"
+                        sx={{
+                          maxWidth: 200, // Batasi lebar sel
+                          whiteSpace: "nowrap", // Cegah teks pindah baris
+                          overflow: "hidden", // Sembunyikan kelebihan teks
+                          textOverflow: "ellipsis", // Tambahkan titik-tiga
+                        }}
+                      >
+                        {item.alamat_pengiriman}
                       </TableCell>
-                      <TableCell align="center">{item.jumlah_barang}</TableCell>
                       <TableCell align="center">
                         <Chip
                           icon={statusItem?.icon}
@@ -188,6 +207,17 @@ export default function InventoryPage() {
                           View
                         </Button>
                       </TableCell>
+                      <TableCell align="center">
+                        <Button
+                          variant="outlined"
+                          color="warning"
+                          onClick={() =>
+                            router.push(`/inventory-barang/update/${item.id}`)
+                          }
+                        >
+                          Update
+                        </Button>
+                      </TableCell>
                     </TableRow>
                   );
                 })
@@ -198,31 +228,102 @@ export default function InventoryPage() {
       )}
 
       {/* MODAL DETAIL */}
-      <Dialog open={openDialog} onClose={handleCloseDialog} fullWidth maxWidth="sm">
+      <Dialog
+        open={openDialog}
+        onClose={handleCloseDialog}
+        fullWidth
+        maxWidth="sm"
+      >
         <DialogTitle>Detail Inventori</DialogTitle>
         <DialogContent dividers>
           {selectedItem && (
             <>
-              <Typography gutterBottom>
-                <strong>Nama Pengirim:</strong> {selectedItem.nama_pengirim}
-              </Typography>
-              <Typography gutterBottom>
-                <strong>Nomor HP:</strong> {selectedItem.nomor_hp_pengirim}
-              </Typography>
-              <Typography gutterBottom>
-                <strong>Jumlah Barang Pengiriman:</strong> {selectedItem.jumlah_barang}
-              </Typography>
-              <Typography gutterBottom>
-                <strong>Status:</strong> {selectedItem.status_barang}
-              </Typography>
-              <Typography gutterBottom>
-                <strong>Nomor Resi:</strong> {selectedItem.nomor_resi || "-"}
-              </Typography>
+              <Grid container spacing={2}>
+                <Grid item xs={12} sm={6}>
+                  <Typography gutterBottom>
+                    <strong>Nama Pengirim:</strong> {selectedItem.nama_pengirim}
+                  </Typography>
+                </Grid>
+                <Grid item xs={12} sm={6}>
+                  <Typography gutterBottom>
+                    <strong>Nomor HP:</strong> {selectedItem.nomor_hp_pengirim}
+                  </Typography>
+                </Grid>
+                <Grid item xs={12} sm={6}>
+                  <Typography gutterBottom>
+                    <strong>jenis</strong>: {selectedItem.jenis}
+                  </Typography>
+                </Grid>
+                <Grid item xs={12} sm={6}>
+                  <Typography gutterBottom>
+                    <strong>Jumlah Barang:</strong> {selectedItem.jumlah_barang}
+                  </Typography>
+                </Grid>
+                <Grid item xs={12} sm={6}>
+                  <Typography gutterBottom>
+                    <strong>Status:</strong> {selectedItem.status_barang}
+                  </Typography>
+                </Grid>
+                <Grid item xs={12} sm={6}>
+                  <Typography gutterBottom>
+                    <strong>Nomor Resi:</strong>{" "}
+                    {selectedItem.nomor_resi || "-"}
+                  </Typography>
+                </Grid>
+              </Grid>
+              <Divider sx={{ my: 1 }} />
+
+              <Box mt={2}>
+                <Typography variant="h6" gutterBottom>
+                  Riwayat Lokasi Barang
+                </Typography>
+                {inventoryHistory.length === 0 ? (
+                  <Typography variant="body2" color="text.secondary">
+                    Tidak ada histori lokasi.
+                  </Typography>
+                ) : (
+                  <Box
+                    sx={{
+                      maxHeight: 250,
+                      overflowY: "auto",
+                      border: "1px solid #ccc",
+                      borderRadius: 2,
+                      p: 2,
+                      mt: 1,
+                    }}
+                  >
+                    {inventoryHistory.map((log, index) => (
+                      <Box
+                        key={index}
+                        sx={{
+                          mb: 2,
+                          p: 1.5,
+                          borderBottom: "1px solid #eee",
+                          backgroundColor: "#FF9800",
+                          borderRadius: 1,
+                        }}
+                      >
+                        <Typography fontWeight="bold" variant="subtitle2">
+                          {new Date(log.waktu_update).toLocaleString()}
+                        </Typography>
+                        <Typography variant="body2">
+                          Lokasi: <strong>{log.lokasi}</strong>
+                        </Typography>
+                        {log.keterangan && (
+                          <Typography variant="body2" color="text.default">
+                            Catatan: {log.keterangan}
+                          </Typography>
+                        )}
+                      </Box>
+                    ))}
+                  </Box>
+                )}
+              </Box>
             </>
           )}
         </DialogContent>
         <DialogActions>
-          <Button onClick={handleCloseDialog} color="primary">
+          <Button onClick={handleCloseDialog} color="warning">
             Tutup
           </Button>
         </DialogActions>

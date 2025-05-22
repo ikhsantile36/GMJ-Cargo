@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { JSX, useState } from "react";
 import { Box, Typography, Button } from "@mui/material";
 import Link from "next/link";
 import CustomTextField from "@/app/(DashboardLayout)/components/forms/theme-elements/CustomTextField";

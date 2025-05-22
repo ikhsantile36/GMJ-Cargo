@@ -68,6 +68,7 @@ model Pengiriman {
   status_barang       StatusBarang? @default(sedang_dikirim)
   createdAt           DateTime      @default(now())
   nomor_hp_pengirim   String
+  nama_penerima      String?
 
   user   User? @relation("UserToPengiriman", fields: [userId], references: [id])
   userId Int?
@@ -88,6 +89,7 @@ model Inventory {
   lokasi       String
   waktu_update DateTime @default(now())
   keterangan   String?
+  foto        String?
 
   pengiriman Pengiriman @relation(fields: [nomor_resi], references: [nomor_resi], onDelete: Cascade)
 }

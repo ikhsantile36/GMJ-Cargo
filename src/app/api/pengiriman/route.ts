@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
-import { prisma } from "@/lib/prisma"; // pastikan path sesuai dengan project kamu
+import { prisma } from "@/lib/prisma";
+import bcrypt from "bcryptjs"; // untuk password default
 
 export async function POST(req: NextRequest) {
   try {
@@ -26,9 +27,31 @@ export async function POST(req: NextRequest) {
     } = body;
 
     const beratFloat = berat !== undefined && berat !== null && berat !== ''
-  ? parseFloat(berat)
-  : null;
+      ? parseFloat(berat)
+      : null;
 
+    // 1. Cek apakah user dengan nomor HP sudah ada
+    let existingUser = await prisma.user.findUnique({
+      where: {
+        nomor_hp: nomor_hp_pengirim,
+      },
+    });
+
+    // 2. Jika belum ada, buat user baru
+    if (!existingUser) {
+      const hashedPassword = await bcrypt.hash(nomor_hp_pengirim, 10); // password default sama dengan nomor HP
+      existingUser = await prisma.user.create({
+        data: {
+          username: nama_pengirim.replace(/\s+/g, "_").toLowerCase() + "_" + Date.now(),
+          email: `user${Date.now()}@autogen.local`, // email dummy unik
+          nomor_hp: nomor_hp_pengirim,
+          password: hashedPassword,
+          role: "USER",
+        },
+      });
+    }
+
+    // 3. Buat data pengiriman dengan relasi ke user tersebut
     const result = await prisma.pengiriman.create({
       data: {
         nomor_resi,
@@ -48,6 +71,9 @@ export async function POST(req: NextRequest) {
         barang,
         berat: beratFloat ?? 0,
         status_barang,
+        user: {
+          connect: { id: existingUser.id },
+        },
       },
     });
 
@@ -63,7 +89,9 @@ export async function POST(req: NextRequest) {
 
 export async function GET() {
   try {
-    const data = await prisma.pengiriman.findMany();
+    const data = await prisma.pengiriman.findMany({
+      include: { user: true },
+    });
     return NextResponse.json(data, { status: 200 });
   } catch (error) {
     console.error("GET /api/pengiriman error:", error);

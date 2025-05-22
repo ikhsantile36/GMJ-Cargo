@@ -1,45 +1,38 @@
-import { NextApiRequest, NextApiResponse } from "next";
-import { PrismaClient } from "@prisma/client";
+// app/api/pengiriman/[id]/route.ts
+import { NextRequest, NextResponse } from 'next/server';
+import { PrismaClient } from '@prisma/client';
 
 const prisma = new PrismaClient();
 
-export default async function handler(req: NextApiRequest, res: NextApiResponse) {
-  const { id } = req.query;
+export async function GET(req: NextRequest, { params }: { params: { id: string } }) {
+  const id = parseInt(params.id);
+  if (isNaN(id)) return NextResponse.json({ message: 'Invalid ID' }, { status: 400 });
 
-  if (typeof id !== "string") {
-    return res.status(400).json({ message: "Invalid ID" });
+  const pengiriman = await prisma.pengiriman.findUnique({ where: { id } });
+  if (!pengiriman) {
+    return NextResponse.json({ message: 'Data not found' }, { status: 404 });
   }
 
-  try {
-    switch (req.method) {
-      case "GET":
-        const pengiriman = await prisma.pengiriman.findUnique({
-          where: { id: parseInt(id) },
-        });
-        if (!pengiriman) {
-          return res.status(404).json({ message: "Data not found" });
-        }
-        return res.status(200).json(pengiriman);
+  return NextResponse.json(pengiriman);
+}
 
-      case "PUT":
-        const updated = await prisma.pengiriman.update({
-          where: { id: parseInt(id) },
-          data: { ...req.body },
-        });
-        return res.status(200).json(updated);
+export async function PUT(req: NextRequest, { params }: { params: { id: string } }) {
+  const id = parseInt(params.id);
+  if (isNaN(id)) return NextResponse.json({ message: 'Invalid ID' }, { status: 400 });
 
-      case "DELETE":
-        await prisma.pengiriman.delete({
-          where: { id: parseInt(id) },
-        });
-        return res.status(204).end();
+  const body = await req.json();
+  const updated = await prisma.pengiriman.update({
+    where: { id },
+    data: body,
+  });
 
-      default:
-        res.setHeader("Allow", ["GET", "PUT", "DELETE"]);
-        return res.status(405).end(`Method ${req.method} Not Allowed`);
-    }
-  } catch (error) {
-    console.error(error);
-    return res.status(500).json({ message: "Server error", error });
-  }
+  return NextResponse.json(updated);
+}
+
+export async function DELETE(req: NextRequest, { params }: { params: { id: string } }) {
+  const id = parseInt(params.id);
+  if (isNaN(id)) return NextResponse.json({ message: 'Invalid ID' }, { status: 400 });
+
+  await prisma.pengiriman.delete({ where: { id } });
+  return new NextResponse(null, { status: 204 });
 }

@@ -1,5 +1,5 @@
 "use client";
-import React, { useState } from "react";
+import React, { JSX, useState } from "react";
 import {
   Box,
   Typography,
@@ -142,7 +142,7 @@ const AuthLogin = ({ title, subtitle, subtext }: loginType) => {
       </Stack>
 
       <Box>
-        <Button variant="contained" fullWidth onClick={handleLogin}>
+        <Button variant="contained" color="warning" fullWidth onClick={handleLogin}>
           Masuk
         </Button>
       </Box>

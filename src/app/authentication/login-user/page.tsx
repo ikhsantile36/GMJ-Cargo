@@ -1,16 +1,61 @@
 "use client";
-import Link from "next/link";
-import { Grid, Box, Card, Stack, Typography } from "@mui/material";
-// components
+
+import {
+  Box,
+  Button,
+  Card,
+  Checkbox,
+  FormControlLabel,
+  FormGroup,
+  Grid,
+  Link,
+  Stack,
+  TextField,
+  Typography,
+} from "@mui/material";
 import PageContainer from "@/app/(DashboardLayout)/components/container/PageContainer";
 import Logo from "@/app/(DashboardLayout)/layout/shared/logo/Logo";
-import AuthLogin from "../auth/AuthLogin";
+import { useState } from "react";
 
-const Login2 = () => {
+const LoginUser = () => {
+  const [nomorHp, setNomorHp] = useState("");
+  const [password, setPassword] = useState("");
+  const [loading, setLoading] = useState(false);
 
-  
+  const handleSubmit = async (e: any) => {
+    e.preventDefault();
+    setLoading(true);
+
+    try {
+      // Call login API
+      const response = await fetch("/api/login/user", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ nomorHp, password }),
+      });
+
+      const result = await response.json();
+
+      if (!response.ok) {
+        throw new Error(result.message || "Login gagal");
+      }
+
+      // Redirect user to dashboard or home
+      window.location.href = "/dashboard/user";
+    } catch (error) {
+      alert("error");
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
-    <PageContainer title="Login" description="this is Login page">
+    <PageContainer
+      title="Login User"
+      description="Login untuk pengguna ekspedisi"
+    >
       <Box
         sx={{
           position: "relative",
@@ -46,36 +91,86 @@ const Login2 = () => {
               elevation={9}
               sx={{ p: 4, zIndex: 1, width: "100%", maxWidth: "500px" }}
             >
-              <Box display="flex" alignItems="center" justifyContent="center">
+              <Box
+                display="flex"
+                alignItems="center"
+                justifyContent="center"
+                mb={3}
+              >
                 <Logo />
               </Box>
-              <AuthLogin
-                subtext={
+              <Typography variant="h5" textAlign="center" mb={3}>
+                Login User Expedisi
+              </Typography>
+              <form onSubmit={handleSubmit}>
+                <Stack spacing={2}>
                   <Typography
-                    variant="subtitle1"
-                    textAlign="center"
-                    color="textSecondary"
-                    mb={1}
+                    variant="subtitle2"
+                    fontWeight={600}
+                    component="label"
+                    htmlFor="phone"
                   >
-                    EXPEDISI CARGO
+                    Nomor HP
                   </Typography>
-                }
-                subtitle={
+                  <TextField
+                    label="Nomor HP"
+                    variant="outlined"
+                    fullWidth
+                    value={nomorHp}
+                    onChange={(e) => setNomorHp(e.target.value)}
+                    required
+                  />
+                  <Typography
+                    variant="subtitle2"
+                    fontWeight={600}
+                    component="label"
+                    htmlFor="password"
+                  >
+                    Password
+                  </Typography>
+                  <TextField
+                    label="Password"
+                    type="password"
+                    variant="outlined"
+                    fullWidth
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    required
+                  />
                   <Stack
+                    justifyContent="space-between"
                     direction="row"
-                    spacing={1}
-                    justifyContent="center"
-                    mt={3}
+                    alignItems="center"
+                    my={6}
                   >
                     <Typography
-                      color="textSecondary"
-                      variant="h6"
+                      component={Link}
+                      href="/authentication/registrasi-user"
                       fontWeight="500"
+                      sx={{ textDecoration: "none", color: "primary.main" }}
                     >
+                      Daftar Akun
+                    </Typography>
+                    <Typography
+                      component={Link}
+                      href="/"
+                      fontWeight="500"
+                      sx={{ textDecoration: "none", color: "primary.main" }}
+                    >
+                      Lupa Password?
                     </Typography>
                   </Stack>
-                }
-              />
+                  <Button
+                    type="submit"
+                    variant="contained"
+                    color="warning"
+                    fullWidth
+                    disabled={loading}
+                  >
+                    {loading ? "Logging in..." : "Login"}
+                  </Button>
+                </Stack>
+              </form>
             </Card>
           </Grid>
         </Grid>
@@ -83,4 +178,5 @@ const Login2 = () => {
     </PageContainer>
   );
 };
-export default Login2;
+
+export default LoginUser;

@@ -85,7 +85,7 @@ const Profile = () => {
         </MenuItem> */}
         <Box mt={1} py={1} px={2}>
           <Button
-            href="/authentication/login"
+            href="/authentication"
             variant="outlined"
             color="primary"
             component={Link}
