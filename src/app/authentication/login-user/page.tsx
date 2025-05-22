@@ -38,8 +38,11 @@ const LoginUser = () => {
 
       const result = await response.json();
 
-      if (!response.ok) {
-        throw new Error(result.message || "Login gagal");
+      if (response.ok) {
+        localStorage.setItem("token", result.token); // Simpan token di localStorage
+        // Redirect atau update state login
+      } else {
+        alert(result.message);
       }
 
       // Redirect user to dashboard or home

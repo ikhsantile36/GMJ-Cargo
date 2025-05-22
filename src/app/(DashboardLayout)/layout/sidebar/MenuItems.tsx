@@ -6,12 +6,12 @@ import {
   IconMoodHappy,
   IconTypography,
   IconUserPlus,
-  IconMap2 ,
-  IconCash ,
-  IconPackageImport ,
+  IconMap2,
+  IconCash,
+  IconPackageImport,
   IconScriptMinus,
   IconArrowAutofitRight,
-  IconTruckDelivery 
+  IconTruckDelivery,
 } from "@tabler/icons-react";
 
 import { uniqueId } from "lodash";
@@ -21,79 +21,41 @@ const Menuitems = [
     navlabel: false,
     subheader: `Sistem Informasi Pengiriman\n&\nPelacakan Barang`,
   },
-
-  {  
+  {
     id: uniqueId(),
     title: "Dashboard",
     icon: IconLayoutDashboard,
     href: "/",
+    allowedRoles: ["SUPERADMIN", "USER"],
   },
-  // {
-  //   navlabel: true,
-  //   subheader: "Utilities",
-  // },
-  // {
-  //   id: uniqueId(),
-  //   title: "Typography",
-  //   icon: IconTypography,
-  //   href: "/utilities/typography",
-  // },
-  // {
-  //   id: uniqueId(),
-  //   title: "Shadow",
-  //   icon: IconCopy,
-  //   href: "/utilities/shadow",
-  // },
-  // {
-  //   navlabel: true,
-  //   subheader: "Auth",
-  // },
-  // {
-  //   id: uniqueId(),
-  //   title: "Login",
-  //   icon: IconLogin,
-  //   href: "/authentication/login",
-  // },
-  // {
-  //   id: uniqueId(),
-  //   title: "Register",
-  //   icon: IconUserPlus,
-  //   href: "/authentication/register",
-  // },
-  // {
-  //   navlabel: true,
-  //   subheader: "Extra",
-  // },
-  // {
-  //   id: uniqueId(),
-  //   title: "Icons",
-  //   icon: IconMoodHappy,
-  //   href: "/icons",
-  // },
 
   {
     id: uniqueId(),
     title: "Input Pengiriman",
-    icon: IconPackageImport ,
+    icon: IconPackageImport,
     href: "/input-pengiriman",
+    allowedRoles: ["SUPERADMIN"],
   },
   {
     id: uniqueId(),
     title: "Inventory Barang",
     icon: IconTruckDelivery,
     href: "/inventory-barang",
+    allowedRoles: ["SUPERADMIN", "USER"],
   },
   {
     id: uniqueId(),
     title: "Manajemen Wilayah",
-    icon: IconMap2 ,
+    icon: IconMap2,
     href: "/manajemen-wilayah",
+    allowedRoles: ["SUPERADMIN"],
   },
   {
     id: uniqueId(),
     title: "Harga Vendor",
-    icon: IconCash ,
+    icon: IconCash,
     href: "/harga-vendor",
+    allowedRoles: ["SUPERADMIN"],
   },
 ];
 

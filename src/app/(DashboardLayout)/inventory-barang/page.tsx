@@ -318,7 +318,7 @@ export default function InventoryPage() {
                             variant="subtitle2"
                             noWrap
                           >
-                            {new Date(log.waktu_update).toLocaleString("id-ID")}
+                            {new Date(log.waktu_update).toLocaleDateString("id-ID")}
                           </Typography>
                           <Typography variant="body2" noWrap>
                             Lokasi:{" "}

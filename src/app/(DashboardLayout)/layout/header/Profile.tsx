@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import {
   Avatar,
   Box,
@@ -15,11 +16,19 @@ import { IconListCheck, IconMail, IconUser } from "@tabler/icons-react";
 
 const Profile = () => {
   const [anchorEl2, setAnchorEl2] = useState(null);
+  const router = useRouter();
+
   const handleClick2 = (event: any) => {
     setAnchorEl2(event.currentTarget);
   };
   const handleClose2 = () => {
     setAnchorEl2(null);
+  };
+
+  const handleLogout = () => {
+    localStorage.removeItem("token"); // Hapus token
+    setAnchorEl2(null); // Tutup menu
+    router.push("/authentication"); // Arahkan ke halaman login
   };
 
   return (
@@ -89,6 +98,7 @@ const Profile = () => {
             variant="outlined"
             color="primary"
             component={Link}
+            onClick={handleLogout}
             fullWidth
           >
             Logout

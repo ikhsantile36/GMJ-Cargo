@@ -22,6 +22,7 @@ const Dashboard = () => {
 
  useEffect(() => {
     const token = localStorage.getItem("token");
+     console.log("Token dari localStorage:", token);
 
     if (token) {
       try {
