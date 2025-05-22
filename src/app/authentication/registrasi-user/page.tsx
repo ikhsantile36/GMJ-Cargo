@@ -27,10 +27,10 @@ const RegistrasiUser = () => {
     setLoading(true);
 
     try {
-      const response = await fetch("/api/auth/register-user", {
+      const response = await fetch('/api/auth/validasi-nomor-telepon', {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ nomorHp}),
+        body: JSON.stringify({ nomorHp }),
       });
 
       const result = await response.json();
@@ -39,9 +39,9 @@ const RegistrasiUser = () => {
         throw new Error(result.message || "Login gagal");
       }
 
-      window.location.href = "/authentication/registrasi-user-password";
+      window.location.href = `/authentication/registrasi-user-password?nomorHp=${nomorHp}`;
     } catch (error: any) {
-      alert(error.message); 
+      alert(error.message);
       setLoading(false);
     }
   };

@@ -1,55 +1,55 @@
 "use client";
-
+import { useState } from "react";
 import {
   Box,
   Button,
   Card,
-  Checkbox,
-  FormControlLabel,
-  FormGroup,
   Grid,
-  Link,
   Stack,
   TextField,
   Typography,
 } from "@mui/material";
 import PageContainer from "@/app/(DashboardLayout)/components/container/PageContainer";
 import Logo from "@/app/(DashboardLayout)/layout/shared/logo/Logo";
-import { useState } from "react";
+import { useSearchParams } from "next/navigation";
 
 const RegistrasiUser = () => {
-  const [nomorHp, setNomorHp] = useState("");
+  // hapus nomorHp karena gak dipakai di form ini
   const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
   const [loading, setLoading] = useState(false);
+  const searchParams = useSearchParams();
+const nomorHp = searchParams.get("nomorHp");
 
   const handleSubmit = async (e: any) => {
     e.preventDefault();
     setLoading(true);
 
     try {
-      const response = await fetch("/api/auth/register-user", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ nomorHp}),
-      });
+      // Kirim password dan confirmPassword ke API
+      const response = await fetch(`/api/auth/auth-password?nomorHp=${nomorHp}`, {
+  method: "POST",
+  headers: { "Content-Type": "application/json" },
+  body: JSON.stringify({ password, confirmPassword }),
+});
 
       const result = await response.json();
       console.log(result);
       if (!response.ok) {
-        throw new Error(result.message || "Login gagal");
+        throw new Error(result.message || "Gagal membuat password");
       }
 
-      window.location.href = "/authentication/registrasi-user-password";
+      window.location.href = "/authentication/login-user";
     } catch (error: any) {
-      alert(error.message); 
+      alert(error.message);
       setLoading(false);
     }
   };
 
   return (
     <PageContainer
-      title="Login User"
-      description="Login untuk pengguna ekspedisi"
+      title="Registrasi User"
+      description="Buat password baru untuk pengguna ekspedisi"
     >
       <Box
         sx={{
@@ -66,12 +66,7 @@ const RegistrasiUser = () => {
           },
         }}
       >
-        <Grid
-          container
-          spacing={0}
-          justifyContent="center"
-          sx={{ height: "100vh" }}
-        >
+        <Grid container spacing={0} justifyContent="center" sx={{ height: "100vh" }}>
           <Grid
             item
             xs={12}
@@ -82,37 +77,38 @@ const RegistrasiUser = () => {
             justifyContent="center"
             alignItems="center"
           >
-            <Card
-              elevation={9}
-              sx={{ p: 4, zIndex: 1, width: "100%", maxWidth: "500px" }}
-            >
-              <Box
-                display="flex"
-                alignItems="center"
-                justifyContent="center"
-                mb={3}
-              >
+            <Card elevation={9} sx={{ p: 4, zIndex: 1, width: "100%", maxWidth: "500px" }}>
+              <Box display="flex" alignItems="center" justifyContent="center" mb={3}>
                 <Logo />
               </Box>
               <Typography variant="h5" textAlign="center" mb={3}>
-                Login User Expedisi
+                Registrasi User Expedisi
               </Typography>
               <form onSubmit={handleSubmit}>
                 <Stack spacing={2}>
-                  <Typography
-                    variant="subtitle2"
-                    fontWeight={600}
-                    component="label"
-                    htmlFor="phone"
-                  >
-                    Nomor HP
+                  <Typography variant="subtitle2" fontWeight={600} component="label" htmlFor="password">
+                    Password Baru
                   </Typography>
                   <TextField
-                    label="08xxxxxxxxxx"
+                    id="password"
+                    type="password"
+                    label="Password"
                     variant="outlined"
                     fullWidth
-                    value={nomorHp}
-                    onChange={(e) => setNomorHp(e.target.value)}
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                  />
+                  <Typography variant="subtitle2" fontWeight={600} component="label" htmlFor="confirmPassword">
+                    Konfirmasi Password
+                  </Typography>
+                  <TextField
+                    id="confirmPassword"
+                    type="password"
+                    label="Konfirmasi Password"
+                    variant="outlined"
+                    fullWidth
+                    value={confirmPassword}
+                    onChange={(e) => setConfirmPassword(e.target.value)}
                   />
                   <Button
                     type="submit"
@@ -121,7 +117,7 @@ const RegistrasiUser = () => {
                     fullWidth
                     disabled={loading}
                   >
-                    {loading ? "Logging in..." : "Login"}
+                    {loading ? "Menyimpan..." : "Buat Password"}
                   </Button>
                 </Stack>
               </form>

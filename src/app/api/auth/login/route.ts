@@ -9,18 +9,27 @@ export const runtime = 'nodejs';
 export async function POST(req: Request) {
   try {
     const body = await req.json();
-    const { username, password } = body;
+    const { username, nomorHp, password } = body;
 
-    if (!username || !password) {
-      return NextResponse.json({ message: 'Username dan password wajib diisi.' }, { status: 400 });
+    if (!password || (!username && !nomorHp)) {
+      return NextResponse.json(
+        { message: 'Username atau nomor HP dan password wajib diisi.' },
+        { status: 400 }
+      );
     }
 
-    const user = await prisma.user.findUnique({
-      where: { username },
-    });
+    // Tentukan field pencarian: username atau nomor_hp
+    const where = username
+      ? { username }
+      : { nomor_hp: nomorHp };
+
+    const user = await prisma.user.findUnique({ where });
 
     if (!user) {
-      return NextResponse.json({ message: 'Username tidak ditemukan.' }, { status: 404 });
+      return NextResponse.json(
+        { message: 'Akun tidak ditemukan.' },
+        { status: 404 }
+      );
     }
 
     const isPasswordValid = await bcryptjs.compare(password, user.password);
@@ -30,7 +39,12 @@ export async function POST(req: Request) {
     }
 
     const token = jwt.sign(
-      { id: user.id, username: user.username, role: user.role },
+      {
+        id: user.id,
+        username: user.username,
+        nomor_hp: user.nomor_hp,
+        role: user.role,
+      },
       process.env.JWT_SECRET!,
       { expiresIn: '1d' }
     );

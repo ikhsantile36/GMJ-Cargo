@@ -1,5 +1,6 @@
 "use client";
 import { Grid, Box, Typography } from "@mui/material";
+import { useEffect } from "react";
 import PageContainer from "@/app/(DashboardLayout)/components/container/PageContainer";
 // components
 import SalesOverview from "@/app/(DashboardLayout)/components/dashboard/SalesOverview";
@@ -8,8 +9,37 @@ import RecentTransactions from "@/app/(DashboardLayout)/components/dashboard/Rec
 import ProductPerformance from "@/app/(DashboardLayout)/components/dashboard/ProductPerformance";
 import Blog from "@/app/(DashboardLayout)/components/dashboard/Blog";
 import MonthlyEarnings from "@/app/(DashboardLayout)/components/dashboard/MonthlyEarnings";
+// import jwt_decode from "jwt-decode";
+import type { User } from "@/app/types/user";
+import jwt from "jsonwebtoken";
+
 
 const Dashboard = () => {
+
+  type Props = {
+    data: User[];
+  };
+
+ useEffect(() => {
+    const token = localStorage.getItem("token");
+
+    if (token) {
+      try {
+        // Decode token tanpa verifikasi secret (hanya decode payload)
+        const decoded = jwt.decode(token) as User | null;
+        if (decoded) {
+          console.log("Role user:", decoded.role);
+        } else {
+          console.log("Token kosong setelah decode");
+        }
+      } catch (err) {
+        console.error("Token tidak valid:", err);
+      }
+    } else {
+      console.log("Belum login");
+    }
+  }, []);
+  
   return (
     <PageContainer title="Dashboard" description="this is Dashboard">
       <Box>

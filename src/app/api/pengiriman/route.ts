@@ -10,6 +10,7 @@ export async function POST(req: NextRequest) {
       nomor_resi,
       jenis,
       nama_pengirim,
+      nama_penerima,
       nomor_hp_pengirim,
       alamat_pengiriman,
       wilayah,
@@ -39,13 +40,13 @@ export async function POST(req: NextRequest) {
 
     // 2. Jika belum ada, buat user baru
     if (!existingUser) {
-      const hashedPassword = await bcrypt.hash(nomor_hp_pengirim, 10); // password default sama dengan nomor HP
+      const hashedPassword = await bcrypt.hash(nomor_hp_pengirim, 10);
       existingUser = await prisma.user.create({
         data: {
           username: nama_pengirim.replace(/\s+/g, "_").toLowerCase() + "_" + Date.now(),
           email: `user${Date.now()}@autogen.local`, // email dummy unik
           nomor_hp: nomor_hp_pengirim,
-          password: hashedPassword,
+          password: "",
           role: "USER",
         },
       });
@@ -57,6 +58,7 @@ export async function POST(req: NextRequest) {
         nomor_resi,
         jenis,
         nama_pengirim,
+        nama_penerima,
         nomor_hp_pengirim,
         alamat_pengiriman,
         wilayah,

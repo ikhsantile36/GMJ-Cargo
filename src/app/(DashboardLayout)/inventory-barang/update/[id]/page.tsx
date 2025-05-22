@@ -46,7 +46,7 @@ export default function UpdateInventoriClientPage() {
         setStatusOptions(
           statusData.filter(
             (status: string) =>
-              status === "telah_diterima" || status === "telah_selesai"
+              status === "sedang_dikirim" || status === "telah_selesai"
           )
         );
 
@@ -124,6 +124,12 @@ export default function UpdateInventoriClientPage() {
                 <TableCell>: {data.nama_pengirim}</TableCell>
               </TableRow>
               <TableRow>
+                <TableCell sx={{ width: "150px", fontWeight: "bold" }}>
+                  Nama Penerima
+                </TableCell>
+                <TableCell>: {data.nama_penerima}</TableCell>
+              </TableRow>
+              <TableRow>
                 <TableCell sx={{ fontWeight: "bold" }}>Nomor HP</TableCell>
                 <TableCell>: {data.nomor_hp_pengirim}</TableCell>
               </TableRow>
@@ -158,6 +164,7 @@ export default function UpdateInventoriClientPage() {
           )}
 
           <Divider sx={{ my: 2 }} />
+          
           <Typography gutterBottom>
             <strong>Alamat Pengiriman:</strong> {data.alamat_pengiriman || "-"}
           </Typography>

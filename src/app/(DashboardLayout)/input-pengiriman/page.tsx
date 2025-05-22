@@ -28,6 +28,7 @@ const SamplePage = () => {
     nomor_resi: "-",
     jenis: "",
     nama_pengirim: "",
+    nama_penerima: "",
     nomor_hp_pengirim: "",
     alamat_pengiriman: "",
     wilayah: "",
@@ -404,6 +405,15 @@ const SamplePage = () => {
                 label="Nama Pengirim"
                 name="nama_pengirim"
                 value={formData.nama_pengirim}
+                onChange={handleChange}
+              />
+            </Grid>
+            <Grid item xs={12} md={6}>
+              <TextField
+                fullWidth
+                label="Nama Penerima"
+                name="nama_penerima"
+                value={formData.nama_penerima}
                 onChange={handleChange}
               />
             </Grid>

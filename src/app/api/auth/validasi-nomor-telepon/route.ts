@@ -1,24 +1,27 @@
-import { NextResponse } from 'next/server';
-import { prisma } from '@/lib/prisma';
-import jwt from 'jsonwebtoken';
+import { NextResponse } from "next/server";
+import { prisma } from "@/lib/prisma";
+import jwt from "jsonwebtoken";
 
-export const runtime = 'nodejs';
+export const runtime = "nodejs";
 
 export async function POST(req: Request) {
   try {
     const body = await req.json();
-    const { nomorHp } = body;
+    const nomorHp = body.nomorHp;
 
     if (!nomorHp) {
       return NextResponse.json(
-        { message: 'Nomor HP wajib diisi.' },
+        { message: "Nomor HP wajib diisi di URL query parameter." },
         { status: 400 }
       );
     }
 
     const isPhoneNumber = /^[0-9]{8,15}$/.test(nomorHp);
     if (!isPhoneNumber) {
-      return NextResponse.json({ message: 'Format nomor HP tidak valid.' }, { status: 400 });
+      return NextResponse.json(
+        { message: "Format nomor HP tidak valid." },
+        { status: 400 }
+      );
     }
 
     const user = await prisma.user.findUnique({
@@ -26,17 +29,20 @@ export async function POST(req: Request) {
     });
 
     if (!user) {
-      return NextResponse.json({ message: 'Nomor HP tidak ditemukan.' }, { status: 404 });
+      return NextResponse.json(
+        { message: "Nomor HP tidak ditemukan." },
+        { status: 404 }
+      );
     }
 
     const token = jwt.sign(
       { id: user.id, nomor_hp: user.nomor_hp, role: user.role },
       process.env.JWT_SECRET!,
-      { expiresIn: '1d' }
+      { expiresIn: "1d" }
     );
 
     return NextResponse.json({
-      message: 'Login berhasil',
+      message: "Nomor HP valid.",
       token,
       user: {
         id: user.id,
@@ -45,11 +51,11 @@ export async function POST(req: Request) {
       },
     });
   } catch (error) {
-    console.error('Login error:', error);
+    console.error("Validasi nomor HP error:", error);
     return NextResponse.json(
       {
-        message: 'Terjadi kesalahan saat login',
-        error: error instanceof Error ? error.message : 'Unknown error',
+        message: "Terjadi kesalahan saat validasi nomor HP.",
+        error: error instanceof Error ? error.message : "Unknown error",
       },
       { status: 500 }
     );

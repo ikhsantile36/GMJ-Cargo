@@ -28,7 +28,7 @@ const LoginUser = () => {
 
     try {
       // Call login API
-      const response = await fetch("/api/login/user", {
+      const response = await fetch("/api/auth/login", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -43,7 +43,7 @@ const LoginUser = () => {
       }
 
       // Redirect user to dashboard or home
-      window.location.href = "/dashboard/user";
+      window.location.href = "/";
     } catch (error) {
       alert("error");
     } finally {

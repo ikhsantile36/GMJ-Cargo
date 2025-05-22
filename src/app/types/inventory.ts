@@ -1,4 +1,5 @@
 export interface Inventory {
+  foto: string;
   id: number;
   nomor_resi: string;
   nama_pengirim: string;
