@@ -246,7 +246,7 @@ export default function InventoryPage() {
                               variant="outlined"
                               color="primary"
                               onClick={() =>
-                                router.push(`/penerimaan-barang`)
+                                router.push(`/penerimaan-barang/${item.id}`)
                               }
                             >
                               Update

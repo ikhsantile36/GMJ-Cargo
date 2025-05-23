@@ -76,10 +76,9 @@ export async function GET(req: Request) {
     const initialEntry = {
       lokasi: pengiriman.wilayah,
       keterangan: 'Awal pengiriman',
-      waktu_update: pengiriman.createdAt ?? new Date(), // fallback ke now kalau tidak ada createdAt
+      waktu_update: pengiriman.createdAt ?? new Date(), 
     };
 
-    // Gabungkan entry awal + histori inventory
     const fullHistory = [initialEntry, ...history];
 
     return NextResponse.json(fullHistory);

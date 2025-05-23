@@ -69,6 +69,7 @@ model Pengiriman {
   createdAt           DateTime      @default(now())
   nomor_hp_pengirim   String
   nama_penerima      String?
+  penerimaanBarang  PenerimaanBarang?
 
   user   User? @relation("UserToPengiriman", fields: [userId], references: [id])
   userId Int?
@@ -92,4 +93,18 @@ model Inventory {
   foto        String?
 
   pengiriman Pengiriman @relation(fields: [nomor_resi], references: [nomor_resi], onDelete: Cascade)
+}
+
+model PenerimaanBarang {
+  id                Int    @id @default(autoincrement())
+  fotoBarang        String   
+  fotoPembayaran    String
+  fotoInvoice       String
+  keterangan        String?
+  createdAt         DateTime @default(now())
+
+  pengiriman        Pengiriman @relation(fields: [pengirimanId], references: [id])
+  pengirimanId      Int        @unique
+
+  @@map("penerimaan_barang")
 }
