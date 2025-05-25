@@ -13,6 +13,7 @@ import {
   IconArrowAutofitRight,
   IconTruckDelivery,
   IconPackage,
+  IconChecklist 
 } from "@tabler/icons-react";
 
 import { uniqueId } from "lodash";
@@ -43,6 +44,13 @@ const Menuitems = [
     icon: IconTruckDelivery,
     href: "/inventory-barang",
     allowedRoles: ["SUPERADMIN", "USER"],
+  },
+   {
+    id: uniqueId(),
+    title: "Status Barang",
+    icon: IconChecklist,
+    href: "/status-barang",
+    allowedRoles: ["SUPERADMIN"],
   },
   // {
   //   id: uniqueId(),
