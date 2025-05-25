@@ -113,6 +113,37 @@ export async function POST(req: NextRequest) {
         },
       },
     });
+    const barangArray = Array.isArray(barang) ? barang : [];
+
+    for (const [index, b] of barangArray.entries()) {
+      await prisma.barang.create({
+        data: {
+          tgl: new Date(),
+          stt: result.sttb,
+          tujuan: result.wilayah,
+          penerima_dan_hp: `${result.nama_penerima} / ${result.nomor_hp_penerima}`,
+          pengirim_dan_hp: `${result.nama_pengirim} / ${result.nomor_hp_pengirim}`,
+          jenis_kiriman: result.jenis,
+          catatan: result.catatan || "",
+          koli: index + 1, // ⬅️ nomor urut
+          panjang: parseFloat(b.panjang),
+          lebar: parseFloat(b.lebar),
+          tinggi: parseFloat(b.tinggi),
+          m3: (parseFloat(b.panjang) * parseFloat(b.lebar) * parseFloat(b.tinggi)) / 1000000,
+          vw: (parseFloat(b.panjang) * parseFloat(b.lebar) * parseFloat(b.tinggi)) / 4000,
+          kg: result.berat ?? 0,
+          tagihan: result.biaya,
+          alamat: result.alamat_pengiriman,
+          pengiriman: {
+            connect: {
+              id: result.id
+            }
+          }
+        }
+      });
+    }
+
+
 
     return NextResponse.json({ success: true, data: result }, { status: 201 });
   } catch (error) {

@@ -3,14 +3,12 @@ import { prisma } from '@/lib/prisma';
 
 export async function GET(req: NextRequest) {
   try {
-    const data = await prisma.pengiriman.findMany({
+    const data = await prisma.barang.findMany({
       orderBy: {
-        createdAt: 'desc',
+        tgl: 'desc',
       },
       include: {
-        user: true,                // Relasi user (pengirim)
-        penerimaanBarang: true,   // Relasi penerimaan
-        inventory: true,          // Relasi ke inventory
+        pengiriman: true, // hanya include relasi yang ada, seperti pengiriman
       },
     });
 

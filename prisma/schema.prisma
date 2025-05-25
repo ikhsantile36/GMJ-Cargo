@@ -76,11 +76,34 @@ model Pengiriman {
 
   sttb                String       // <--- tambahkan ini (dari kamu)
   penerimaanBarang    PenerimaanBarang? // <--- pertahankan ini (dari branch lain)
-
+  
+  barangList Barang[]  // relasi ke model Barang
   user   User? @relation("UserToPengiriman", fields: [userId], references: [id])
   userId Int?
-
   inventory Inventory[]
+}
+
+model Barang {
+  id              Int         @id @default(autoincrement())
+  tgl             DateTime
+  stt             String
+  tujuan          String
+  penerima_dan_hp String
+  pengirim_dan_hp String
+  jenis_kiriman   String
+  catatan         String?
+  koli            Int
+  panjang         Float
+  lebar           Float
+  tinggi          Float
+  m3              Float
+  vw              Float
+  kg              Float?
+  tagihan         Float
+  alamat          String
+
+  pengirimanId    Int
+  pengiriman      Pengiriman  @relation(fields: [pengirimanId], references: [id])
 }
 
 

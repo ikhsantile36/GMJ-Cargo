@@ -31,23 +31,25 @@ type Barang = {
 };
 
 type PengirimanItem = {
-  id: string | number;
-  createdAt: string; // Assumed to be an ISO Date string or compatible timestamp
-  sttb: string;
-  wilayah: string;
-  nama_penerima: string;
-  nama_pengirim: string;
-  jenis: string;
+  id: number;
+  tgl: string;
+  stt: string;
+  tujuan: string;
+  penerima_dan_hp: string;
+  pengirim_dan_hp: string;
+  jenis_kiriman: string;
   catatan?: string;
-  jumlah_barang: number;
-  barang?: Barang[];
-  volume_rb: number;
-  berat?: number;
-  biaya: number;
-  alamat_pengiriman?: string;
-  nomor_hp_pengirim?: string;
-  nomor_hp_penerima?: string;
+  koli: number;
+  panjang: number;
+  lebar: number;
+  tinggi: number;
+  m3: number;
+  vw: number;
+  kg?: number;
+  tagihan: number;
+  alamat: string;
 };
+
 
 // Styling for TableCell in Header
 const StyledTableHeadCell = styled(TableCell)(({ theme }) => ({
@@ -111,7 +113,7 @@ export default function PengirimanTable() {
     if (dateFilter !== 'all') {
       processedData = processedData.filter((item: PengirimanItem) => {
         try {
-          const itemDate = new Date(item.createdAt);
+          const itemDate = new Date(item.tgl);
           if (isNaN(itemDate.getTime())) return false;
 
           if (dateFilter === 'today') return isToday(itemDate);
@@ -119,7 +121,7 @@ export default function PengirimanTable() {
           if (dateFilter === 'thisYear') return isThisYear(itemDate);
           return true; // Should not be reached if dateFilter is one of the above
         } catch (e) {
-          console.warn(`Invalid date format for item ID ${item.id}: ${item.createdAt}`);
+          console.warn(`Invalid date format for item ID ${item.id}: ${item.tgl}`);
           return false;
         }
       });
@@ -130,8 +132,8 @@ export default function PengirimanTable() {
       const q = search.toLowerCase();
       processedData = processedData.filter(
         (item: PengirimanItem) =>
-          item.nama_pengirim.toLowerCase().includes(q) ||
-          item.sttb.toLowerCase().includes(q)
+          item.pengirim_dan_hp.toLowerCase().includes(q) ||
+          item.stt.toLowerCase().includes(q)
       );
     }
 
@@ -218,44 +220,35 @@ export default function PengirimanTable() {
               </TableRow>
             ) : (
               displayData.map((item) => {
-                const barang = item.barang?.[0] || { panjang: 0, lebar: 0, tinggi: 0 };
-                const p = Number(barang.panjang);
-                const l = Number(barang.lebar);
-                const t = Number(barang.tinggi);
-                const m3 = (p * l * t) / 1000000; // Assuming p, l, t are in cm for m³ calculation
                 let formattedDate = 'Tanggal Invalid';
                 try {
-                  formattedDate = format(new Date(item.createdAt), 'dd/MM/yyyy');
+                  formattedDate = format(new Date(item.tgl), 'dd/MM/yyyy');
                 } catch (e) {
-                   console.warn(`Invalid date format for item ID ${item.id}: ${item.createdAt}`);
-
+                  console.warn(`Invalid date format for item ID ${item.id}: ${item.tgl}`);
                 }
 
                 return (
                   <StyledTableRow key={item.id}>
-                    <TableCell sx={{whiteSpace: 'nowrap'}}>{formattedDate}</TableCell>
-                    <TableCell>{item.sttb}</TableCell>
-                    <TableCell>{item.wilayah}</TableCell>
-                    <TableCell>{item.nama_penerima}</TableCell>
-                    <TableCell>{item.nama_pengirim}</TableCell>
-                    <TableCell>{item.jenis}</TableCell>
+                    <TableCell sx={{ whiteSpace: 'nowrap' }}>{formattedDate}</TableCell>
+                    <TableCell>{item.stt}</TableCell>
+                    <TableCell>{item.tujuan}</TableCell>
+                    <TableCell>{item.penerima_dan_hp}</TableCell>
+                    <TableCell>{item.pengirim_dan_hp}</TableCell>
+                    <TableCell>{item.jenis_kiriman}</TableCell>
                     <TableCell>{item.catatan || '-'}</TableCell>
-                    <TableCell align="right">{item.jumlah_barang}</TableCell>
-                    <TableCell align="right">{p}</TableCell>
-                    <TableCell align="right">{l}</TableCell>
-                    <TableCell align="right">{t}</TableCell>
-                    <TableCell align="right">{m3.toFixed(3)}</TableCell>
-                    <TableCell align="right">{(m3 * item.volume_rb).toFixed(3)}</TableCell>
-                    <TableCell align="right">{item.berat ?? '-'}</TableCell>
-                    <TableCell align="right">{item.biaya.toLocaleString('id-ID')}</TableCell>
-                    <TableCell sx={{minWidth: 250, '& > div': { marginBottom: '4px' } }}> {/* Minor style tweak for spacing */}
-                      {item.alamat_pengiriman && <div>Alamat: {item.alamat_pengiriman}</div>}
-                      {item.nomor_hp_pengirim && <div>Pengirim HP: {item.nomor_hp_pengirim}</div>}
-                      {item.nomor_hp_penerima && <div>Penerima HP: {item.nomor_hp_penerima}</div>}
-                    </TableCell>
+                    <TableCell align="right">{item.koli}</TableCell>
+                    <TableCell align="right">{item.panjang}</TableCell>
+                    <TableCell align="right">{item.lebar}</TableCell>
+                    <TableCell align="right">{item.tinggi}</TableCell>
+                    <TableCell align="right">{item.m3.toFixed(3)}</TableCell>
+                    <TableCell align="right">{item.vw.toFixed(2)}</TableCell>
+                    <TableCell align="right">{item.kg ?? '-'}</TableCell>
+                    <TableCell align="right">{item.tagihan}</TableCell>
+                    <TableCell>{item.alamat}</TableCell>
                   </StyledTableRow>
                 );
               })
+
             )}
           </TableBody>
         </Table>
