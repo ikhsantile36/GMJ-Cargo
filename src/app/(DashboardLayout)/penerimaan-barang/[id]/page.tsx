@@ -11,10 +11,13 @@ import {
 } from "@mui/material";
 import { useState } from "react";
 import { useParams } from "next/navigation";
+import { useRouter } from "next/navigation";
 import DashboardCard from "@/app/(DashboardLayout)/components/shared/DashboardCard";
 
 const PenerimaanBarang = () => {
   const params = useParams();
+  const router = useRouter();
+
   const id = params.id;
 
   const [fotoBarang, setFotoBarang] = useState<File | null>(null);
@@ -66,6 +69,7 @@ const PenerimaanBarang = () => {
 
       alert("Penerimaan barang berhasil disimpan!");
       resetForm();
+      router.push(`/inventory-barang/`);
     } catch (error: any) {
       alert(`Terjadi kesalahan: ${error.message}`);
     } finally {
@@ -78,7 +82,11 @@ const PenerimaanBarang = () => {
       <Box component="form" onSubmit={handleSubmit} noValidate>
         <Stack spacing={4}>
           <FormControl>
-            <InputLabel shrink htmlFor="foto-barang" sx={{ fontWeight: "bold" }}>
+            <InputLabel
+              shrink
+              htmlFor="foto-barang"
+              sx={{ fontWeight: "bold" }}
+            >
               Foto Barang
             </InputLabel>
             <input
@@ -96,7 +104,11 @@ const PenerimaanBarang = () => {
           </FormControl>
 
           <FormControl>
-            <InputLabel shrink htmlFor="foto-pembayaran" sx={{ fontWeight: "bold" }}>
+            <InputLabel
+              shrink
+              htmlFor="foto-pembayaran"
+              sx={{ fontWeight: "bold" }}
+            >
               Foto Bukti Pembayaran
             </InputLabel>
             <input
@@ -114,7 +126,11 @@ const PenerimaanBarang = () => {
           </FormControl>
 
           <FormControl>
-            <InputLabel shrink htmlFor="foto-invoice" sx={{ fontWeight: "bold" }}>
+            <InputLabel
+              shrink
+              htmlFor="foto-invoice"
+              sx={{ fontWeight: "bold" }}
+            >
               Foto Invoice
             </InputLabel>
             <input

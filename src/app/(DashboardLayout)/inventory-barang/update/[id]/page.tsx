@@ -46,7 +46,7 @@ export default function UpdateInventoriClientPage() {
         setStatusOptions(
           statusData.filter(
             (status: string) =>
-              status === "sedang_dikirim" || status === "telah_selesai"
+              status === "sedang_dikirim" || status === "telah_diterima"
           )
         );
 

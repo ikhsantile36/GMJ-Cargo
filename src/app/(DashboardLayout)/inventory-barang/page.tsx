@@ -31,6 +31,7 @@ import { useRouter } from "next/navigation";
 import { Inventory } from "@/app/types/inventory";
 import jwt from "jsonwebtoken";
 import { User } from "@prisma/client";
+import { useSearchParams } from "next/navigation";
 
 type InventoryStatus =
   | "sedang_dikirim"
@@ -88,6 +89,8 @@ export default function InventoryPage() {
   const [openDialog, setOpenDialog] = useState(false);
   const [inventoryHistory, setInventoryHistory] = useState<Inventory[]>([]);
   const [userRole, setUserRole] = useState<string | null>(null);
+  const searchParams = useSearchParams();
+  const urlFilter = searchParams.get("filter") as InventoryStatus | null;
 
   type Props = {
     data: User[];
@@ -116,7 +119,7 @@ export default function InventoryPage() {
       try {
         const decoded = jwt.decode(token) as User | null;
         if (decoded && decoded.role) {
-          setUserRole(decoded.role.toUpperCase()); // UPPERCASE biar seragam
+          setUserRole(decoded.role.toUpperCase()); 
         }
       } catch (err) {
         console.error("Gagal decode token:", err);
@@ -124,7 +127,6 @@ export default function InventoryPage() {
     }
   }, []);
 
-  // const filteredData = data.filter((item) => item.status_barang === filter);
   const filteredData =
     userRole === "USER"
       ? data
@@ -148,6 +150,10 @@ export default function InventoryPage() {
     setSelectedItem(null);
     setOpenDialog(false);
   };
+
+  useEffect(() => {
+    if (urlFilter) setFilter(urlFilter);
+  }, [urlFilter]);
 
   return (
     <Box p={4}>
@@ -214,10 +220,10 @@ export default function InventoryPage() {
                       <TableCell
                         align="center"
                         sx={{
-                          maxWidth: 200, // Batasi lebar sel
-                          whiteSpace: "nowrap", // Cegah teks pindah baris
-                          overflow: "hidden", // Sembunyikan kelebihan teks
-                          textOverflow: "ellipsis", // Tambahkan titik-tiga
+                          maxWidth: 200, 
+                          whiteSpace: "nowrap", 
+                          overflow: "hidden", 
+                          textOverflow: "ellipsis", 
                         }}
                       >
                         {item.alamat_pengiriman}
@@ -261,6 +267,14 @@ export default function InventoryPage() {
                             onClick={() =>
                               router.push(`/inventory-barang/update/${item.id}`)
                             }
+                          >
+                            Update
+                          </Button>
+                        ) : item.status_barang === "butuh_validasi" ? (
+                          <Button
+                            variant="outlined"
+                            color="success"
+                            onClick={() => router.push(`/validasi/${item.id}`)}
                           >
                             Update
                           </Button>

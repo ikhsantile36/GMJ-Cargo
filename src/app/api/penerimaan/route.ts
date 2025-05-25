@@ -30,9 +30,14 @@ export async function POST(request: Request) {
   try {
     const formData = await request.formData();
 
-    const pengirimanId = parseInt(formData.get("pengirimanId")?.toString() || "");
+    const pengirimanId = parseInt(
+      formData.get("pengirimanId")?.toString() || ""
+    );
     if (!pengirimanId) {
-      return NextResponse.json({ message: "pengirimanId wajib" }, { status: 400 });
+      return NextResponse.json(
+        { message: "pengirimanId wajib" },
+        { status: 400 }
+      );
     }
 
     const fotoBarang = formData.get("foto_barang") as Blob | null;
@@ -40,7 +45,10 @@ export async function POST(request: Request) {
     const fotoInvoice = formData.get("foto_invoice") as Blob | null;
 
     if (!fotoBarang || !fotoPembayaran || !fotoInvoice) {
-      return NextResponse.json({ message: "File wajib diupload" }, { status: 400 });
+      return NextResponse.json(
+        { message: "File wajib diupload" },
+        { status: 400 }
+      );
     }
 
     // Simpan file secara manual
@@ -54,9 +62,18 @@ export async function POST(request: Request) {
       return "/uploads-penerimaan-barang/" + filename;
     };
 
-    const fotoBarangPath = await saveFile(fotoBarang, `fotoBarang-${Date.now()}.jpg`);
-    const fotoPembayaranPath = await saveFile(fotoPembayaran, `fotoPembayaran-${Date.now()}.jpg`);
-    const fotoInvoicePath = await saveFile(fotoInvoice, `fotoInvoice-${Date.now()}.jpg`);
+    const fotoBarangPath = await saveFile(
+      fotoBarang,
+      `fotoBarang-${Date.now()}.jpg`
+    );
+    const fotoPembayaranPath = await saveFile(
+      fotoPembayaran,
+      `fotoPembayaran-${Date.now()}.jpg`
+    );
+    const fotoInvoicePath = await saveFile(
+      fotoInvoice,
+      `fotoInvoice-${Date.now()}.jpg`
+    );
 
     const keterangan = formData.get("keterangan")?.toString() || "";
 
@@ -70,6 +87,11 @@ export async function POST(request: Request) {
       },
     });
 
+    await prisma.pengiriman.update({
+      where: { id: pengirimanId },
+      data: { status_barang: "butuh_validasi" },
+    });
+
     return NextResponse.json({ message: "Berhasil disimpan", data: result });
   } catch (err: any) {
     console.error("Upload error:", err);
@@ -77,3 +99,25 @@ export async function POST(request: Request) {
   }
 }
 
+export async function GET(_: Request, { params }: { params: { id: string } }) {
+  const id = parseInt(params.id);
+
+  if (isNaN(id)) {
+    return NextResponse.json({ message: "ID tidak valid" }, { status: 400 });
+  }
+
+  try {
+    const data = await prisma.penerimaanBarang.findFirst({
+      where: { pengirimanId: id },
+    });
+
+    if (!data) {
+      return NextResponse.json({ message: "Data tidak ditemukan" }, { status: 404 });
+    }
+
+    return NextResponse.json(data);
+  } catch (error) {
+    console.error("GET /api/penerimaan/[id] error:", error);
+    return NextResponse.json({ message: "Server error" }, { status: 500 });
+  }
+}
