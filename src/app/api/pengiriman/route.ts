@@ -1,7 +1,30 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import bcrypt from "bcryptjs"; // untuk password default
+import { format } from 'date-fns';
 
+// Fungsi generate STTB otomatis berdasarkan bulan + urutan
+export const generateSTTB = async (): Promise<string> => {
+  const now = new Date();
+  const bulan = format(now, 'MM'); // "05"
+  const tahun = format(now, 'yyyy'); // "2025"
+
+  const count = await prisma.pengiriman.count({
+    where: {
+      createdAt: {
+        gte: new Date(`${tahun}-${bulan}-01T00:00:00Z`),
+        lt: new Date(`${tahun}-${bulan}-31T23:59:59Z`),
+      },
+    },
+  });
+
+  const urutan = count + 1;
+  const sttb = `${bulan}${String(urutan).padStart(3, '0')}`; // Misal: 05001
+
+  return sttb;
+};
+
+// Handler API untuk membuat pengiriman
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
@@ -12,12 +35,16 @@ export async function POST(req: NextRequest) {
       nama_pengirim,
       nama_penerima,
       nomor_hp_pengirim,
+      nomor_hp_penerima,
       alamat_pengiriman,
       wilayah,
       biaya,
       jumlah_barang,
+      isi_barang,
+      catatan,
       volume_rb,
       total_volume,
+      actual,
       total_biaya_gmj,
       total_biaya_vendor,
       kategori_barang,
@@ -52,7 +79,10 @@ export async function POST(req: NextRequest) {
       });
     }
 
-    // 3. Buat data pengiriman dengan relasi ke user tersebut
+    // 3. Generate kode STTB otomatis
+    const sttb = await generateSTTB();
+
+    // 4. Buat data pengiriman
     const result = await prisma.pengiriman.create({
       data: {
         nomor_resi,
@@ -60,12 +90,17 @@ export async function POST(req: NextRequest) {
         nama_pengirim,
         nama_penerima,
         nomor_hp_pengirim,
+        nomor_hp_penerima,
         alamat_pengiriman,
         wilayah,
         biaya,
         jumlah_barang,
+        isi_barang,
+        catatan,
+        sttb,
         volume_rb,
         total_volume,
+        actual,
         total_biaya_gmj,
         total_biaya_vendor,
         kategori_barang,
@@ -88,6 +123,7 @@ export async function POST(req: NextRequest) {
     );
   }
 }
+
 
 export async function GET() {
   try {

@@ -23,6 +23,7 @@
     "apexcharts": "3.41.1",
     "bcrypt": "^5.1.1",
     "bcryptjs": "^3.0.2",
+    "date-fns": "^4.1.0",
     "eslint": "8.46.0",
     "eslint-config-next": "13.4.12",
     "formidable": "^3.5.4",

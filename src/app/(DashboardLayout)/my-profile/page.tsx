@@ -117,6 +117,7 @@ const MyProfile = () => {
                   <MenuItem value="USER">User</MenuItem>
                   <MenuItem value="ADMIN">Admin</MenuItem>
                   <MenuItem value="SUPERADMIN">Superadmin</MenuItem>
+                  <MenuItem value="OPERATOR">Operator</MenuItem>
                 </Select>
               </FormControl>
               <Button variant="contained" onClick={handleAddUser}>

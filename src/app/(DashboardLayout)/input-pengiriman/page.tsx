@@ -30,12 +30,16 @@ const SamplePage = () => {
     nama_pengirim: "",
     nama_penerima: "",
     nomor_hp_pengirim: "",
+    nomor_hp_penerima: "",
+    isi_barang: "",
     alamat_pengiriman: "",
+    catatan: "",
     wilayah: "",
     biaya: 0,
     jumlah_barang: 0,
     volume_rb: 0,
     total_volume: 0,
+    actual: 0,
     total_biaya_gmj: 0,
     total_biaya_vendor: 0,
     kategori_barang: "-",
@@ -69,6 +73,7 @@ const SamplePage = () => {
     let totalVolume = 0;
     let biaya = 0;
     let biayaPerBarangSatuan = 0;
+    let beratActual = 0;
 
     interface RangeChecker {
       (value: number, min: number, max: number): boolean;
@@ -134,6 +139,7 @@ const SamplePage = () => {
 
   const generateNomorResi = () => {
   return `RESI-${Date.now()}`;
+
 };
   const { volume, biaya, biayaPerBarangSatuan } = calculateVolume();
 
@@ -183,6 +189,19 @@ const SamplePage = () => {
     return (p * l * t) / 1000000;
   };
 
+    const getActualPerItem = (barang: {
+    panjang: string;
+    lebar: string;
+    tinggi: string;
+  }) => {
+    const p = Number(barang.panjang);
+    const l = Number(barang.lebar);
+    const t = Number(barang.tinggi);
+    if (isNaN(p) || isNaN(l) || isNaN(t)) return 0;
+
+    return (p * l * t) / 4000;
+  };
+
   const getBiayaGMJ = (barang: {
     panjang: string;
     lebar: string;
@@ -209,14 +228,17 @@ const SamplePage = () => {
   let totalVolume = 0;
   let totalBiayaVendor = 0;
   let totalBiayaGMJ = 0;
-
+  let beratActual = 0;
+  
   const isVendor = formData.jenis === "vendor";
 
   formData.barang.forEach((barang) => {
     const volumePerItem = getVolumePerItem(barang);
     const biayaPerItemVendor = isVendor ? getBiayaPerBarang(barang) : 0;
     const biayaPerItemGMJ = getBiayaGMJ(barang);
+    const ActualPerItem = getActualPerItem(barang);
 
+    beratActual += ActualPerItem;
     totalVolume += volumePerItem;
     totalBiayaVendor += biayaPerItemVendor;
     totalBiayaGMJ += biayaPerItemGMJ;
@@ -229,11 +251,12 @@ const SamplePage = () => {
     totalBiayaGMJ: Math.round(totalBiayaGMJ * 100) / 100,
     totalSemuaBiaya: Math.round(totalSemuaBiaya * 100) / 100,
     totalVolume: Math.round(totalVolume * 1000) / 1000,
+    beratActual: Math.round(beratActual * 1000) / 1000,
   };
 };
 
 
-  const { totalBiayaVendor, totalBiayaGMJ, totalSemuaBiaya, totalVolume } =
+  const { totalBiayaVendor, totalBiayaGMJ, totalSemuaBiaya, totalVolume, beratActual } =
     getTotalBiayaDanVolume();
 
   const calculateBerat = () => {
@@ -295,7 +318,7 @@ const SamplePage = () => {
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
-    const { totalSemuaBiaya, totalBiayaVendor , totalVolume} = getTotalBiayaDanVolume();
+    const { totalSemuaBiaya, totalBiayaVendor , totalVolume, beratActual} = getTotalBiayaDanVolume();
     e.preventDefault();
     const resiBaru = generateNomorResi();
 
@@ -344,6 +367,7 @@ const SamplePage = () => {
         // berat: berat.toFixed(2),
         berat: parseFloat(berat.toFixed(2)),
         total_volume: totalVolume,
+        actual: beratActual,
         total_biaya_gmj: result.volume,
         total_biaya_vendor: totalBiayaVendor,
         biaya: totalSemuaBiaya,
@@ -411,6 +435,15 @@ const SamplePage = () => {
             <Grid item xs={12} md={6}>
               <TextField
                 fullWidth
+                label="Nomor HP"
+                name="nomor_hp_pengirim"
+                value={formData.nomor_hp_pengirim}
+                onChange={handleChange}
+              />
+            </Grid>
+            <Grid item xs={12} md={6}>
+              <TextField
+                fullWidth
                 label="Nama Penerima"
                 name="nama_penerima"
                 value={formData.nama_penerima}
@@ -420,9 +453,18 @@ const SamplePage = () => {
             <Grid item xs={12} md={6}>
               <TextField
                 fullWidth
-                label="Nomor HP"
-                name="nomor_hp_pengirim"
-                value={formData.nomor_hp_pengirim}
+                label="Nomor HP Penerima"
+                name="nomor_hp_penerima"
+                value={formData.nomor_hp_penerima}
+                onChange={handleChange}
+              />
+            </Grid>
+            <Grid item xs={12}>
+              <TextField
+                fullWidth
+                label="Isi Barang"
+                name="isi_barang"
+                value={formData.isi_barang}
                 onChange={handleChange}
               />
             </Grid>
@@ -434,6 +476,15 @@ const SamplePage = () => {
                 label="Alamat Pengiriman"
                 name="alamat_pengiriman"
                 value={formData.alamat_pengiriman}
+                onChange={handleChange}
+              />
+            </Grid>
+            <Grid item xs={12}>
+              <TextField
+                fullWidth
+                label="Catatan (opsional)"
+                name="catatan"
+                value={formData.catatan}
                 onChange={handleChange}
               />
             </Grid>

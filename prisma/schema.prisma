@@ -57,6 +57,7 @@ model Pengiriman {
   wilayah             String
   volume_rb           Float
   total_volume        Float
+  actual              Float
   total_biaya_gmj     Float
   total_biaya_vendor  Float
   berat               Float?
@@ -68,14 +69,21 @@ model Pengiriman {
   status_barang       StatusBarang? @default(sedang_dikirim)
   createdAt           DateTime      @default(now())
   nomor_hp_pengirim   String
-  nama_penerima      String?
-  penerimaanBarang  PenerimaanBarang?
+  nomor_hp_penerima   String
+  isi_barang          String
+  catatan             String?
+  nama_penerima       String?
+
+  sttb                String       // <--- tambahkan ini (dari kamu)
+  penerimaanBarang    PenerimaanBarang? // <--- pertahankan ini (dari branch lain)
 
   user   User? @relation("UserToPengiriman", fields: [userId], references: [id])
   userId Int?
 
   inventory Inventory[]
 }
+
+
 
 enum StatusBarang {
   sedang_dikirim
