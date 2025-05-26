@@ -91,6 +91,7 @@ export default function InventoryPage() {
   const [userRole, setUserRole] = useState<string | null>(null);
   const searchParams = useSearchParams();
   const urlFilter = searchParams.get("filter") as InventoryStatus | null;
+  const [userPhone, setUserPhone] = useState<string | null>(null);
 
   type Props = {
     data: User[];
@@ -114,6 +115,22 @@ export default function InventoryPage() {
   }, []);
 
   useEffect(() => {
+  const token = localStorage.getItem("token");
+  if (token) {
+    try {
+      const decoded = jwt.decode(token) as User | null;
+      if (decoded) {
+        setUserRole(decoded.role.toUpperCase());
+        setUserPhone(decoded.nomor_hp); // <-- tambahkan ini
+      }
+    } catch (err) {
+      console.error("Gagal decode token:", err);
+    }
+  }
+}, []);
+
+
+  useEffect(() => {
     const token = localStorage.getItem("token");
     if (token) {
       try {
@@ -127,10 +144,10 @@ export default function InventoryPage() {
     }
   }, []);
 
-  const filteredData =
-    userRole === "USER"
-      ? data
-      : data.filter((item) => item.status_barang === filter);
+      const filteredData =
+        userRole === "USER"
+          ? data.filter((item) => item.nomor_hp_pengirim === userPhone)
+          : data.filter((item) => item.status_barang === filter);
 
   const handleMarkAsSelesai = async (id: string) => {
     try {
@@ -182,7 +199,7 @@ export default function InventoryPage() {
   return (
     <Box p={4}>
       <Typography variant="h5" gutterBottom>
-        Manajemen Inventori Barang
+        Manajemen Status Barang
       </Typography>
 
       {userRole !== "USER" && (
@@ -269,16 +286,15 @@ export default function InventoryPage() {
                           View
                         </Button>
                       </TableCell>
-                      <TableCell align="center">
-                        {item.status_barang === "telah_diterima" &&
-                        userRole === "SUPERADMIN" ? (
-                          <Button
-                            variant="outlined"
-                            color="info"
-                            onClick={() => handleMarkAsSelesai(String(item.id))}
-                          >
-                            Tandai Selesai
-                          </Button>
+                        <TableCell align="center">
+                          {item.status_barang === "telah_diterima" && (userRole === "ADMIN" || userRole === "USER") ? (
+                            <Button
+                              variant="outlined"
+                              color="primary"
+                              onClick={() => router.push(`/penerimaan-barang/${item.id}`)}
+                            >
+                              Update
+                            </Button>
                         ) : userRole === "USER" ? (
                           item.status_barang === "telah_diterima" ? (
                             <Button
@@ -303,7 +319,7 @@ export default function InventoryPage() {
                           >
                             Update
                           </Button>
-                        ) : item.status_barang === "butuh_validasi" ? (
+                        ) : userRole === "ADMIN" && item.status_barang === "butuh_validasi" ? (
                           <Button
                             variant="outlined"
                             color="success"

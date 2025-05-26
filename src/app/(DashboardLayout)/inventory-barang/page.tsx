@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import {
   TextField,
   Select,
@@ -18,11 +18,18 @@ import {
   Typography,
   SelectChangeEvent,
   Button,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
+  DialogContentText,
 } from '@mui/material';
 import { styled } from '@mui/material/styles';
 import { format, isToday, isThisMonth, isThisYear } from 'date-fns';
 import * as XLSX from 'xlsx';
 import { saveAs } from 'file-saver';
+import jwt from "jsonwebtoken";
+
 
 const exportToExcel = (data: PengirimanItem[]) => {
   const groupedData: any[] = [];
@@ -128,8 +135,11 @@ export default function PengirimanTable() {
   const [pageSize, setPageSize] = useState(10);
   const [totalFiltered, setTotalFiltered] = useState(0);
   const [dateFilter, setDateFilter] = useState('all');
-  
+  const [userRole, setUserRole] = useState<string | null>(null);
   const totalPages = Math.ceil(totalFiltered / pageSize);
+  const [editingItem, setEditingItem] = useState<PengirimanItem | null>(null);
+  const [editModalOpen, setEditModalOpen] = useState(false);
+
 
   useEffect(() => {
     const fetchInitialData = async () => {
@@ -148,6 +158,19 @@ export default function PengirimanTable() {
     };
     fetchInitialData();
   }, []);
+  useEffect(() => {
+  const token = localStorage.getItem("token");
+  if (token) {
+    try {
+      const decoded = jwt.decode(token) as any;
+      if (decoded?.role) {
+        setUserRole(decoded.role.toUpperCase());
+      }
+    } catch (err) {
+      console.error("Gagal decode token:", err);
+    }
+  }
+}, []);
 
   useEffect(() => {
     let filtered = [...allData];
@@ -177,6 +200,7 @@ export default function PengirimanTable() {
       const sttB = Number(b.stt);
       return sttA === sttB ? a.koli - b.koli : sttA - sttB;
     });
+    
 
     setTotalFiltered(filtered.length);
     setDisplayData(filtered.slice((page - 1) * pageSize, page * pageSize));
@@ -191,11 +215,43 @@ export default function PengirimanTable() {
     setDateFilter(e.target.value);
     setPage(1);
   };      
+  const handleEdit = (item: PengirimanItem) => {
+  setEditingItem(item);
+  setEditModalOpen(true);
+};
+
+const handleDelete = async (id: number) => {
+  const confirm = window.confirm("Yakin ingin menghapus data ini?");
+  if (!confirm) return;
+
+  try {
+    const res = await fetch("/api/barang", {
+      method: "DELETE",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ id }),
+    });
+
+    if (res.ok) {
+      setAllData((prev) => prev.filter((item) => item.id !== id));
+    } else {
+      console.error("Gagal menghapus data.");
+    }
+  } catch (error) {
+    console.error("Error saat menghapus data:", error);
+  }
+};
+
+
 
   const handleRowsPerPageChange = (e: SelectChangeEvent) => {
     setPageSize(Number(e.target.value));
     setPage(1);
   };
+
+  const totalTagihan = displayData.reduce((sum, item) => sum + item.tagihan, 0);
+
 
   return (
     <Box sx={{ p: 2 }}>
@@ -243,6 +299,8 @@ export default function PengirimanTable() {
               <StyledTableHeadCell align="right">KG</StyledTableHeadCell>
               <StyledTableHeadCell align="right">Tagihan</StyledTableHeadCell>
               <StyledTableHeadCell>Alamat</StyledTableHeadCell>
+              {userRole === 'OWNER' && <StyledTableHeadCell align='center'>Aksi</StyledTableHeadCell>}
+
             </TableRow>
           </TableHead>
           <TableBody>
@@ -272,6 +330,27 @@ export default function PengirimanTable() {
                   <TableCell align="right">{item.kg ?? '-'}</TableCell>
                   <TableCell align="right">{item.tagihan.toLocaleString('id-ID')}</TableCell>
                   <TableCell>{item.alamat}</TableCell>
+                    {userRole === 'OWNER' && (
+                      <TableCell align="center">
+                        <Button
+                          size="small"
+                          variant="outlined"
+                          onClick={() => handleEdit(item)}
+                        >
+                          Edit
+                        </Button>{" "}
+                        <Button
+                          size="small"
+                          variant="contained"
+                          color="error"
+                          onClick={() => handleDelete(item.id)}
+                        >
+                          Delete
+                        </Button>
+                      </TableCell>
+                    )}
+                  
+
                 </StyledTableRow>
               ))
             )}
@@ -294,6 +373,69 @@ export default function PengirimanTable() {
           <Button disabled={page === totalPages || totalPages === 0} onClick={() => setPage(page + 1)}>Berikutnya</Button>
         </Box>
           </Paper>
+          <Box sx={{ mt: 2 }}>
+  <Typography variant="h6">
+    Total Tagihan (halaman ini): Rp {totalTagihan.toLocaleString('id-ID')}
+  </Typography>
+</Box>
+              <Dialog open={editModalOpen} onClose={() => setEditModalOpen(false)} maxWidth="sm" fullWidth>
+  <DialogTitle>Edit Pengiriman</DialogTitle>
+  <DialogContent sx={{ display: 'flex', flexDirection: 'column', gap: 2, mt: 1 }}>
+    <TextField
+      label="Tujuan"
+      value={editingItem?.tujuan || ''}
+      onChange={(e) => setEditingItem((prev) => prev ? { ...prev, tujuan: e.target.value } : null)}
+    />
+    <TextField
+      label="Penerima"
+      value={editingItem?.penerima_dan_hp || ''}
+      onChange={(e) => setEditingItem((prev) => prev ? { ...prev, penerima_dan_hp: e.target.value } : null)}
+    />
+    <TextField
+      label="Tagihan"
+      type="number"
+      value={editingItem?.tagihan || 0}
+      onChange={(e) => setEditingItem((prev) => prev ? { ...prev, tagihan: Number(e.target.value) } : null)}
+    />
+    {/* Tambah field lain sesuai kebutuhan */}
+  </DialogContent>
+  <DialogActions>
+    <Button onClick={() => setEditModalOpen(false)}>Batal</Button>
+    <Button
+      variant="contained"
+      onClick={async () => {
+        if (!editingItem) return;
+        try {
+          const res = await fetch(`/api/barang/${editingItem.id}`, {
+            method: "PUT",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify(editingItem),
+          });
+
+          if (res.ok) {
+            const updated = await res.json();
+            setAllData((prev) =>
+              prev.map((item) =>
+                item.id === editingItem.id ? { ...item, ...editingItem } : item
+              )
+            );
+            setEditModalOpen(false);
+          } else {
+            console.error("Gagal update data");
+          }
+        } catch (error) {
+          console.error("Error saat update:", error);
+        }
+      }}
+    >
+      Simpan
+    </Button>
+  </DialogActions>
+</Dialog>
+
         </Box>
-      );
+      
+    );
     }

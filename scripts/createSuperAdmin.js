@@ -7,7 +7,7 @@ const prisma = new PrismaClient();
 const createSuperAdmin = async () => {
   try {
     // Hash password untuk superadmin
-    const hashedPassword = await bcryptjs.hash('superadmin123', 10);
+    const hashedPassword = await bcryptjs.hash('owner123', 10);
 
     // Cek apakah superadmin sudah ada
     const existing = await prisma.user.findFirst({
@@ -18,11 +18,11 @@ const createSuperAdmin = async () => {
       // Membuat user superadmin baru
       const admin = await prisma.user.create({
         data: {
-          username: 'superadmin',
+          username: 'OWNER',
           email: 'superadmin@example.com',
           password: hashedPassword,
           nomor_hp: '081234567890',
-          role: 'SUPERADMIN',
+          role: 'OWNER',
         },
       });
 

@@ -129,7 +129,7 @@ const ManajemenUser = () => {
       description="Admin dapat menambah, melihat, mengedit, dan menghapus user"
     >
       <Box>
-        {loggedInUserRole === "SUPERADMIN" ? (
+        {loggedInUserRole === "OWNER" ? (
           <DashboardCard title={editId ? "Edit User" : "Add New User"}>
             <Stack spacing={2}>
               <TextField
@@ -167,7 +167,7 @@ const ManajemenUser = () => {
                 >
                   <MenuItem value="USER">User</MenuItem>
                   <MenuItem value="ADMIN">Admin</MenuItem>
-                  <MenuItem value="SUPERADMIN">Superadmin</MenuItem>
+                  <MenuItem value="OWNER">Owner</MenuItem>
                   <MenuItem value="OPERATOR">Operator</MenuItem>
                 </Select>
               </FormControl>
@@ -196,7 +196,7 @@ const ManajemenUser = () => {
                 <MenuItem value="ALL">Semua</MenuItem>
                 <MenuItem value="USER">User</MenuItem>
                 <MenuItem value="ADMIN">Admin</MenuItem>
-                <MenuItem value="SUPERADMIN">Superadmin</MenuItem>
+                <MenuItem value="OWNER">Owner</MenuItem>
                 <MenuItem value="OPERATOR">Operator</MenuItem>
               </Select>
             </FormControl>

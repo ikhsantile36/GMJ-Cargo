@@ -75,8 +75,8 @@ export default function ValidasiPage() {
         throw new Error("Gagal mengubah status.");
       }
 
-      if (userRole === "SUPERADMIN") {
-        router.push("/inventory-barang?filter=" + status);
+      if (userRole === "ADMIN") {
+        router.push("/status-barang?filter=" + status);
       } else {
         router.push("/pengiriman?filter=" + status);
       }
@@ -124,7 +124,7 @@ export default function ValidasiPage() {
 
       <Stack direction="row" spacing={2} justifyContent="center" mt={4}>
         <Stack direction="row" spacing={2} justifyContent="center" mt={4}>
-          {userRole === "SUPERADMIN" && (
+          {userRole === "ADMIN" && (
             <Button
               variant="contained"
               color="success"

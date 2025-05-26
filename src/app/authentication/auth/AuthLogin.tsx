@@ -58,10 +58,17 @@ const AuthLogin = ({ title, subtitle, subtext }: loginType) => {
 
       // Redirect berdasarkan role
       switch (data.user.role) {
-        case "SUPERADMIN":
+        case "USER":
+        case "OPERATOR":
+          router.push("/status-barang");
+          break;
+        case "OWNER":
         case "ADMIN":
+          router.push("/");
+          break;
         default:
           router.push("/");
+          break;
       }
     } catch (error) {
       console.error("Network error:", error);

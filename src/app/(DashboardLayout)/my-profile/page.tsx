@@ -85,7 +85,7 @@ const MyProfile = () => {
     >
       {/* Wrapper supaya children selalu ReactElement */}
       <Box>
-        {loggedInUserRole === "SUPERADMIN" ? (
+        {loggedInUserRole === "OWNER" ? (
           <DashboardCard title="Add New User">
             <Stack spacing={2}>
               <TextField
@@ -116,7 +116,7 @@ const MyProfile = () => {
                 >
                   <MenuItem value="USER">User</MenuItem>
                   <MenuItem value="ADMIN">Admin</MenuItem>
-                  <MenuItem value="SUPERADMIN">Superadmin</MenuItem>
+                  <MenuItem value="OWNER">Owner</MenuItem>
                   <MenuItem value="OPERATOR">Operator</MenuItem>
                 </Select>
               </FormControl>

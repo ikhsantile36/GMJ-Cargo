@@ -28,7 +28,7 @@ const Menuitems = [
     title: "Dashboard",
     icon: IconLayoutDashboard,
     href: "/",
-    allowedRoles: ["SUPERADMIN"],
+    allowedRoles: ["OWNER", "ADMIN"],
   },
 
   {
@@ -36,21 +36,21 @@ const Menuitems = [
     title: "Input Pengiriman",
     icon: IconPackageImport,
     href: "/input-pengiriman",
-    allowedRoles: ["SUPERADMIN"],
+    allowedRoles: ["ADMIN", "OPERATOR"],
   },
   {
     id: uniqueId(),
     title: "Inventory Barang",
     icon: IconTruckDelivery,
     href: "/inventory-barang",
-    allowedRoles: ["SUPERADMIN"],
+    allowedRoles: ["OWNER", "ADMIN"],
   },
    {
     id: uniqueId(),
     title: "Status Barang",
     icon: IconChecklist,
     href: "/status-barang",
-    allowedRoles: ["SUPERADMIN" , "USER"],
+    allowedRoles: ["ADMIN" , "USER", "OPERATOR"],
   },
   // {
   //   id: uniqueId(),
@@ -64,21 +64,21 @@ const Menuitems = [
     title: "Manajemen Wilayah",
     icon: IconMap2,
     href: "/manajemen-wilayah",
-    allowedRoles: ["SUPERADMIN"],
+    allowedRoles: ["ADMIN"],
   },
   {
     id: uniqueId(),
     title: "Harga Vendor",
     icon: IconCash,
     href: "/harga-vendor",
-    allowedRoles: ["SUPERADMIN"],
+    allowedRoles: ["ADMIN"],
   },
   {
     id: uniqueId(),
     title: "Manajemen User",
     icon: IconMap2,
     href: "/manajemen-user",
-    allowedRoles: ["SUPERADMIN"],
+    allowedRoles: ["OWNER"],
   },
 ];
 
