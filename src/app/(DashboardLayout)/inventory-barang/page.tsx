@@ -290,7 +290,7 @@ const submitEdit = async () => {
       <Paper sx={{ p: 2, mb: 3 }}>
         <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 2 }}>
           <TextField
-            label="Cari Nama Pengirim / No. Resi (STTB)"
+            label="Cari Nama Pengirim dan No Hp / No. Resi (STTB)"
             value={search}
             onChange={handleSearchChange}
             fullWidth
