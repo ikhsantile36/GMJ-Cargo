@@ -270,7 +270,8 @@ export default function FormTarifVolumeVendor() {
                       <Button
                         size="small"
                         variant="contained"
-                        color="error"
+                        color="warning"
+                        sx={{ ml: 1 }}
                         onClick={() => handleDelete(item.id)}
                       >
                         Delete
