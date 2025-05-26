@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import {
   TextField,
   Select,
@@ -18,11 +18,17 @@ import {
   Typography,
   SelectChangeEvent,
   Button,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
+  DialogContentText,
 } from '@mui/material';
 import { styled } from '@mui/material/styles';
 import { format, isToday, isThisMonth, isThisYear } from 'date-fns';
 import * as XLSX from 'xlsx';
 import { saveAs } from 'file-saver';
+import React from 'react';
 
 const exportToExcel = (data: PengirimanItem[]) => {
   const groupedData: any[] = [];
@@ -128,6 +134,30 @@ export default function PengirimanTable() {
   const [pageSize, setPageSize] = useState(10);
   const [totalFiltered, setTotalFiltered] = useState(0);
   const [dateFilter, setDateFilter] = useState('all');
+  const [openEdit, setOpenEdit] = useState(false);
+  const [editItem, setEditItem] = useState<PengirimanItem | null>(null);
+   const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
+  const [itemToDelete, setItemToDelete] = useState<number | null>(null);
+
+  // Fungsi untuk membuka dialog konfirmasi
+  const openDeleteConfirm = (id: number) => {
+    setItemToDelete(id);
+    setDeleteConfirmOpen(true);
+  };
+
+  // Fungsi untuk menutup dialog
+  const closeDeleteConfirm = () => {
+    setDeleteConfirmOpen(false);
+    setItemToDelete(null);
+  };
+
+  // Fungsi untuk konfirmasi delete
+  const confirmDelete = () => {
+    if (itemToDelete !== null) {
+      handleDelete(itemToDelete);
+    }
+    closeDeleteConfirm();
+  };
   
   const totalPages = Math.ceil(totalFiltered / pageSize);
 
@@ -186,6 +216,26 @@ export default function PengirimanTable() {
     setSearch(e.target.value);
     setPage(1);
   };
+  const handleDelete = async (id: number) => {
+  try {
+    const res = await fetch('/api/barang', {
+      method: 'DELETE',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ id }),
+    });
+
+    if (res.ok) {
+      // Perbarui state setelah berhasil menghapus
+      setAllData(prevData => prevData.filter(item => item.id !== id));
+    } else {
+      console.error('Gagal menghapus data');
+    }
+  } catch (error) {
+    console.error('Terjadi kesalahan:', error);
+  }
+};
 
   const handleDateFilterChange = (e: SelectChangeEvent<string>) => {
     setDateFilter(e.target.value);
@@ -196,6 +246,42 @@ export default function PengirimanTable() {
     setPageSize(Number(e.target.value));
     setPage(1);
   };
+  const handleEditChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  if (!editItem) return;
+  const { name, value } = e.target;
+
+  setEditItem({ ...editItem, [name]: value });
+};
+
+const submitEdit = async () => {
+  try {
+    const res = await fetch('/api/barang', {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(editItem),
+    });
+
+    const result = await res.json();
+
+    if (res.ok) {
+      // Update state local
+      setAllData((prev) =>
+        prev.map((item) => (item.id === editItem!.id ? { ...editItem! } : item))
+      );
+      setOpenEdit(false);
+    } else {
+      console.error('Gagal update:', result.message);
+    }
+  } catch (err) {
+    console.error('Error saat update:', err);
+  }
+};
+
+  const handleEdit = (item: PengirimanItem) => {
+  setEditItem(item);
+  setOpenEdit(true);
+};
+
 
   return (
     <Box sx={{ p: 2 }}>
@@ -243,6 +329,7 @@ export default function PengirimanTable() {
               <StyledTableHeadCell align="right">KG</StyledTableHeadCell>
               <StyledTableHeadCell align="right">Tagihan</StyledTableHeadCell>
               <StyledTableHeadCell>Alamat</StyledTableHeadCell>
+              <StyledTableHeadCell align='center'>Aksi</StyledTableHeadCell>
             </TableRow>
           </TableHead>
           <TableBody>
@@ -272,6 +359,47 @@ export default function PengirimanTable() {
                   <TableCell align="right">{item.kg ?? '-'}</TableCell>
                   <TableCell align="right">{item.tagihan.toLocaleString('id-ID')}</TableCell>
                   <TableCell>{item.alamat}</TableCell>
+                  <TableCell align="center">
+                        {/* Tombol Edit */}
+                        <Button
+                        size="small"
+                        variant="outlined"
+                        onClick={() => handleEdit(item)}
+                      >
+                        Edit
+                      </Button>{" "}
+                      <Button
+                        size="small"
+                        variant="contained"
+                        color="error"
+                        onClick={() => openDeleteConfirm(item.id)}
+                      >
+                        Delete
+                      </Button>
+
+                        {/* Dialog Konfirmasi Delete */}
+                        <Dialog
+                          open={deleteConfirmOpen}
+                          onClose={closeDeleteConfirm}
+                        >
+                          <DialogTitle>Konfirmasi Hapus</DialogTitle>
+                          <DialogContent>
+                            <DialogContentText>
+                              Apakah Anda yakin ingin menghapus item ini? Data yang dihapus tidak dapat dikembalikan.
+                            </DialogContentText>
+                          </DialogContent>
+                          <DialogActions>
+                            <Button onClick={closeDeleteConfirm}>Batal</Button>
+                            <Button 
+                              onClick={confirmDelete}
+                              color="error"
+                              autoFocus
+                            >
+                              Ya, Hapus
+                            </Button>
+                          </DialogActions>
+                        </Dialog>
+                      </TableCell>
                 </StyledTableRow>
               ))
             )}
@@ -302,6 +430,50 @@ export default function PengirimanTable() {
           </Typography>
         </Box>
       </Paper>
+      <Dialog open={openEdit} onClose={() => setOpenEdit(false)} fullWidth maxWidth="sm">
+          <DialogTitle>Edit Pengiriman</DialogTitle>
+          <DialogContent>
+            <TextField
+              margin="dense"
+              name="stt"
+              label="STT"
+              value={editItem?.stt || ''}
+              onChange={handleEditChange}
+              fullWidth
+            />
+            <TextField
+              margin="dense"
+              name="tujuan"
+              label="Tujuan"
+              value={editItem?.tujuan || ''}
+              onChange={handleEditChange}
+              fullWidth
+            />
+            <TextField
+              margin="dense"
+              name="penerima_dan_hp"
+              label="Penerima"
+              value={editItem?.penerima_dan_hp || ''}
+              onChange={handleEditChange}
+              fullWidth
+            />
+            <TextField
+              margin="dense"
+              name="pengirim_dan_hp"
+              label="Pengirim"
+              value={editItem?.pengirim_dan_hp || ''}
+              onChange={handleEditChange}
+              fullWidth
+            />
+            {/* Tambahkan field lain sesuai kebutuhan */}
+          </DialogContent>
+          <DialogActions>
+            <Button onClick={() => setOpenEdit(false)}>Batal</Button>
+            <Button variant="contained" onClick={submitEdit}>Simpan</Button>
+          </DialogActions>
+        </Dialog>
+
     </Box>
+    
   );
 }
