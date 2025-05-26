@@ -1,117 +1,119 @@
-import React from 'react';
+'use client';
+
+import React, { useEffect, useState } from 'react';
 import { Select, MenuItem } from '@mui/material';
 import { useTheme } from '@mui/material/styles';
 import DashboardCard from '@/app/(DashboardLayout)/components/shared/DashboardCard';
-import dynamic from "next/dynamic";
-const Chart = dynamic(() => import("react-apexcharts"), { ssr: false });
+import dynamic from 'next/dynamic';
 
+const Chart = dynamic(() => import('react-apexcharts'), { ssr: false });
+
+interface Barang {
+  id: number;
+  tgl: string;
+  tujuan: string;
+  tagihan: number;
+}
+
+type Mode = 'bulan' | 'tahun';
 
 const SalesOverview = () => {
+  const [mode, setMode] = useState<Mode>('bulan');
+  const [data, setData] = useState<Barang[]>([]);
 
-    // select
-    const [month, setMonth] = React.useState('1');
+  const handleChange = (event: any) => {
+    setMode(event.target.value);
+  };
 
-    const handleChange = (event: any) => {
-        setMonth(event.target.value);
+  useEffect(() => {
+    const fetchData = async () => {
+      const res = await fetch('/api/barang');
+      const json = await res.json();
+      setData(Array.isArray(json) ? json : json.data || []);
     };
+    fetchData();
+  }, []);
 
-    // chart color
-    const theme = useTheme();
-    const primary = theme.palette.primary.main;
-    const secondary = theme.palette.secondary.main;
+  const theme = useTheme();
+  const primary = theme.palette.primary.main;
 
-    // chart
-    const optionscolumnchart: any = {
-        chart: {
-            type: 'bar',
-            fontFamily: "'Plus Jakarta Sans', sans-serif;",
-            foreColor: '#adb0bb',
-            toolbar: {
-                show: true,
-            },
-            height: 370,
-        },
-        colors: [primary, secondary],
-        plotOptions: {
-            bar: {
-                horizontal: false,
-                barHeight: '60%',
-                columnWidth: '42%',
-                borderRadius: [6],
-                borderRadiusApplication: 'end',
-                borderRadiusWhenStacked: 'all',
-            },
-        },
+  // 🔄 Agregasi berdasarkan bulan/tahun
+  const aggregated: { [key: string]: number } = {};
 
-        stroke: {
-            show: true,
-            width: 5,
-            lineCap: "butt",
-            colors: ["transparent"],
-          },
-        dataLabels: {
-            enabled: false,
-        },
-        legend: {
-            show: false,
-        },
-        grid: {
-            borderColor: 'rgba(0,0,0,0.1)',
-            strokeDashArray: 3,
-            xaxis: {
-                lines: {
-                    show: false,
-                },
-            },
-        },
-        yaxis: {
-            tickAmount: 4,
-        },
-        xaxis: {
-            categories: ['16/08', '17/08', '18/08', '19/08', '20/08', '21/08', '22/08', '23/08'],
-            axisBorder: {
-                show: false,
-            },
-        },
-        tooltip: {
-            theme: 'dark',
-            fillSeriesColor: false,
-        },
-    };
-    const seriescolumnchart: any = [
-        {
-            name: 'Eanings this month',
-            data: [355, 390, 300, 350, 390, 180, 355, 390],
-        },
-        {
-            name: 'Expense this month',
-            data: [280, 250, 325, 215, 250, 310, 280, 250],
-        },
-    ];
+  data.forEach((item) => {
+    const date = new Date(item.tgl);
+    const key =
+      mode === 'bulan'
+        ? `${date.getFullYear()}-${(date.getMonth() + 1).toString().padStart(2, '0')}` // ex: 2025-05
+        : `${date.getFullYear()}`; // ex: 2025
 
-    return (
+    aggregated[key] = (aggregated[key] || 0) + item.tagihan;
+  });
 
-        <DashboardCard title="Sales Overview" action={
-            <Select
-                labelId="month-dd"
-                id="month-dd"
-                value={month}
-                size="small"
-                onChange={handleChange}
-            >
-                <MenuItem value={1}>March 2023</MenuItem>
-                <MenuItem value={2}>April 2023</MenuItem>
-                <MenuItem value={3}>May 2023</MenuItem>
-            </Select>
-        }>
-            <Chart
-                options={optionscolumnchart}
-                series={seriescolumnchart}
-                type="bar"
-                height={370} width={"100%"}
-            />
-        </DashboardCard>
-    );
+  // Ubah object menjadi array untuk chart
+  const categories = Object.keys(aggregated).sort();
+  const seriesData = categories.map((key) => aggregated[key]);
+
+  const options = {
+    chart: {
+      type: 'bar' as const,
+      toolbar: { show: false },
+      foreColor: '#000', // warna hitam untuk semua teks chart
+    },
+    colors: [primary],
+    plotOptions: {
+      bar: {
+        horizontal: false,
+        columnWidth: '8%',
+        borderRadius: 4,
+      },
+    },
+    xaxis: {
+      categories,
+      labels: {
+        style: { colors: '#000' }, // warna label sumbu X
+        rotate: -45,
+        formatter: (val: string | number) => {
+          if (mode === 'bulan') {
+            const [year, month] = String(val).split('-');
+            return `${month}/${year}`;
+          }
+          return String(val);
+        },
+      },
+    },
+    yaxis: {
+      labels: {
+        style: { colors: '#000' }, // warna label sumbu Y
+      },
+    },
+    tooltip: {
+      y: {
+        formatter: (val: number) => `Rp ${val.toLocaleString('id-ID')}`,
+      },
+    },
+  };
+
+  const series = [
+    {
+      name: 'Total Pendapatan',
+      data: seriesData,
+    },
+  ];
+
+  return (
+    <DashboardCard
+      title="Sales Overview"
+      action={
+        <Select value={mode} size="small" onChange={handleChange}>
+          <MenuItem value="bulan">Per Bulan</MenuItem>
+          <MenuItem value="tahun">Per Tahun</MenuItem>
+        </Select>
+      }
+    >
+      <Chart options={options} series={series} type="bar" height={370} width="100%" />
+    </DashboardCard>
+  );
 };
 
 export default SalesOverview;

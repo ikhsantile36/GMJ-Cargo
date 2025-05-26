@@ -1,44 +1,71 @@
+'use client';
 
-import dynamic from "next/dynamic";
-const Chart = dynamic(() => import("react-apexcharts"), { ssr: false });
+import dynamic from 'next/dynamic';
+import { useEffect, useState } from 'react';
+const Chart = dynamic(() => import('react-apexcharts'), { ssr: false });
 import { useTheme } from '@mui/material/styles';
 import { Grid, Stack, Typography, Avatar } from '@mui/material';
 import { IconArrowUpLeft } from '@tabler/icons-react';
-
 import DashboardCard from '@/app/(DashboardLayout)/components/shared/DashboardCard';
 
+interface Barang {
+  tgl: string;
+  tagihan: number;
+}
+
 const YearlyBreakup = () => {
-  // chart color
   const theme = useTheme();
   const primary = theme.palette.primary.main;
   const primarylight = '#ecf2ff';
   const successlight = theme.palette.success.light;
 
-  // chart
-  const optionscolumnchart: any = {
+  const [series, setSeries] = useState<number[]>([]);
+  const [yearLabels, setYearLabels] = useState<string[]>([]);
+
+  useEffect(() => {
+    const fetchData = async () => {
+      const res = await fetch('/api/barang');
+      const json = await res.json();
+      const data: Barang[] = Array.isArray(json) ? json : json.data || [];
+
+      // Kelompokkan berdasarkan tahun
+      const yearlyTotals: { [year: string]: number } = {};
+
+      data.forEach((item) => {
+        const year = new Date(item.tgl).getFullYear().toString();
+        yearlyTotals[year] = (yearlyTotals[year] || 0) + item.tagihan;
+      });
+
+      setSeries(Object.values(yearlyTotals));
+      setYearLabels(Object.keys(yearlyTotals));
+    };
+
+    fetchData();
+  }, []);
+
+  const optionscolumnchart = {
     chart: {
-      type: 'donut',
+      type: "donut" as const,
       fontFamily: "'Plus Jakarta Sans', sans-serif;",
       foreColor: '#adb0bb',
-      toolbar: {
-        show: false,
-      },
+      toolbar: { show: false },
       height: 155,
     },
     colors: [primary, primarylight, '#F9F9FD'],
-    plotOptions: {
-      pie: {
-        startAngle: 0,
-        endAngle: 360,
-        donut: {
-          size: '75%',
-          background: 'transparent',
-        },
-      },
-    },
+    labels: yearLabels,
     tooltip: {
       theme: theme.palette.mode === 'dark' ? 'dark' : 'light',
       fillSeriesColor: false,
+      y: {
+        formatter: (val: number) => `Rp ${val.toLocaleString('id-ID')}`,
+      },
+    },
+    plotOptions: {
+      pie: {
+        donut: {
+          size: '75%',
+        },
+      },
     },
     stroke: {
       show: false,
@@ -49,64 +76,46 @@ const YearlyBreakup = () => {
     legend: {
       show: false,
     },
-    responsive: [
-      {
-        breakpoint: 991,
-        options: {
-          chart: {
-            width: 120,
-          },
-        },
-      },
-    ],
   };
-  const seriescolumnchart: any = [38, 40, 25];
 
   return (
-    <DashboardCard title="Yearly Breakup">
+    <DashboardCard title="Pendatapan Tahunan">
       <Grid container spacing={3}>
-        {/* column */}
-        <Grid item xs={7} sm={7}>
+        <Grid item xs={12} md={7}>
           <Typography variant="h3" fontWeight="700">
-            $36,358
+            Total: Rp {series.reduce((a, b) => a + b, 0).toLocaleString('id-ID')}
           </Typography>
           <Stack direction="row" spacing={1} mt={1} alignItems="center">
             <Avatar sx={{ bgcolor: successlight, width: 27, height: 27 }}>
               <IconArrowUpLeft width={20} color="#39B69A" />
             </Avatar>
             <Typography variant="subtitle2" fontWeight="600">
-              +9%
+              +{series.length > 1 ? 'Growth' : 'Data'}
             </Typography>
             <Typography variant="subtitle2" color="textSecondary">
-              last year
+              per tahun
             </Typography>
           </Stack>
           <Stack spacing={3} mt={5} direction="row">
-            <Stack direction="row" spacing={1} alignItems="center">
-              <Avatar
-                sx={{ width: 9, height: 9, bgcolor: primary, svg: { display: 'none' } }}
-              ></Avatar>
-              <Typography variant="subtitle2" color="textSecondary">
-                2022
-              </Typography>
-            </Stack>
-            <Stack direction="row" spacing={1} alignItems="center">
-              <Avatar
-                sx={{ width: 9, height: 9, bgcolor: primarylight, svg: { display: 'none' } }}
-              ></Avatar>
-              <Typography variant="subtitle2" color="textSecondary">
-                2023
-              </Typography>
-            </Stack>
+            {yearLabels.map((year, index) => (
+              <Stack direction="row" spacing={1} alignItems="center" key={year}>
+                <Avatar
+                  sx={{ width: 9, height: 9, bgcolor: index === 0 ? primary : primarylight }}
+                ></Avatar>
+                <Typography variant="subtitle2" color="textSecondary">
+                  {year}
+                </Typography>
+              </Stack>
+            ))}
           </Stack>
         </Grid>
-        {/* column */}
-        <Grid item xs={5} sm={5}>
+        <Grid item xs={12} md={5}>
           <Chart
             options={optionscolumnchart}
-            series={seriescolumnchart}
+            series={series}
             type="donut"
-            height={150} width={"100%"}
+            height={150}
+            width="100%"
           />
         </Grid>
       </Grid>

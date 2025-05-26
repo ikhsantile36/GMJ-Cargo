@@ -13,8 +13,7 @@ import {
   IconArrowAutofitRight,
   IconTruckDelivery,
   IconPackage,
-  IconChecklist ,
-  IconUsers,
+  IconChecklist 
 } from "@tabler/icons-react";
 
 import { uniqueId } from "lodash";
@@ -77,7 +76,7 @@ const Menuitems = [
   {
     id: uniqueId(),
     title: "Manajemen User",
-    icon: IconUsers,
+    icon: IconMap2,
     href: "/manajemen-user",
     allowedRoles: ["SUPERADMIN"],
   },

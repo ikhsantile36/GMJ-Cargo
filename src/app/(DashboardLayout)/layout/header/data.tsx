@@ -162,10 +162,10 @@ const pageLinks = [
     href: '/user-profile',
     title: 'User Application'
   },
-  {
-    href: '/apps/blog/posts',
-    title: 'Blog Design'
-  },
+  // {
+  //   href: '/apps/blog/posts',
+  //   title: 'Blog Design'
+  // },
   {
     href: '/apps/ecommerce/eco-checkout',
     title: 'Shopping Cart'

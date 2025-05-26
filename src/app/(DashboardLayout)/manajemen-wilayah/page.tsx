@@ -21,12 +21,15 @@ import {
   TablePagination,
   IconButton,
 } from "@mui/material";
+import EditIcon from "@mui/icons-material/Edit";
+import DeleteIcon from "@mui/icons-material/Delete";
 import PageContainer from "@/app/(DashboardLayout)/components/container/PageContainer";
 import DashboardCard from "@/app/(DashboardLayout)/components/shared/DashboardCard";
 import React from "react";
 
 const SamplePage = () => {
   const [formData, setFormData] = useState<any>({
+    id: null, // tambahin id untuk edit
     jenis: "",
     wilayah: "",
     benda_ringan_rb: "",
@@ -278,23 +281,21 @@ const SamplePage = () => {
                   <TableCell align="right">{row.cost_minimum}</TableCell>
                   <TableCell>{row.estimasi}</TableCell>
                   <TableCell align="center">
+                    <Button
+                        size="small"
+                        variant="outlined"
+                        onClick={() => handleEdit(row)}
+                      >
+                        Edit
+                      </Button>{" "}
                       <Button
-                          size="small"
-                          variant="outlined"
-                          onClick={() => handleEdit(row)}
-                          
-                        >
-                          Edit
-                        </Button>{" "}
-                        <Button
-                          size="small"
-                          variant="contained"
-                          color="warning"
-                          sx={{ ml: 1 }}
-                          onClick={() => handleDelete(row.id)}
-                        >
-                          Delete
-                        </Button>
+                        size="small"
+                        variant="contained"
+                        color="error"
+                        onClick={() => handleDelete(row.id)}
+                      >
+                        Delete
+                      </Button>
                   </TableCell>  
                 </TableRow>
               ))}
