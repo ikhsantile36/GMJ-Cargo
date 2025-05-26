@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import bcrypt from "bcryptjs";
 import { format } from 'date-fns';
 
 export const generateSTTB = async (): Promise<string> => {
@@ -24,8 +23,9 @@ export const generateSTTB = async (): Promise<string> => {
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
-    console.log('Received data:', body); // Log data yang diterima
+    console.log('Received data:', body);
 
+    // Destructuring dengan validasi default
     const {
       nomor_resi,
       jenis,
@@ -46,7 +46,7 @@ export async function POST(req: NextRequest) {
       kategori_barang,
       metode_penghitungan,
       barang,
-      berat,
+      berat_satuan,
       status_barang,
       biaya_satuan,
     } = body;
@@ -58,8 +58,6 @@ export async function POST(req: NextRequest) {
         { status: 400 }
       );
     }
-
-    const beratFloat = parseFloat(berat) || 0;
 
     // 1. Cek atau buat user
     let existingUser = await prisma.user.findUnique({
@@ -81,11 +79,12 @@ export async function POST(req: NextRequest) {
     // 2. Generate STTB
     const sttb = await generateSTTB();
 
-    // 3. Pastikan barang dan biaya_satuan adalah array
+    // 3. Validasi dan transformasi data array
     const barangArray = Array.isArray(barang) ? barang : [];
     const biayaSatuanArray = Array.isArray(biaya_satuan) ? biaya_satuan : [];
+    const beratSatuanArray = Array.isArray(berat_satuan) ? berat_satuan : [];
 
-    // 4. Buat data pengiriman
+    // 4. Buat data pengiriman utama
     const result = await prisma.pengiriman.create({
       data: {
         nomor_resi,
@@ -96,19 +95,19 @@ export async function POST(req: NextRequest) {
         nomor_hp_penerima,
         alamat_pengiriman,
         wilayah,
-        biaya: parseFloat(biaya) || 0,
-        jumlah_barang: parseInt(jumlah_barang) || 0,
+        biaya: Number(biaya) || 0,
+        jumlah_barang: Number(jumlah_barang) || 0,
         isi_barang,
         catatan,
         sttb,
-        volume_rb: parseFloat(volume_rb) || 0,
-        total_volume: parseFloat(total_volume) || 0,
-        total_biaya_gmj: parseFloat(total_biaya_gmj) || 0,
-        total_biaya_vendor: parseFloat(total_biaya_vendor) || 0,
+        volume_rb: Number(volume_rb) || 0,
+        total_volume: Number(total_volume) || 0,
+        total_biaya_gmj: Number(total_biaya_gmj) || 0,
+        total_biaya_vendor: Number(total_biaya_vendor) || 0,
         kategori_barang,
         metode_penghitungan,
         barang: barangArray,
-        berat: beratFloat,
+        berat_satuan: beratSatuanArray, // Simpan berat_satuan sebagai array
         status_barang,
         biaya_satuan: biayaSatuanArray,
         user: { connect: { id: existingUser.id } },
@@ -117,12 +116,15 @@ export async function POST(req: NextRequest) {
 
     // 5. Buat data barang terkait
     for (const [index, b] of barangArray.entries()) {
-      const panjang = parseFloat(b.panjang) || 0;
-      const lebar = parseFloat(b.lebar) || 0;
-      const tinggi = parseFloat(b.tinggi) || 0;
+      const panjang = Number(b.panjang) || 0;
+      const lebar = Number(b.lebar) || 0;
+      const tinggi = Number(b.tinggi) || 0;
       const m3 = (panjang * lebar * tinggi) / 1000000;
       const vw = (panjang * lebar * tinggi) / 4000;
+      const beratItem = beratSatuanArray[index] || 0;
       const tagihan = biayaSatuanArray[index] || 0;
+
+
 
       await prisma.barang.create({
         data: {
@@ -139,15 +141,20 @@ export async function POST(req: NextRequest) {
           tinggi: parseFloat(b.tinggi),
           m3: (parseFloat(b.panjang) * parseFloat(b.lebar) * parseFloat(b.tinggi)) / 1000000,
           vw: (parseFloat(b.panjang) * parseFloat(b.lebar) * parseFloat(b.tinggi)) / 4000,
-          kg: result.berat ?? 0,
+          kg: beratSatuanArray[index] || 0,
           tagihan: biaya_satuan[index] || 0,
           alamat: result.alamat_pengiriman,
+
           pengiriman: { connect: { id: result.id } }
         }
       });
     }
 
-    return NextResponse.json({ success: true, data: result }, { status: 201 });
+    return NextResponse.json({ 
+      success: true, 
+      data: result,
+      message: "Data pengiriman berhasil disimpan" 
+    }, { status: 201 });
 
   } catch (error) {
     console.error("POST /api/pengiriman error:", error);

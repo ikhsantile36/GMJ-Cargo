@@ -59,7 +59,7 @@ model Pengiriman {
   total_volume        Float
   total_biaya_gmj     Float
   total_biaya_vendor  Float
-  berat               Float?
+  berat_satuan        Json?
   biaya               Float
   biaya_satuan        Json?
   metode_penghitungan String

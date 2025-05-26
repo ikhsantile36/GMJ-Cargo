@@ -293,6 +293,14 @@ export default function PengirimanTable() {
           <Button disabled={page === 1} onClick={() => setPage(page - 1)}>Sebelumnya</Button>
           <Button disabled={page === totalPages || totalPages === 0} onClick={() => setPage(page + 1)}>Berikutnya</Button>
         </Box>
+        <Box sx={{ display: 'flex', gap: 4, mt: 2 }}>
+          <Typography variant="subtitle1">
+            <strong>Total Tagihan:</strong> Rp{' '}
+            {displayData
+              .reduce((sum, item) => sum + (item.tagihan || 0), 0)
+              .toLocaleString('id-ID')}
+          </Typography>
+        </Box>
       </Paper>
     </Box>
   );
