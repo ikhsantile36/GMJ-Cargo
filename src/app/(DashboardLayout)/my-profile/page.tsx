@@ -5,153 +5,103 @@ import {
   Button,
   TextField,
   Stack,
-  Table,
-  TableHead,
-  TableRow,
-  TableCell,
-  TableBody,
+  Typography,
   Paper,
-  MenuItem,
-  Select,
-  InputLabel,
-  FormControl,
 } from "@mui/material";
 import { useState, useEffect } from "react";
 import PageContainer from "@/app/(DashboardLayout)/components/container/PageContainer";
 import DashboardCard from "@/app/(DashboardLayout)/components/shared/DashboardCard";
 
-interface User {
-  id: number;
-  username: string;
-  email: string;
-  role: string;
-}
-
 const MyProfile = () => {
-  const [username, setUsername] = useState("");
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [role, setRole] = useState("USER");
-  const [users, setUsers] = useState<User[]>([]);
-  const [loggedInUserRole, setLoggedInUserRole] = useState("");
+  const [user, setUser] = useState({
+    id: 0,
+    username: "",
+    email: "",
+    phone: "",
+    role: "",
+  });
 
- useEffect(() => {
-  const r = localStorage.getItem("role") || "";
-  setLoggedInUserRole(r);
-  fetchUsers();
-}, []);
+  const [loading, setLoading] = useState(false);
 
+  useEffect(() => {
+    fetchLoggedInUser();
+  }, []);
 
- const fetchUsers = async () => {
-  try {
-    const res = await fetch("/api/users");
+  const fetchLoggedInUser = async () => {
+    try {
+      const res = await fetch("/api/users/me"); // asumsi endpoint user yang login
+      if (!res.ok) throw new Error("Gagal ambil data pengguna");
 
-    if (!res.ok) {
-      const text = await res.text();
-      throw new Error(`Server error ${res.status}: ${text}`);
+      const data = await res.json();
+      setUser(data);
+    } catch (error) {
+      console.error("❌ Gagal mengambil data user:", error);
+      alert("Gagal mengambil data pengguna");
     }
+  };
 
-    const data = await res.json();
-    setUsers(data);
-  } catch (error) {
-    console.error("❌ Gagal fetch user:", error);
-    alert("Gagal mengambil data user");
-  }
-};
+  const handleUpdate = async () => {
+    setLoading(true);
+    try {
+      const res = await fetch(`/api/users/${user.id}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(user),
+      });
 
-  const handleAddUser = async () => {
-    const res = await fetch("/api/users", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ username, email, password, role }),
-    });
+      if (!res.ok) {
+        const err = await res.json();
+        throw new Error(err.message || "Gagal update");
+      }
 
-    if (res.ok) {
-      setUsername("");
-      setEmail("");
-      setPassword("");
-      setRole("USER");
-      fetchUsers();
-    } else {
-      const error = await res.json();
-      alert(error.message || "Gagal menambahkan user");
+      alert("Berhasil update data pengguna");
+    } catch (error) {
+      console.error("❌", error);
+      alert("Gagal update data");
+    } finally {
+      setLoading(false);
     }
   };
 
   return (
-    <PageContainer
-      title="Kelola Pengguna"
-      description="Admin dapat menambah dan melihat user"
-    >
-      {/* Wrapper supaya children selalu ReactElement */}
-      <Box>
-        {loggedInUserRole === "SUPERADMIN" ? (
-          <DashboardCard title="Add New User">
-            <Stack spacing={2}>
-              <TextField
-                label="Username"
-                value={username}
-                onChange={(e) => setUsername(e.target.value)}
-                fullWidth
-              />
-              <TextField
-                label="Email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                fullWidth
-              />
-              <TextField
-                label="Password"
-                type="password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                fullWidth
-              />
-              <FormControl fullWidth>
-                <InputLabel>Role</InputLabel>
-                <Select
-                  value={role}
-                  label="Role"
-                  onChange={(e) => setRole(e.target.value)}
-                >
-                  <MenuItem value="USER">User</MenuItem>
-                  <MenuItem value="ADMIN">Admin</MenuItem>
-                  <MenuItem value="SUPERADMIN">Superadmin</MenuItem>
-                  <MenuItem value="OPERATOR">Operator</MenuItem>
-                </Select>
-              </FormControl>
-              <Button variant="contained" onClick={handleAddUser}>
-                Create User
-              </Button>
-            </Stack>
-          </DashboardCard>
-        ) : null}
-
-        <DashboardCard title="User List">
-          <Paper>
-            <Table>
-              <TableHead>
-                <TableRow>
-                  <TableCell>ID</TableCell>
-                  <TableCell>Username</TableCell>
-                  <TableCell>Email</TableCell>
-                  <TableCell>Role</TableCell>
-                </TableRow>
-              </TableHead>
-              <TableBody>
-                {users.map((u) => (
-                  <TableRow key={u.id}>
-                    <TableCell>{u.id}</TableCell>
-                    <TableCell>{u.username}</TableCell>
-                    <TableCell>{u.email}</TableCell>
-                    <TableCell>{u.role}</TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          </Paper>
-        </DashboardCard>
-      </Box>
+    <PageContainer title="Profil Saya" description="Kelola akun Anda">
+      <DashboardCard title="Edit Profil">
+        <Paper sx={{ padding: 3 }}>
+          <Stack spacing={2}>
+            <TextField
+              label="Username"
+              value={user.username}
+              onChange={(e) => setUser({ ...user, username: e.target.value })}
+              fullWidth
+            />
+            <TextField
+              label="Email"
+              value={user.email}
+              onChange={(e) => setUser({ ...user, email: e.target.value })}
+              fullWidth
+            />
+            <TextField
+              label="No HP"
+              value={user.phone}
+              onChange={(e) => setUser({ ...user, phone: e.target.value })}
+              fullWidth
+            />
+            <TextField
+              label="Role"
+              value={user.role}
+              disabled
+              fullWidth
+            />
+            <Button
+              variant="contained"
+              onClick={handleUpdate}
+              disabled={loading}
+            >
+              {loading ? "Menyimpan..." : "Update Profil"}
+            </Button>
+          </Stack>
+        </Paper>
+      </DashboardCard>
     </PageContainer>
   );
 };
