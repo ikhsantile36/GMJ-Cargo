@@ -26,6 +26,8 @@ export async function PUT(req: NextRequest, { params }: { params: { id: string }
     data: body,
   });
 
+  
+
   return NextResponse.json(updated);
 }
 

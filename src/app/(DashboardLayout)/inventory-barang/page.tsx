@@ -1,6 +1,6 @@
-'use client';
+"use client";
 
-import { useEffect, useState } from 'react';
+import React, { useEffect, useState } from "react";
 import {
   TextField,
   Select,
@@ -16,112 +16,108 @@ import {
   FormControl,
   InputLabel,
   Typography,
-  SelectChangeEvent,
   Button,
-  Dialog,
-  DialogTitle,
-  DialogContent,
-  DialogActions,
-  DialogContentText,
-} from '@mui/material';
-import { styled } from '@mui/material/styles';
-import { format, isToday, isThisMonth, isThisYear } from 'date-fns';
-import * as XLSX from 'xlsx';
-import { saveAs } from 'file-saver';
-import React from 'react';
+  SelectChangeEvent,
+} from "@mui/material";
+import { styled } from "@mui/material/styles";
+import { format, isToday, isThisMonth, isThisYear } from "date-fns";
+import * as XLSX from "xlsx";
+
+// Tipe data sesuai field yang digunakan di tabel
+type PengirimanItem = {
+  id: number;
+  createdAt: string;
+  sttb: string;
+  wilayah: string;
+  nama_penerima: string;
+  nama_pengirim: string;
+  jenis: string;
+  catatan?: string;
+  jumlah_barang: number;
+  barang?: { panjang: number; lebar: number; tinggi: number }[];
+  volume_rb: number;
+  berat?: number;
+  biaya: number;
+  alamat_pengiriman?: string;
+  nomor_hp_pengirim?: string;
+  nomor_hp_penerima?: string;
+};
 
 const exportToExcel = (data: PengirimanItem[]) => {
   const groupedData: any[] = [];
-  let currentSTT = null;
 
   data.forEach((item, index) => {
-    const date = new Date(item.tgl);
+    const date = new Date(item.createdAt);
     const formattedDate = `${date.getDate()}/${date.getMonth() + 1}/${date.getFullYear()}`;
+    const barang = item.barang?.[0] || { panjang: 0, lebar: 0, tinggi: 0 };
+    const p = Number(barang.panjang);
+    const l = Number(barang.lebar);
+    const t = Number(barang.tinggi);
+    const m3 = (p * l * t) / 1000000;
+    const vw = m3 * item.volume_rb;
 
     const row = {
-      Tanggal: formattedDate,
-      STT: item.stt,
-      Tujuan: item.tujuan,
-      Penerima: item.penerima_dan_hp,
-      Pengirim: item.pengirim_dan_hp,
-      Jenis: item.jenis_kiriman,
-      Catatan: item.catatan,
-      Koli: item.koli,
-      Panjang: item.panjang,
-      Lebar: item.lebar,
-      Tinggi: item.tinggi,
-      M3: item.m3,
-      VW: item.vw,
-      KG: item.kg,
-      Tagihan: item.tagihan,
-      Alamat: item.alamat,
+      "Tanggal": formattedDate,
+      "STTB": item.sttb,
+      "Tujuan": item.wilayah,
+      "Penerima": item.nama_penerima,
+      "Pengirim": item.nama_pengirim,
+      "Jenis": item.jenis,
+      "Catatan": item.catatan || "-",
+      "Koli": item.jumlah_barang,
+      "Panjang": p,
+      "Lebar": l,
+      "Tinggi": t,
+      "M3": m3.toFixed(3),
+      "VW": vw.toFixed(3),
+      "KG": item.berat ?? "-",
+      "Tagihan": item.biaya,
+      "Alamat": item.alamat_pengiriman ?? "-",
+      "HP Pengirim": item.nomor_hp_pengirim ?? "-",
+      "HP Penerima": item.nomor_hp_penerima ?? "-",
     };
 
-    // Tambahkan row
     groupedData.push(row);
 
-    // Cek jika STT berubah di item berikutnya, tambahkan baris kosong
+    // Tambahkan baris kosong jika STTB berubah di item berikutnya
     const nextItem = data[index + 1];
-    if (!nextItem || nextItem.stt !== item.stt) {
-      groupedData.push({}); // baris kosong
+    if (!nextItem || nextItem.sttb !== item.sttb) {
+      groupedData.push({});
     }
   });
 
   const worksheet = XLSX.utils.json_to_sheet(groupedData);
   const workbook = XLSX.utils.book_new();
-  XLSX.utils.book_append_sheet(workbook, worksheet, 'Pengiriman');
+  XLSX.utils.book_append_sheet(workbook, worksheet, "Pengiriman");
 
   const excelBuffer = XLSX.write(workbook, {
-    bookType: 'xlsx',
-    type: 'array',
+    bookType: "xlsx",
+    type: "array",
   });
 
-  // Simpan ke file (contoh)
-  const blob = new Blob([excelBuffer], { type: 'application/octet-stream' });
+  const blob = new Blob([excelBuffer], { type: "application/octet-stream" });
   const url = window.URL.createObjectURL(blob);
-  const a = document.createElement('a');
+  const a = document.createElement("a");
   a.href = url;
-  a.download = 'pengiriman.xlsx';
+  a.download = "pengiriman.xlsx";
   a.click();
   window.URL.revokeObjectURL(url);
 };
 
-
-
-type PengirimanItem = {
-  id: number;
-  tgl: string;
-  stt: string;
-  tujuan: string;
-  penerima_dan_hp: string;
-  pengirim_dan_hp: string;
-  jenis_kiriman: string;
-  catatan?: string;
-  koli: number;
-  panjang: number;
-  lebar: number;
-  tinggi: number;
-  m3: number;
-  vw: number;
-  kg?: number;
-  tagihan: number;
-  alamat: string;
-};
-
 const StyledTableHeadCell = styled(TableCell)(({ theme }) => ({
   backgroundColor: theme.palette.grey[200],
-  fontWeight: 'bold',
-  whiteSpace: 'nowrap',
+  fontWeight: "bold",
+  whiteSpace: "nowrap",
 }));
 
 const StyledTableRow = styled(TableRow)(({ theme }) => ({
-  '&:nth-of-type(odd)': {
+  "&:nth-of-type(odd)": {
     backgroundColor: theme.palette.action.hover,
   },
-  '&:hover': {
+  "&:hover": {
     backgroundColor: theme.palette.grey[300],
   },
-  '&:last-child td, &:last-child th': {
+  "&:last-child td, &:last-child th": {
     border: 0,
   },
 }));
@@ -129,51 +125,29 @@ const StyledTableRow = styled(TableRow)(({ theme }) => ({
 export default function PengirimanTable() {
   const [allData, setAllData] = useState<PengirimanItem[]>([]);
   const [displayData, setDisplayData] = useState<PengirimanItem[]>([]);
-  const [search, setSearch] = useState('');
+  const [search, setSearch] = useState("");
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
   const [totalFiltered, setTotalFiltered] = useState(0);
-  const [dateFilter, setDateFilter] = useState('all');
-  const [openEdit, setOpenEdit] = useState(false);
-  const [editItem, setEditItem] = useState<PengirimanItem | null>(null);
-   const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
-  const [itemToDelete, setItemToDelete] = useState<number | null>(null);
+  const [dateFilter, setDateFilter] = useState("all");
 
-  // Fungsi untuk membuka dialog konfirmasi
-  const openDeleteConfirm = (id: number) => {
-    setItemToDelete(id);
-    setDeleteConfirmOpen(true);
-  };
-
-  // Fungsi untuk menutup dialog
-  const closeDeleteConfirm = () => {
-    setDeleteConfirmOpen(false);
-    setItemToDelete(null);
-  };
-
-  // Fungsi untuk konfirmasi delete
-  const confirmDelete = () => {
-    if (itemToDelete !== null) {
-      handleDelete(itemToDelete);
-    }
-    closeDeleteConfirm();
-  };
-  
   const totalPages = Math.ceil(totalFiltered / pageSize);
 
   useEffect(() => {
     const fetchInitialData = async () => {
       try {
-        const res = await fetch('/api/barang');
+        const res = await fetch("/api/barang");
         if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
         const json = await res.json();
         if (json.success) {
           setAllData(json.data);
         } else {
-          console.error('Gagal mengambil data:', json.message);
+          console.error("Gagal mengambil data:", json.message);
+          setAllData([]);
         }
       } catch (err) {
-        console.error('Gagal mengambil data:', err);
+        console.error("Gagal mengambil data:", err);
+        setAllData([]);
       }
     };
     fetchInitialData();
@@ -182,106 +156,57 @@ export default function PengirimanTable() {
   useEffect(() => {
     let filtered = [...allData];
 
-    if (dateFilter !== 'all') {
-      filtered = filtered.filter((item) => {
-        const itemDate = new Date(item.tgl);
-        if (isNaN(itemDate.getTime())) return false;
-        if (dateFilter === 'today') return isToday(itemDate);
-        if (dateFilter === 'thisMonth') return isThisMonth(itemDate);
-        if (dateFilter === 'thisYear') return isThisYear(itemDate);
-        return true;
+    // Filter tanggal
+    if (dateFilter !== "all") {
+      filtered = filtered.filter((item: PengirimanItem) => {
+        try {
+          const itemDate = new Date(item.createdAt);
+          if (isNaN(itemDate.getTime())) return false;
+          if (dateFilter === "today") return isToday(itemDate);
+          if (dateFilter === "thisMonth") return isThisMonth(itemDate);
+          if (dateFilter === "thisYear") return isThisYear(itemDate);
+          return true;
+        } catch (e) {
+          console.warn(
+            `Invalid date format for item ID ${item.id}: ${item.createdAt}`
+          );
+          return false;
+        }
       });
     }
-         if (search) {
-        const query = search.toLowerCase();
-        filtered = filtered.filter(
+
+    // Filter pencarian
+    if (search) {
+      const query = search.toLowerCase();
+      filtered = filtered.filter(
         (item) =>
-          item.pengirim_dan_hp.toLowerCase().includes(query) ||
-          item.stt.toLowerCase().includes(query)
+          item.nama_pengirim?.toLowerCase().includes(query) ||
+          item.sttb?.toLowerCase().includes(query)
       );
     }
 
-
-    filtered.sort((a, b) => {
-      const sttA = Number(a.stt);
-      const sttB = Number(b.stt);
-      return sttA === sttB ? a.koli - b.koli : sttA - sttB;
-    });
-
     setTotalFiltered(filtered.length);
-    setDisplayData(filtered.slice((page - 1) * pageSize, page * pageSize));
+
+    // Paginasi
+    const start = (page - 1) * pageSize;
+    const paginated = filtered.slice(start, start + pageSize);
+    setDisplayData(paginated);
   }, [allData, search, dateFilter, page, pageSize]);
 
-  const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setSearch(e.target.value);
+  const handleSearchChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    setSearch(event.target.value);
     setPage(1);
   };
-  const handleDelete = async (id: number) => {
-  try {
-    const res = await fetch('/api/barang', {
-      method: 'DELETE',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({ id }),
-    });
-
-    if (res.ok) {
-      // Perbarui state setelah berhasil menghapus
-      setAllData(prevData => prevData.filter(item => item.id !== id));
-    } else {
-      console.error('Gagal menghapus data');
-    }
-  } catch (error) {
-    console.error('Terjadi kesalahan:', error);
-  }
-};
 
   const handleDateFilterChange = (e: SelectChangeEvent<string>) => {
     setDateFilter(e.target.value);
     setPage(1);
-  };      
+  };
 
   const handleRowsPerPageChange = (e: SelectChangeEvent) => {
     setPageSize(Number(e.target.value));
     setPage(1);
   };
-  const handleEditChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-  if (!editItem) return;
-  const { name, value } = e.target;
-
-  setEditItem({ ...editItem, [name]: value });
-};
-
-const submitEdit = async () => {
-  try {
-    const res = await fetch('/api/barang', {
-      method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(editItem),
-    });
-
-    const result = await res.json();
-
-    if (res.ok) {
-      // Update state local
-      setAllData((prev) =>
-        prev.map((item) => (item.id === editItem!.id ? { ...editItem! } : item))
-      );
-      setOpenEdit(false);
-    } else {
-      console.error('Gagal update:', result.message);
-    }
-  } catch (err) {
-    console.error('Error saat update:', err);
-  }
-};
-
-  const handleEdit = (item: PengirimanItem) => {
-  setEditItem(item);
-  setOpenEdit(true);
-};
-
 
   return (
     <Box sx={{ p: 2 }}>
@@ -290,7 +215,7 @@ const submitEdit = async () => {
       <Paper sx={{ p: 2, mb: 3 }}>
         <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 2 }}>
           <TextField
-            label="Cari Nama Pengirim dan No Hp / No. Resi (STTB)"
+            label="Cari Nama Pengirim / No. Resi (STTB)"
             value={search}
             onChange={handleSearchChange}
             fullWidth
@@ -307,173 +232,139 @@ const submitEdit = async () => {
         </Box>
       </Paper>
 
-      <Button onClick={() => exportToExcel(displayData)} sx={{ mb: 2 }}>Download Excel</Button>
+      <Button onClick={() => exportToExcel(displayData)} sx={{ mb: 2 }}>
+        Download Excel
+      </Button>
 
       <TableContainer component={Paper}>
         <Table>
           <TableHead>
             <TableRow>
-              <StyledTableHeadCell>Tanggal</StyledTableHeadCell>
-              <StyledTableHeadCell>STTB</StyledTableHeadCell>
-              <StyledTableHeadCell>Tujuan</StyledTableHeadCell>
-              <StyledTableHeadCell>Penerima</StyledTableHeadCell>
-              <StyledTableHeadCell>Pengirim</StyledTableHeadCell>
-              <StyledTableHeadCell>Jenis</StyledTableHeadCell>
-              <StyledTableHeadCell>Catatan</StyledTableHeadCell>
-              <StyledTableHeadCell align="right">Koli</StyledTableHeadCell>
-              <StyledTableHeadCell align="right">P</StyledTableHeadCell>
-              <StyledTableHeadCell align="right">L</StyledTableHeadCell>
-              <StyledTableHeadCell align="right">T</StyledTableHeadCell>
-              <StyledTableHeadCell align="right">M³</StyledTableHeadCell>
-              <StyledTableHeadCell align="right">VW</StyledTableHeadCell>
-              <StyledTableHeadCell align="right">KG</StyledTableHeadCell>
-              <StyledTableHeadCell align="right">Tagihan</StyledTableHeadCell>
-              <StyledTableHeadCell>Alamat</StyledTableHeadCell>
-              <StyledTableHeadCell align='center'>Aksi</StyledTableHeadCell>
+              <TableCell>TGL & WAKTU</TableCell>
+              <TableCell>STTB</TableCell>
+              <TableCell>TUJUAN</TableCell>
+              <TableCell>PENERIMA</TableCell>
+              <TableCell>PENGIRIM</TableCell>
+              <TableCell>JENIS</TableCell>
+              <TableCell>CATATAN</TableCell>
+              <TableCell align="right">KOLI</TableCell>
+              <TableCell align="right">P (cm)</TableCell>
+              <TableCell align="right">L (cm)</TableCell>
+              <TableCell align="right">T (cm)</TableCell>
+              <TableCell align="right">M³</TableCell>
+              <TableCell align="right">VW (Kg)</TableCell>
+              <TableCell align="right">KG</TableCell>
+              <TableCell align="right">TAGIHAN (Rp)</TableCell>
+              <TableCell>ALAMAT / HP / KET</TableCell>
             </TableRow>
           </TableHead>
+
           <TableBody>
             {displayData.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={16} align="center">Tidak ada data ditemukan.</TableCell>
+                <TableCell colSpan={16} align="center">
+                  Tidak ada data ditemukan.
+                </TableCell>
               </TableRow>
             ) : (
-              displayData.map((item) => (
-                <StyledTableRow key={item.id}>
-                  <TableCell>{new Date(item.tgl).toLocaleDateString("id-ID", {
-                      timeZone: "Asia/Jakarta",
-                    })
-                  }</TableCell>
-                  <TableCell>{item.stt}</TableCell>
-                  <TableCell>{item.tujuan}</TableCell>
-                  <TableCell>{item.penerima_dan_hp}</TableCell>
-                  <TableCell>{item.pengirim_dan_hp}</TableCell>
-                  <TableCell>{item.jenis_kiriman}</TableCell>
-                  <TableCell>{item.catatan || '-'}</TableCell>
-                  <TableCell align="right">{item.koli}</TableCell>
-                  <TableCell align="right">{item.panjang}</TableCell>
-                  <TableCell align="right">{item.lebar}</TableCell>
-                  <TableCell align="right">{item.tinggi}</TableCell>
-                  <TableCell align="right">{item.m3.toFixed(3)}</TableCell>
-                  <TableCell align="right">{item.vw.toFixed(2)}</TableCell>
-                  <TableCell align="right">{item.kg ?? '-'}</TableCell>
-                  <TableCell align="right">{item.tagihan.toLocaleString('id-ID')}</TableCell>
-                  <TableCell>{item.alamat}</TableCell>
-                  <TableCell align="center">
-                        {/* Tombol Edit */}
-                        <Button
-                        size="small"
-                        variant="outlined"
-                        onClick={() => handleEdit(item)}
-                      >
-                        Edit
-                      </Button>{" "}
-                      <Button
-                        size="small"
-                        variant="contained"
-                        color="error"
-                        onClick={() => openDeleteConfirm(item.id)}
-                      >
-                        Delete
-                      </Button>
+              displayData.map((item) => {
+                const barang = item.barang?.[0] || {
+                  panjang: 0,
+                  lebar: 0,
+                  tinggi: 0,
+                };
+                const p = Number(barang.panjang);
+                const l = Number(barang.lebar);
+                const t = Number(barang.tinggi);
+                const m3 = (p * l * t) / 1000000;
 
-                        {/* Dialog Konfirmasi Delete */}
-                        <Dialog
-                          open={deleteConfirmOpen}
-                          onClose={closeDeleteConfirm}
-                        >
-                          <DialogTitle>Konfirmasi Hapus</DialogTitle>
-                          <DialogContent>
-                            <DialogContentText>
-                              Apakah Anda yakin ingin menghapus item ini? Data yang dihapus tidak dapat dikembalikan.
-                            </DialogContentText>
-                          </DialogContent>
-                          <DialogActions>
-                            <Button onClick={closeDeleteConfirm}>Batal</Button>
-                            <Button 
-                              onClick={confirmDelete}
-                              color="error"
-                              autoFocus
-                            >
-                              Ya, Hapus
-                            </Button>
-                          </DialogActions>
-                        </Dialog>
-                      </TableCell>
-                </StyledTableRow>
-              ))
+                let formattedDate = "Tanggal Invalid";
+                try {
+                  formattedDate = format(
+                    new Date(item.createdAt),
+                    "dd/MM/yyyy"
+                  );
+                } catch (e) {
+                  console.warn(
+                    `Invalid date format for item ID ${item.id}: ${item.createdAt}`
+                  );
+                }
+
+                return (
+                  <TableRow key={item.id}>
+                    <TableCell sx={{ whiteSpace: "nowrap" }}>
+                      {formattedDate}
+                    </TableCell>
+                    <TableCell>{item.sttb}</TableCell>
+                    <TableCell>{item.wilayah}</TableCell>
+                    <TableCell>{item.nama_penerima}</TableCell>
+                    <TableCell>{item.nama_pengirim}</TableCell>
+                    <TableCell>{item.jenis}</TableCell>
+                    <TableCell>{item.catatan || "-"}</TableCell>
+                    <TableCell align="right">{item.jumlah_barang}</TableCell>
+                    <TableCell align="right">{p}</TableCell>
+                    <TableCell align="right">{l}</TableCell>
+                    <TableCell align="right">{t}</TableCell>
+                    <TableCell align="right">{m3.toFixed(3)}</TableCell>
+                    <TableCell align="right">
+                      {(m3 * item.volume_rb).toFixed(3)}
+                    </TableCell>
+                    <TableCell align="right">{item.berat ?? "-"}</TableCell>
+                    <TableCell align="right">
+                      {item.biaya.toLocaleString("id-ID")}
+                    </TableCell>
+                    <TableCell sx={{ minWidth: 250 }}>
+                      {item.alamat_pengiriman && (
+                        <div>Alamat: {item.alamat_pengiriman}</div>
+                      )}
+                      {item.nomor_hp_pengirim && (
+                        <div>Pengirim HP: {item.nomor_hp_pengirim}</div>
+                      )}
+                      {item.nomor_hp_penerima && (
+                        <div>Penerima HP: {item.nomor_hp_penerima}</div>
+                      )}
+                    </TableCell>
+                  </TableRow>
+                );
+              })
             )}
           </TableBody>
         </Table>
       </TableContainer>
 
-      <Paper sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', p: 2, mt: 2 }}>
-        <Typography>Halaman {page} dari {totalPages || 1} (Total {totalFiltered} item)</Typography>
-        <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-          <FormControl size="small">
-            <InputLabel>Rows / Page</InputLabel>
-            <Select value={pageSize.toString()} label="Rows / Page" onChange={handleRowsPerPageChange}>
-              {[5, 10, 20, 50, 100].map((num) => (
-                <MenuItem key={num} value={num}>{num}</MenuItem>
-              ))}
-            </Select>
-          </FormControl>
-          <Button disabled={page === 1} onClick={() => setPage(page - 1)}>Sebelumnya</Button>
-          <Button disabled={page === totalPages || totalPages === 0} onClick={() => setPage(page + 1)}>Berikutnya</Button>
-        </Box>
-        <Box sx={{ display: 'flex', gap: 4, mt: 2 }}>
-          <Typography variant="subtitle1">
-            <strong>Total Tagihan:</strong> Rp{' '}
-            {displayData
-              .reduce((sum, item) => sum + (item.tagihan || 0), 0)
-              .toLocaleString('id-ID')}
+      {displayData.length > 0 && (
+        <Paper
+          sx={{
+            display: "flex",
+            justifyContent: "space-between",
+            alignItems: "center",
+            p: 2,
+            mt: 2,
+            borderRadius: 2,
+            boxShadow: 1,
+          }}
+        >
+          <Typography variant="body2">
+            Halaman {page} dari {totalPages || 1} (Total {totalFiltered} item)
           </Typography>
-        </Box>
-      </Paper>
-      <Dialog open={openEdit} onClose={() => setOpenEdit(false)} fullWidth maxWidth="sm">
-          <DialogTitle>Edit Pengiriman</DialogTitle>
-          <DialogContent>
-            <TextField
-              margin="dense"
-              name="stt"
-              label="STT"
-              value={editItem?.stt || ''}
-              onChange={handleEditChange}
-              fullWidth
-            />
-            <TextField
-              margin="dense"
-              name="tujuan"
-              label="Tujuan"
-              value={editItem?.tujuan || ''}
-              onChange={handleEditChange}
-              fullWidth
-            />
-            <TextField
-              margin="dense"
-              name="penerima_dan_hp"
-              label="Penerima"
-              value={editItem?.penerima_dan_hp || ''}
-              onChange={handleEditChange}
-              fullWidth
-            />
-            <TextField
-              margin="dense"
-              name="pengirim_dan_hp"
-              label="Pengirim"
-              value={editItem?.pengirim_dan_hp || ''}
-              onChange={handleEditChange}
-              fullWidth
-            />
-            {/* Tambahkan field lain sesuai kebutuhan */}
-          </DialogContent>
-          <DialogActions>
-            <Button onClick={() => setOpenEdit(false)}>Batal</Button>
-            <Button variant="contained" onClick={submitEdit}>Simpan</Button>
-          </DialogActions>
-        </Dialog>
-
+          <Box sx={{ display: "flex", gap: 1 }}>
+            <Button
+              variant="outlined"
+              disabled={page === 1}
+              onClick={() => setPage(page - 1)}
+            >
+              Sebelumnya
+            </Button>
+            <Button
+              variant="outlined"
+              disabled={page === totalPages || totalPages === 0}
+              onClick={() => setPage(page + 1)}
+            >
+              Berikutnya
+            </Button>
+          </Box>
+        </Paper>
+      )}
     </Box>
-    
   );
 }
