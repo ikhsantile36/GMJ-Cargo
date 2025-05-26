@@ -147,7 +147,7 @@ export default function ValidasiPage() {
           <Button
             variant="outlined"
             color="secondary"
-            onClick={() => router.push(`/inventory-barang/`)}
+            onClick={() => router.push(`/status-barang/`)}
           >
             Kembali
           </Button>

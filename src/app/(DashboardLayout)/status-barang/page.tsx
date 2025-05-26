@@ -265,7 +265,7 @@ export default function InventoryPage() {
                             variant="outlined"
                             color="warning"
                             onClick={() =>
-                              router.push(`/inventory-barang/update/${item.id}`)
+                              router.push(`/status-barang/update/${item.id}`)
                             }
                           >
                             Update

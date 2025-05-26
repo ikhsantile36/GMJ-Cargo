@@ -236,7 +236,7 @@ export default function UpdateInventoriClientPage() {
               variant="contained"
               type="submit"
               color="warning"
-              onClick={() => router.push(`/inventory-barang/`)}
+              onClick={() => router.push(`/status-barang/`)}
             >
               Simpan Perubahan
             </Button>

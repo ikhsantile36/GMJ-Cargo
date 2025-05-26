@@ -69,7 +69,7 @@ const PenerimaanBarang = () => {
 
       alert("Penerimaan barang berhasil disimpan!");
       resetForm();
-      router.push(`/inventory-barang/`);
+      router.push(`/status-barang/`);
     } catch (error: any) {
       alert(`Terjadi kesalahan: ${error.message}`);
     } finally {

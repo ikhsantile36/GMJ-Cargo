@@ -43,14 +43,14 @@ const Menuitems = [
     title: "Inventory Barang",
     icon: IconTruckDelivery,
     href: "/inventory-barang",
-    allowedRoles: ["SUPERADMIN", "USER"],
+    allowedRoles: ["SUPERADMIN"],
   },
    {
     id: uniqueId(),
     title: "Status Barang",
     icon: IconChecklist,
     href: "/status-barang",
-    allowedRoles: ["SUPERADMIN"],
+    allowedRoles: ["SUPERADMIN" , "USER"],
   },
   // {
   //   id: uniqueId(),
@@ -71,6 +71,13 @@ const Menuitems = [
     title: "Harga Vendor",
     icon: IconCash,
     href: "/harga-vendor",
+    allowedRoles: ["SUPERADMIN"],
+  },
+  {
+    id: uniqueId(),
+    title: "Manajemen User",
+    icon: IconMap2,
+    href: "/manajemen-user",
     allowedRoles: ["SUPERADMIN"],
   },
 ];

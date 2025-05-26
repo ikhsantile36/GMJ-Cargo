@@ -39,13 +39,13 @@ const SamplePage = () => {
     jumlah_barang: 0,
     volume_rb: 0,
     total_volume: 0,
-    actual: 0,
     total_biaya_gmj: 0,
     total_biaya_vendor: 0,
     kategori_barang: "-",
     status_barang: "sedang_dikirim",
     metode_penghitungan: "volume",
     barang: [{ panjang: "", lebar: "", tinggi: "" }],
+    biaya_satuan: [], // Tambahkan ini
   });
 
   const [wilayahOptions, setWilayahOptions] = useState<TarifWilayah[]>([]);
@@ -73,7 +73,6 @@ const SamplePage = () => {
     let totalVolume = 0;
     let biaya = 0;
     let biayaPerBarangSatuan = 0;
-    let beratActual = 0;
 
     interface RangeChecker {
       (value: number, min: number, max: number): boolean;
@@ -189,18 +188,7 @@ const SamplePage = () => {
     return (p * l * t) / 1000000;
   };
 
-    const getActualPerItem = (barang: {
-    panjang: string;
-    lebar: string;
-    tinggi: string;
-  }) => {
-    const p = Number(barang.panjang);
-    const l = Number(barang.lebar);
-    const t = Number(barang.tinggi);
-    if (isNaN(p) || isNaN(l) || isNaN(t)) return 0;
 
-    return (p * l * t) / 4000;
-  };
 
   const getBiayaGMJ = (barang: {
     panjang: string;
@@ -224,11 +212,11 @@ const SamplePage = () => {
     return volumeM3 * volume_rb;
   };
 
-  const getTotalBiayaDanVolume = () => {
+const getTotalBiayaDanVolume = () => {
   let totalVolume = 0;
   let totalBiayaVendor = 0;
   let totalBiayaGMJ = 0;
-  let beratActual = 0;
+  const biayaSatuan: number[] = []; // Array untuk menyimpan biaya satuan per barang
   
   const isVendor = formData.jenis === "vendor";
 
@@ -236,12 +224,13 @@ const SamplePage = () => {
     const volumePerItem = getVolumePerItem(barang);
     const biayaPerItemVendor = isVendor ? getBiayaPerBarang(barang) : 0;
     const biayaPerItemGMJ = getBiayaGMJ(barang);
-    const ActualPerItem = getActualPerItem(barang);
 
-    beratActual += ActualPerItem;
     totalVolume += volumePerItem;
     totalBiayaVendor += biayaPerItemVendor;
     totalBiayaGMJ += biayaPerItemGMJ;
+    
+    // Hitung biaya satuan per barang (GMJ + Vendor)
+    biayaSatuan.push(biayaPerItemGMJ + biayaPerItemVendor);
   });
 
   const totalSemuaBiaya = totalBiayaVendor + totalBiayaGMJ;
@@ -251,12 +240,12 @@ const SamplePage = () => {
     totalBiayaGMJ: Math.round(totalBiayaGMJ * 100) / 100,
     totalSemuaBiaya: Math.round(totalSemuaBiaya * 100) / 100,
     totalVolume: Math.round(totalVolume * 1000) / 1000,
-    beratActual: Math.round(beratActual * 1000) / 1000,
+    biayaSatuan, // Tambahkan biayaSatuan ke return value
   };
 };
 
 
-  const { totalBiayaVendor, totalBiayaGMJ, totalSemuaBiaya, totalVolume, beratActual } =
+  const { totalBiayaVendor, totalBiayaGMJ, totalSemuaBiaya, totalVolume } =
     getTotalBiayaDanVolume();
 
   const calculateBerat = () => {
@@ -317,80 +306,84 @@ const SamplePage = () => {
     }));
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    const { totalSemuaBiaya, totalBiayaVendor , totalVolume, beratActual} = getTotalBiayaDanVolume();
-    e.preventDefault();
-    const resiBaru = generateNomorResi();
+const handleSubmit = async (e: React.FormEvent) => {
+  let { 
+    totalSemuaBiaya, 
+    totalBiayaVendor, 
+    totalVolume, 
+    biayaSatuan // Ambil biayaSatuan dari getTotalBiayaDanVolume
+  } = getTotalBiayaDanVolume();
+  
+  e.preventDefault();
+  const resiBaru = generateNomorResi();
 
-    const { volume, biaya } = calculateVolume();
-    const total_biaya_gmj = volume;
-    const berat = calculateBerat();
-    const jumlah_barang = formData.barang.length;
+  const { volume } = calculateVolume();
+  const total_biaya_gmj = volume;
+  const berat = calculateBerat();
+  const jumlah_barang = formData.barang.length;
 
-    const selectedWilayah = wilayahOptions.find(
-      (w) => w.wilayah === formData.wilayah
+  const selectedWilayah = wilayahOptions.find(
+    (w) => w.wilayah === formData.wilayah
+  );
+
+  if (!selectedWilayah) {
+    alert("Wilayah tidak ditemukan.");
+    return;
+  }
+
+  if (
+    formData.metode_penghitungan === "volume" &&
+    totalSemuaBiaya < selectedWilayah.cost_minimum
+  ) {
+    alert(
+      `Harga akhir (${totalSemuaBiaya.toFixed(
+        2
+      )}) lebih kecil dari cost minimum wilayah (${
+        selectedWilayah.cost_minimum
+      }).`
     );
+    totalSemuaBiaya = selectedWilayah.cost_minimum
+    biayaSatuan = Array(formData.barang.length).fill(selectedWilayah.cost_minimum / formData.barang.length);
+  }
 
-    if (!selectedWilayah) {
-      alert("Wilayah tidak ditemukan.");
-      return;
-    }
+  if (formData.metode_penghitungan === "berat" && berat < 50) {
+    alert(
+      `Berat barang hanya ${berat.toFixed(
+        2
+      )} kg. Minimal pengiriman adalah 50 kg.`
+    );
+    return;
+  }
 
-    if (
-      formData.metode_penghitungan === "volume" &&
-      total_biaya_gmj < selectedWilayah.cost_minimum
-    ) {
-      alert(
-        `Harga akhir (${total_biaya_gmj.toFixed(
-          2
-        )}) lebih kecil dari cost minimum wilayah (${
-          selectedWilayah.cost_minimum
-        }).`
-      );
-      return;
-    }
+  try {
+    const result = calculateVolume();
+    
+    const payload = {
+      ...formData,
+      berat: parseFloat(berat.toFixed(2)),
+      total_volume: totalVolume,
+      total_biaya_gmj: result.volume,
+      total_biaya_vendor: totalBiayaVendor,
+      biaya: totalSemuaBiaya,
+      jumlah_barang,
+      status_barang: "sedang_dikirim",
+      nomor_resi: resiBaru,
+      biaya_satuan: biayaSatuan, // Tambahkan biaya_satuan ke payload
+    };
 
-    if (formData.metode_penghitungan === "berat" && berat < 50) {
-      alert(
-        `Berat barang hanya ${berat.toFixed(
-          2
-        )} kg. Minimal pengiriman adalah 50 kg.`
-      );
-      return;
-    }
+    const res = await fetch("/api/pengiriman", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload),
+    });
 
-    try {
-      const result = calculateVolume();
-      
-      const payload = {
-        ...formData,
-        // berat: berat.toFixed(2),
-        berat: parseFloat(berat.toFixed(2)),
-        total_volume: totalVolume,
-        actual: beratActual,
-        total_biaya_gmj: result.volume,
-        total_biaya_vendor: totalBiayaVendor,
-        biaya: totalSemuaBiaya,
-        jumlah_barang,
-        status_barang: "sedang_dikirim",
-        nomor_resi: resiBaru,
-      };
-
-      
-
-      const res = await fetch("/api/pengiriman", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload),
-      });
-
-      if (!res.ok) throw new Error("Gagal menyimpan data");
-      alert("Data berhasil disimpan!");
-    } catch (error) {
-      alert("Terjadi kesalahan saat menyimpan data.");
-      console.error(error);
-    }
-  };
+    if (!res.ok) throw new Error("Gagal menyimpan data");
+    alert("Data berhasil disimpan!");
+  } catch (error) {
+    alert("Terjadi kesalahan saat menyimpan data.");
+    console.error(error);
+  }
+};
 
   useEffect(() => {
     const fetchWilayah = async () => {

@@ -10,25 +10,77 @@ import {
   TableRow,
   TableCell,
   TableBody,
-  Button,
   Paper,
   TableContainer,
   Box,
   FormControl,
   InputLabel,
   Typography,
-  SelectChangeEvent // Correctly imported for Select's onChange event
+  SelectChangeEvent,
+  Button,
 } from '@mui/material';
-import { styled } from '@mui/material/styles'; // Correct for custom styling
+import { styled } from '@mui/material/styles';
 import { format, isToday, isThisMonth, isThisYear } from 'date-fns';
+import * as XLSX from 'xlsx';
+import { saveAs } from 'file-saver';
 
-const PAGE_SIZE = 10;
+const exportToExcel = (data: PengirimanItem[]) => {
+  const groupedData: any[] = [];
+  let currentSTT = null;
 
-type Barang = {
-  panjang: number;
-  lebar: number;
-  tinggi: number;
+  data.forEach((item, index) => {
+    const date = new Date(item.tgl);
+    const formattedDate = `${date.getDate()}/${date.getMonth() + 1}/${date.getFullYear()}`;
+
+    const row = {
+      Tanggal: formattedDate,
+      STT: item.stt,
+      Tujuan: item.tujuan,
+      Penerima: item.penerima_dan_hp,
+      Pengirim: item.pengirim_dan_hp,
+      Jenis: item.jenis_kiriman,
+      Catatan: item.catatan,
+      Koli: item.koli,
+      Panjang: item.panjang,
+      Lebar: item.lebar,
+      Tinggi: item.tinggi,
+      M3: item.m3,
+      VW: item.vw,
+      KG: item.kg,
+      Tagihan: item.tagihan,
+      Alamat: item.alamat,
+    };
+
+    // Tambahkan row
+    groupedData.push(row);
+
+    // Cek jika STT berubah di item berikutnya, tambahkan baris kosong
+    const nextItem = data[index + 1];
+    if (!nextItem || nextItem.stt !== item.stt) {
+      groupedData.push({}); // baris kosong
+    }
+  });
+
+  const worksheet = XLSX.utils.json_to_sheet(groupedData);
+  const workbook = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(workbook, worksheet, 'Pengiriman');
+
+  const excelBuffer = XLSX.write(workbook, {
+    bookType: 'xlsx',
+    type: 'array',
+  });
+
+  // Simpan ke file (contoh)
+  const blob = new Blob([excelBuffer], { type: 'application/octet-stream' });
+  const url = window.URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = 'pengiriman.xlsx';
+  a.click();
+  window.URL.revokeObjectURL(url);
 };
+
+
 
 type PengirimanItem = {
   id: number;
@@ -50,15 +102,12 @@ type PengirimanItem = {
   alamat: string;
 };
 
-
-// Styling for TableCell in Header
 const StyledTableHeadCell = styled(TableCell)(({ theme }) => ({
   backgroundColor: theme.palette.grey[200],
   fontWeight: 'bold',
   whiteSpace: 'nowrap',
 }));
 
-// Styling for TableRow with zebra striping and hover
 const StyledTableRow = styled(TableRow)(({ theme }) => ({
   '&:nth-of-type(odd)': {
     backgroundColor: theme.palette.action.hover,
@@ -76,110 +125,93 @@ export default function PengirimanTable() {
   const [displayData, setDisplayData] = useState<PengirimanItem[]>([]);
   const [search, setSearch] = useState('');
   const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(10);
   const [totalFiltered, setTotalFiltered] = useState(0);
   const [dateFilter, setDateFilter] = useState('all');
+  
+  const totalPages = Math.ceil(totalFiltered / pageSize);
 
-  const totalPages = Math.ceil(totalFiltered / PAGE_SIZE);
-
-  // Fetch data awal sekali saja
   useEffect(() => {
     const fetchInitialData = async () => {
       try {
-        const res = await fetch('/api/barang'); // This will call your Next.js API route
-        if (!res.ok) { // Added a check for response status
-          throw new Error(`HTTP error! status: ${res.status}`);
-
-        }
+        const res = await fetch('/api/barang');
+        if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
         const json = await res.json();
         if (json.success) {
           setAllData(json.data);
         } else {
           console.error('Gagal mengambil data:', json.message);
-          setAllData([]);
         }
       } catch (err) {
         console.error('Gagal mengambil data:', err);
-        setAllData([]); // Ensure state is reset on error
       }
     };
     fetchInitialData();
   }, []);
 
-  // Efek untuk memproses data ketika allData, search, dateFilter, atau page berubah
   useEffect(() => {
-    let processedData = [...allData];
+    let filtered = [...allData];
 
-    // 1. Terapkan Filter Tanggal
     if (dateFilter !== 'all') {
-      processedData = processedData.filter((item: PengirimanItem) => {
-        try {
-          const itemDate = new Date(item.tgl);
-          if (isNaN(itemDate.getTime())) return false;
-
-          if (dateFilter === 'today') return isToday(itemDate);
-          if (dateFilter === 'thisMonth') return isThisMonth(itemDate);
-          if (dateFilter === 'thisYear') return isThisYear(itemDate);
-          return true; // Should not be reached if dateFilter is one of the above
-        } catch (e) {
-          console.warn(`Invalid date format for item ID ${item.id}: ${item.tgl}`);
-          return false;
-        }
+      filtered = filtered.filter((item) => {
+        const itemDate = new Date(item.tgl);
+        if (isNaN(itemDate.getTime())) return false;
+        if (dateFilter === 'today') return isToday(itemDate);
+        if (dateFilter === 'thisMonth') return isThisMonth(itemDate);
+        if (dateFilter === 'thisYear') return isThisYear(itemDate);
+        return true;
       });
     }
-
-    // 2. Terapkan Filter Pencarian
-    if (search) {
-      const q = search.toLowerCase();
-      processedData = processedData.filter(
-        (item: PengirimanItem) =>
-          item.pengirim_dan_hp.toLowerCase().includes(q) ||
-          item.stt.toLowerCase().includes(q)
+         if (search) {
+        const query = search.toLowerCase();
+        filtered = filtered.filter(
+        (item) =>
+          item.pengirim_dan_hp.toLowerCase().includes(query) ||
+          item.stt.toLowerCase().includes(query)
       );
     }
 
-    setTotalFiltered(processedData.length);
 
-    // 3. Paginasi
-    const start = (page - 1) * PAGE_SIZE;
-    const paginated = processedData.slice(start, start + PAGE_SIZE);
-    setDisplayData(paginated);
+    filtered.sort((a, b) => {
+      const sttA = Number(a.stt);
+      const sttB = Number(b.stt);
+      return sttA === sttB ? a.koli - b.koli : sttA - sttB;
+    });
 
-  }, [allData, search, dateFilter, page]);
+    setTotalFiltered(filtered.length);
+    setDisplayData(filtered.slice((page - 1) * pageSize, page * pageSize));
+  }, [allData, search, dateFilter, page, pageSize]);
 
-
-  const handleSearchChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    setSearch(event.target.value);
+  const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setSearch(e.target.value);
     setPage(1);
   };
 
-  const handleDateFilterChange = (event: SelectChangeEvent<string>) => {
-    setDateFilter(event.target.value);
+  const handleDateFilterChange = (e: SelectChangeEvent<string>) => {
+    setDateFilter(e.target.value);
+    setPage(1);
+  };      
+
+  const handleRowsPerPageChange = (e: SelectChangeEvent) => {
+    setPageSize(Number(e.target.value));
     setPage(1);
   };
 
   return (
-    <Box sx={{ p: { xs: 2, md: 3 }, }}>
-      <Typography variant="h5" gutterBottom sx={{ mb: 2, fontWeight: 'medium' }}>
-        Data Pengiriman
-      </Typography>
-      <Paper sx={{ p: 2, mb: 3, borderRadius: 2, boxShadow: 1 }}> {/* Subtle shadow for filter Paper */}
-        <Box sx={{ display: 'flex', flexDirection: { xs: 'column', md: 'row' }, gap: 2, alignItems: 'center', mb: 2 }}>
+    <Box sx={{ p: 2 }}>
+      <Typography variant="h5" gutterBottom>Data Pengiriman</Typography>
+
+      <Paper sx={{ p: 2, mb: 3 }}>
+        <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 2 }}>
           <TextField
             label="Cari Nama Pengirim / No. Resi (STTB)"
-            variant="outlined"
             value={search}
             onChange={handleSearchChange}
             fullWidth
-            sx={{ maxWidth: { md: 400 } }}
           />
-          <FormControl variant="outlined" sx={{ minWidth: 200, width: { xs: '100%', md: 'auto'} }}>
-            <InputLabel id="date-filter-label">Filter Tanggal</InputLabel>
-            <Select
-              labelId="date-filter-label"
-              value={dateFilter}
-              label="Filter Tanggal"
-              onChange={handleDateFilterChange}
-            >
+          <FormControl sx={{ minWidth: 200 }}>
+            <InputLabel>Filter Tanggal</InputLabel>
+            <Select value={dateFilter} label="Filter Tanggal" onChange={handleDateFilterChange}>
               <MenuItem value="all">Semua</MenuItem>
               <MenuItem value="today">Hari Ini</MenuItem>
               <MenuItem value="thisMonth">Bulan Ini</MenuItem>
@@ -189,94 +221,79 @@ export default function PengirimanTable() {
         </Box>
       </Paper>
 
-      <TableContainer component={Paper} sx={{ borderRadius: 2, boxShadow: 3 }}>
-        <Table sx={{ minWidth: 1200 }} aria-label="tabel pengiriman detail">
+      <Button onClick={() => exportToExcel(displayData)} sx={{ mb: 2 }}>Download Excel</Button>
+
+      <TableContainer component={Paper}>
+        <Table>
           <TableHead>
             <TableRow>
-              <StyledTableHeadCell>TGL & WAKTU</StyledTableHeadCell>
+              <StyledTableHeadCell>Tanggal</StyledTableHeadCell>
               <StyledTableHeadCell>STTB</StyledTableHeadCell>
-              <StyledTableHeadCell>TUJUAN</StyledTableHeadCell>
-              <StyledTableHeadCell>PENERIMA</StyledTableHeadCell>
-              <StyledTableHeadCell>PENGIRIM</StyledTableHeadCell>
-              <StyledTableHeadCell>JENIS</StyledTableHeadCell>
-              <StyledTableHeadCell>CATATAN</StyledTableHeadCell>
-              <StyledTableHeadCell align="right">KOLI</StyledTableHeadCell>
-              <StyledTableHeadCell align="right">P (cm)</StyledTableHeadCell> {/* Added units for clarity */}
-              <StyledTableHeadCell align="right">L (cm)</StyledTableHeadCell> {/* Added units for clarity */}
-              <StyledTableHeadCell align="right">T (cm)</StyledTableHeadCell> {/* Added units for clarity */}
-              <StyledTableHeadCell align="right">M³</StyledTableHeadCell>    {/* More common symbol */}
-              <StyledTableHeadCell align="right">VW (Kg)</StyledTableHeadCell> {/* Added units for clarity */}
+              <StyledTableHeadCell>Tujuan</StyledTableHeadCell>
+              <StyledTableHeadCell>Penerima</StyledTableHeadCell>
+              <StyledTableHeadCell>Pengirim</StyledTableHeadCell>
+              <StyledTableHeadCell>Jenis</StyledTableHeadCell>
+              <StyledTableHeadCell>Catatan</StyledTableHeadCell>
+              <StyledTableHeadCell align="right">Koli</StyledTableHeadCell>
+              <StyledTableHeadCell align="right">P</StyledTableHeadCell>
+              <StyledTableHeadCell align="right">L</StyledTableHeadCell>
+              <StyledTableHeadCell align="right">T</StyledTableHeadCell>
+              <StyledTableHeadCell align="right">M³</StyledTableHeadCell>
+              <StyledTableHeadCell align="right">VW</StyledTableHeadCell>
               <StyledTableHeadCell align="right">KG</StyledTableHeadCell>
-              <StyledTableHeadCell align="right">TAGIHAN (Rp)</StyledTableHeadCell>
-              <StyledTableHeadCell>ALAMAT / HP / KET</StyledTableHeadCell>
+              <StyledTableHeadCell align="right">Tagihan</StyledTableHeadCell>
+              <StyledTableHeadCell>Alamat</StyledTableHeadCell>
             </TableRow>
           </TableHead>
           <TableBody>
             {displayData.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={16} align="center" sx={{ py: 4 }}>
-                  Tidak ada data yang sesuai dengan filter.
-                </TableCell>
+                <TableCell colSpan={16} align="center">Tidak ada data ditemukan.</TableCell>
               </TableRow>
             ) : (
-              displayData.map((item) => {
-                let formattedDate = 'Tanggal Invalid';
-                try {
-                  formattedDate = format(new Date(item.tgl), 'dd/MM/yyyy');
-                } catch (e) {
-                  console.warn(`Invalid date format for item ID ${item.id}: ${item.tgl}`);
-                }
-
-                return (
-                  <StyledTableRow key={item.id}>
-                    <TableCell sx={{ whiteSpace: 'nowrap' }}>{formattedDate}</TableCell>
-                    <TableCell>{item.stt}</TableCell>
-                    <TableCell>{item.tujuan}</TableCell>
-                    <TableCell>{item.penerima_dan_hp}</TableCell>
-                    <TableCell>{item.pengirim_dan_hp}</TableCell>
-                    <TableCell>{item.jenis_kiriman}</TableCell>
-                    <TableCell>{item.catatan || '-'}</TableCell>
-                    <TableCell align="right">{item.koli}</TableCell>
-                    <TableCell align="right">{item.panjang}</TableCell>
-                    <TableCell align="right">{item.lebar}</TableCell>
-                    <TableCell align="right">{item.tinggi}</TableCell>
-                    <TableCell align="right">{item.m3.toFixed(3)}</TableCell>
-                    <TableCell align="right">{item.vw.toFixed(2)}</TableCell>
-                    <TableCell align="right">{item.kg ?? '-'}</TableCell>
-                    <TableCell align="right">{item.tagihan}</TableCell>
-                    <TableCell>{item.alamat}</TableCell>
-                  </StyledTableRow>
-                );
-              })
-
+              displayData.map((item) => (
+                <StyledTableRow key={item.id}>
+                  <TableCell>{new Date(item.tgl).toLocaleDateString("id-ID", {
+                      timeZone: "Asia/Jakarta",
+                    })
+                  }</TableCell>
+                  <TableCell>{item.stt}</TableCell>
+                  <TableCell>{item.tujuan}</TableCell>
+                  <TableCell>{item.penerima_dan_hp}</TableCell>
+                  <TableCell>{item.pengirim_dan_hp}</TableCell>
+                  <TableCell>{item.jenis_kiriman}</TableCell>
+                  <TableCell>{item.catatan || '-'}</TableCell>
+                  <TableCell align="right">{item.koli}</TableCell>
+                  <TableCell align="right">{item.panjang}</TableCell>
+                  <TableCell align="right">{item.lebar}</TableCell>
+                  <TableCell align="right">{item.tinggi}</TableCell>
+                  <TableCell align="right">{item.m3.toFixed(3)}</TableCell>
+                  <TableCell align="right">{item.vw.toFixed(2)}</TableCell>
+                  <TableCell align="right">{item.kg ?? '-'}</TableCell>
+                  <TableCell align="right">{item.tagihan.toLocaleString('id-ID')}</TableCell>
+                  <TableCell>{item.alamat}</TableCell>
+                </StyledTableRow>
+              ))
             )}
           </TableBody>
         </Table>
       </TableContainer>
 
-      {displayData.length > 0 && (
-        <Paper sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', p: 2, mt: 2, borderRadius: 2, boxShadow: 1 }}>
-          <Typography variant="body2">
-            Halaman {page} dari {totalPages || 1} (Total {totalFiltered} item)
-          </Typography>
-          <Box sx={{ display: 'flex', gap: 1 }}>
-            <Button
-              variant="outlined"
-              disabled={page === 1}
-              onClick={() => setPage(page - 1)}
-            >
-              Sebelumnya
-            </Button>
-            <Button
-              variant="outlined"
-              disabled={page === totalPages || totalPages === 0}
-              onClick={() => setPage(page + 1)}
-            >
-              Berikutnya
-            </Button>
-          </Box>
-        </Paper>
-      )}
+      <Paper sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', p: 2, mt: 2 }}>
+        <Typography>Halaman {page} dari {totalPages || 1} (Total {totalFiltered} item)</Typography>
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+          <FormControl size="small">
+            <InputLabel>Rows / Page</InputLabel>
+            <Select value={pageSize.toString()} label="Rows / Page" onChange={handleRowsPerPageChange}>
+              {[5, 10, 20, 50, 100].map((num) => (
+                <MenuItem key={num} value={num}>{num}</MenuItem>
+              ))}
+            </Select>
+          </FormControl>
+          <Button disabled={page === 1} onClick={() => setPage(page - 1)}>Sebelumnya</Button>
+          <Button disabled={page === totalPages || totalPages === 0} onClick={() => setPage(page + 1)}>Berikutnya</Button>
+        </Box>
+      </Paper>
     </Box>
   );
 }
