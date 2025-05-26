@@ -46,14 +46,12 @@ const SamplePage = () => {
     status_barang: "sedang_dikirim",
     metode_penghitungan: "volume",
     barang: [{ panjang: "", lebar: "", tinggi: "" }],
-    biaya_satuan: [], // Tambahkan ini
+    biaya_satuan: [],
   });
 
   const [wilayahOptions, setWilayahOptions] = useState<TarifWilayah[]>([]);
   const [jenisOptions, setJenisOptions] = useState<string[]>([]);
   const [tarifVendor, setTarifVendor] = useState<any[]>([]);
-
-
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
@@ -136,11 +134,9 @@ const SamplePage = () => {
     };
   };
 
-
   const generateNomorResi = () => {
-  return `RESI-${Date.now()}`;
-
-};
+    return `RESI-${Date.now()}`;
+  };
   const { volume, biaya, biayaPerBarangSatuan } = calculateVolume();
 
   const getBiayaPerBarang = (barang: {
@@ -186,10 +182,8 @@ const SamplePage = () => {
     const t = Number(barang.tinggi);
     if (isNaN(p) || isNaN(l) || isNaN(t)) return 0;
 
-    return (p * l * t);
+    return p * l * t;
   };
-
-
 
   const getBiayaGMJ = (barang: {
     panjang: string;
@@ -213,57 +207,53 @@ const SamplePage = () => {
     return volumeM3 * volume_rb;
   };
 
-const getTotalBiayaDanVolume = () => {
-  let totalVolume = 0;
-  let totalBiayaVendor = 0;
-  let totalBiayaGMJ = 0;
-  const biayaSatuan: number[] = []; // Array untuk menyimpan biaya satuan per barang
+  const getTotalBiayaDanVolume = () => {
+    let totalVolume = 0;
+    let totalBiayaVendor = 0;
+    let totalBiayaGMJ = 0;
+    const biayaSatuan: number[] = []; // Array untuk menyimpan biaya satuan per barang
 
-  const isVendor = formData.jenis === "vendor";
-  const isByBerat = formData.metode_penghitungan === "berat";
+    const isVendor = formData.jenis === "vendor";
+    const isByBerat = formData.metode_penghitungan === "berat";
 
-  formData.barang.forEach((barang) => {
-    const volumePerItem = getVolumePerItem(barang) / 1000000;
-    const biayaPerItemVendor = isVendor ? getBiayaPerBarang(barang) : 0;
-    const biayaPerItemGMJ = getBiayaGMJ(barang);
+    formData.barang.forEach((barang) => {
+      const volumePerItem = getVolumePerItem(barang) / 1000000;
+      const biayaPerItemVendor = isVendor ? getBiayaPerBarang(barang) : 0;
+      const biayaPerItemGMJ = getBiayaGMJ(barang);
 
-    totalVolume += volumePerItem;
-    totalBiayaVendor += biayaPerItemVendor;
-    totalBiayaGMJ += biayaPerItemGMJ;
+      totalVolume += volumePerItem;
+      totalBiayaVendor += biayaPerItemVendor;
+      totalBiayaGMJ += biayaPerItemGMJ;
 
-    let biayaBarang = biayaPerItemGMJ + biayaPerItemVendor;
+      let biayaBarang = biayaPerItemGMJ + biayaPerItemVendor;
 
-    // if (isByBerat) {
-    //   // Kalau hitung berdasarkan berat, hitung per itemnya pakai calculateBeratPerBarang
-    //   biayaBarang = calculateBeratPerBarang(barang);
-    // }
+      // if (isByBerat) {
+      //   // Kalau hitung berdasarkan berat, hitung per itemnya pakai calculateBeratPerBarang
+      //   biayaBarang = calculateBeratPerBarang(barang);
+      // }
 
-    biayaSatuan.push(Math.round(biayaBarang * 100) / 100);
-  });
+      biayaSatuan.push(Math.round(biayaBarang * 100) / 100);
+    });
 
-  const totalSemuaBiaya = biayaSatuan.reduce((acc, val) => acc + val, 0);
+    const totalSemuaBiaya = biayaSatuan.reduce((acc, val) => acc + val, 0);
 
-  return {
-    totalBiayaVendor: Math.round(totalBiayaVendor * 100) / 100,
-    totalBiayaGMJ: Math.round(totalBiayaGMJ * 100) / 100,
-    totalSemuaBiaya: Math.round(totalSemuaBiaya * 100) / 100,
-    totalVolume: Math.round(totalVolume * 1000) / 1000,
-    biayaSatuan, // <-- Ini yang nanti dikirim ke database
+    return {
+      totalBiayaVendor: Math.round(totalBiayaVendor * 100) / 100,
+      totalBiayaGMJ: Math.round(totalBiayaGMJ * 100) / 100,
+      totalSemuaBiaya: Math.round(totalSemuaBiaya * 100) / 100,
+      totalVolume: Math.round(totalVolume * 1000) / 1000,
+      biayaSatuan, // <-- Ini yang nanti dikirim ke database
+    };
   };
-};
-
-
 
   const { totalBiayaVendor, totalBiayaGMJ, totalSemuaBiaya, totalVolume } =
     getTotalBiayaDanVolume();
 
-  
+  const calculateBeratPerBarang = (item: any) => {
+    const { kategori_barang, wilayah } = formData;
+    const selectedWilayah = wilayahOptions.find((w) => w.wilayah === wilayah);
 
-  const calculateBeratPerBarang = (item:any) => {
-  const { kategori_barang, wilayah } = formData;
-  const selectedWilayah = wilayahOptions.find((w) => w.wilayah === wilayah);
-
-  if (!selectedWilayah) return 0;
+    if (!selectedWilayah) return 0;
 
     let rb = 0;
     if (kategori_barang === "ringan") {
@@ -272,16 +262,16 @@ const getTotalBiayaDanVolume = () => {
       rb = selectedWilayah.benda_berat_rb;
     }
 
-  const p = Number(item.panjang);
-  const l = Number(item.lebar);
-  const t = Number(item.tinggi);
+    const p = Number(item.panjang);
+    const l = Number(item.lebar);
+    const t = Number(item.tinggi);
 
-  const berat = ((p * l * t) / 4000) * rb;
+    const berat = ((p * l * t) / 4000) * rb;
 
-  return isNaN(berat) ? 0 : berat;
-};
+    return isNaN(berat) ? 0 : berat;
+  };
 
-const calculateBerat = () => {
+  const calculateBerat = () => {
     const { kategori_barang, wilayah } = formData;
     const selectedWilayah = wilayahOptions.find((w) => w.wilayah === wilayah);
 
@@ -306,15 +296,14 @@ const calculateBerat = () => {
     return isNaN(totalBerat) ? 0 : totalBerat;
   };
 
-
-const handleBeratSatuanChange = (index: number, value: string) => {
-  const updatedBeratSatuan = [...formData.berat_satuan];
-  updatedBeratSatuan[index] = Number(value);
-  setFormData(prev => ({
-    ...prev,
-    berat_satuan: updatedBeratSatuan
-  }));
-};
+  const handleBeratSatuanChange = (index: number, value: string) => {
+    const updatedBeratSatuan = [...formData.berat_satuan];
+    updatedBeratSatuan[index] = Number(value);
+    setFormData((prev) => ({
+      ...prev,
+      berat_satuan: updatedBeratSatuan,
+    }));
+  };
 
   const handleBarangChange = (
     index: number,
@@ -349,84 +338,109 @@ const handleBeratSatuanChange = (index: number, value: string) => {
     }));
   };
 
-const handleSubmit = async (e: React.FormEvent) => {
-  let { 
-    totalSemuaBiaya, 
-    totalBiayaVendor, 
-    totalVolume, 
-    biayaSatuan // Ambil biayaSatuan dari getTotalBiayaDanVolume
-  } = getTotalBiayaDanVolume();
-  
-  e.preventDefault();
-  const resiBaru = generateNomorResi();
+  const handleSubmit = async (e: React.FormEvent) => {
+    let {
+      totalSemuaBiaya,
+      totalBiayaVendor,
+      totalVolume,
+      biayaSatuan, // Ambil biayaSatuan dari getTotalBiayaDanVolume
+    } = getTotalBiayaDanVolume();
 
-  const { volume } = calculateVolume();
-  const total_biaya_gmj = volume;
-  const berat = calculateBerat();
-  const jumlah_barang = formData.barang.length;
+    e.preventDefault();
+    const resiBaru = generateNomorResi();
 
-  const selectedWilayah = wilayahOptions.find(
-    (w) => w.wilayah === formData.wilayah
-  );
+    const { volume } = calculateVolume();
+    const total_biaya_gmj = volume;
+    const berat = calculateBerat();
+    const jumlah_barang = formData.barang.length;
 
-  if (!selectedWilayah) {
-    alert("Wilayah tidak ditemukan.");
-    return;
-  }
-
-  if (
-    formData.metode_penghitungan === "volume" &&
-    totalSemuaBiaya < selectedWilayah.cost_minimum
-  ) {
-    alert(
-      `Harga akhir (${totalSemuaBiaya.toFixed(
-        2
-      )}) lebih kecil dari cost minimum wilayah (${
-        selectedWilayah.cost_minimum
-      }).`
+    const selectedWilayah = wilayahOptions.find(
+      (w) => w.wilayah === formData.wilayah
     );
-    totalSemuaBiaya = selectedWilayah.cost_minimum
-    biayaSatuan = Array(formData.barang.length).fill(selectedWilayah.cost_minimum / formData.barang.length);
-  }
 
-  if (formData.metode_penghitungan === "berat" && berat < 50) {
-    alert(
-      `Berat barang hanya ${berat.toFixed(
-        2
-      )} kg. Minimal pengiriman adalah 50 kg.`
-    );
-    
-  }
+    if (!selectedWilayah) {
+      alert("Wilayah tidak ditemukan.");
+      return;
+    }
 
-  try {
-    const result = calculateVolume();
-    
-    const payload = {
-      ...formData,
-      berat_satuan: formData.berat_satuan,
-      total_volume: totalVolume,
-      total_biaya_gmj: result.volume,
-      total_biaya_vendor: totalBiayaVendor,
-      biaya: totalSemuaBiaya,
-      jumlah_barang,
-      status_barang: "sedang_dikirim",
-      nomor_resi: resiBaru,
-      biaya_satuan: biayaSatuan, // Tambahkan biaya_satuan ke payload
-    };
+    if (
+      formData.metode_penghitungan === "volume" &&
+      totalSemuaBiaya < selectedWilayah.cost_minimum
+    ) {
+      alert(
+        `Harga akhir (${totalSemuaBiaya.toFixed(
+          2
+        )}) lebih kecil dari cost minimum wilayah (${
+          selectedWilayah.cost_minimum
+        }).`
+      );
+      totalSemuaBiaya = selectedWilayah.cost_minimum;
+      biayaSatuan = Array(formData.barang.length).fill(
+        selectedWilayah.cost_minimum / formData.barang.length
+      );
+    }
 
-    const res = await fetch("/api/pengiriman", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(payload),
-    });
+    if (formData.metode_penghitungan === "berat" && berat < 50) {
+      alert(
+        `Berat barang hanya ${berat.toFixed(
+          2
+        )} kg. Minimal pengiriman adalah 50 kg.`
+      );
+    }
 
-    if (!res.ok) throw new Error("Gagal menyimpan data");
-    alert("Data berhasil disimpan!");
-  } catch (error) {
-    alert("Terjadi kesalahan saat menyimpan data.");
-    console.error(error);
-  }
-};
+    try {
+      const result = calculateVolume();
+
+      const payload = {
+        ...formData,
+        berat_satuan: formData.berat_satuan,
+        total_volume: totalVolume,
+        total_biaya_gmj: result.volume,
+        total_biaya_vendor: totalBiayaVendor,
+        biaya: totalSemuaBiaya,
+        jumlah_barang,
+        status_barang: "sedang_dikirim",
+        nomor_resi: resiBaru,
+        biaya_satuan: biayaSatuan, // Tambahkan biaya_satuan ke payload
+      };
+
+      const res = await fetch("/api/pengiriman", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      });
+
+      if (!res.ok) throw new Error("Gagal menyimpan data");
+      alert("Data berhasil disimpan!");
+      setFormData({
+        nomor_resi: "-",
+        jenis: "",
+        nama_pengirim: "",
+        nama_penerima: "",
+        nomor_hp_pengirim: "",
+        nomor_hp_penerima: "",
+        isi_barang: "",
+        alamat_pengiriman: "",
+        catatan: "",
+        wilayah: "",
+        biaya: 0,
+        berat_satuan: [],
+        jumlah_barang: 0,
+        volume_rb: 0,
+        total_volume: 0,
+        total_biaya_gmj: 0,
+        total_biaya_vendor: 0,
+        kategori_barang: "-",
+        status_barang: "sedang_dikirim",
+        metode_penghitungan: "volume",
+        barang: [{ panjang: "", lebar: "", tinggi: "" }],
+        biaya_satuan: [],
+      });
+    } catch (error) {
+      alert("Terjadi kesalahan saat menyimpan data.");
+      console.error(error);
+    }
+  };
 
   useEffect(() => {
     const fetchWilayah = async () => {
@@ -566,7 +580,6 @@ const handleSubmit = async (e: React.FormEvent) => {
               </FormControl>
             </Grid>
 
-
             <Grid item xs={12}>
               <FormControl component="fieldset">
                 <RadioGroup
@@ -576,12 +589,12 @@ const handleSubmit = async (e: React.FormEvent) => {
                 >
                   <FormControlLabel
                     value="volume"
-                    control={<Radio color="warning"/>}
+                    control={<Radio color="warning" />}
                     label="Hitung berdasarkan Volume"
                   />
                   <FormControlLabel
                     value="berat"
-                    control={<Radio color="warning"/>}
+                    control={<Radio color="warning" />}
                     label="Hitung berdasarkan Berat"
                   />
                 </RadioGroup>
@@ -618,7 +631,12 @@ const handleSubmit = async (e: React.FormEvent) => {
 
               return (
                 <Box key={index} mb={2}>
-                  <Grid container spacing={2} alignItems="center" sx={{ ml: 2, mt: 2 }}>
+                  <Grid
+                    container
+                    spacing={2}
+                    alignItems="center"
+                    sx={{ ml: 2, mt: 2 }}
+                  >
                     <Grid item xs={12} sm={2}>
                       <TextField
                         fullWidth
@@ -658,45 +676,54 @@ const handleSubmit = async (e: React.FormEvent) => {
                           name="berat"
                           type="number"
                           value={formData.berat_satuan[index] || ""}
-                          onChange={(e) => handleBeratSatuanChange(index, e.target.value)}
-
+                          onChange={(e) =>
+                            handleBeratSatuanChange(index, e.target.value)
+                          }
                         />
                       </Grid>
                     )}
 
-                    <Grid item xs={12} sm={formData.metode_penghitungan === "berat" ? 4 : 6}>
+                    <Grid
+                      item
+                      xs={12}
+                      sm={formData.metode_penghitungan === "berat" ? 4 : 6}
+                    >
                       <Button
                         fullWidth
                         variant="outlined"
-      color="error"
-      onClick={() => hapusBarang(index)}
-      disabled={formData.barang.length === 1}
-    >
-      Hapus
-    </Button>
-  </Grid>
-</Grid>
+                        color="error"
+                        onClick={() => hapusBarang(index)}
+                        disabled={formData.barang.length === 1}
+                      >
+                        Hapus
+                      </Button>
+                    </Grid>
+                  </Grid>
 
-
-                  <Box mt={1} color="gray" sx={{ ml: 5, display: "flex", gap: 2 }}>
+                  <Box
+                    mt={1}
+                    color="gray"
+                    sx={{ ml: 5, display: "flex", gap: 2 }}
+                  >
                     <em>
                       Volume Barang {index + 1}:{" "}
-                      {(getVolumePerItem(item) /1000000).toLocaleString("id-ID")} m³
+                      {(getVolumePerItem(item) / 1000000).toLocaleString(
+                        "id-ID"
+                      )}{" "}
+                      m³
                     </em>
                     <br />
                     <span>
-                      VW :{" "}
-                      {(getVolumePerItem(item) / 4000).toFixed(2)}
+                      VW : {(getVolumePerItem(item) / 4000).toFixed(2)}
                     </span>
-
 
                     {formData.metode_penghitungan === "berat" ? (
                       <span>
                         Biaya Barang: Rp{" "}
-                        {Math.round(calculateBeratPerBarang(item)).toLocaleString("id-ID")}
+                        {Math.round(
+                          calculateBeratPerBarang(item)
+                        ).toLocaleString("id-ID")}
                       </span>
-                      
-                      
                     ) : (
                       <>
                         <span>
@@ -706,19 +733,23 @@ const handleSubmit = async (e: React.FormEvent) => {
                         {formData.jenis === "vendor" && (
                           <span>
                             Biaya Vendor: Rp{" "}
-                            {Math.round(getBiayaPerBarang(item)).toLocaleString("id-ID")}
+                            {Math.round(getBiayaPerBarang(item)).toLocaleString(
+                              "id-ID"
+                            )}
                           </span>
                         )}
                       </>
                     )}
                   </Box>
 
-
-
                   {/* Tombol tambah hanya muncul setelah barang terakhir */}
                   {isLastItem && (
                     <Box mt={2} sx={{ ml: 2, mt: 2 }}>
-                      <Button variant="contained" onClick={tambahBarang} color="warning">
+                      <Button
+                        variant="contained"
+                        onClick={tambahBarang}
+                        color="warning"
+                      >
                         + Tambah Barang
                       </Button>
                     </Box>
@@ -747,13 +778,13 @@ const handleSubmit = async (e: React.FormEvent) => {
                   {/* <strong>Biaya Satuan:</strong> Rp{" "}
                   {calculateVolume().biaya.toLocaleString("id-ID")}
                   <br /> */}
-                 {formData.jenis === "vendor" && (
+                  {formData.jenis === "vendor" && (
                     <Box>
                       <strong>Total Biaya Vendor:</strong> Rp{" "}
-                      {Math.round(totalBiayaVendor).toLocaleString("id-ID")} <br />
+                      {Math.round(totalBiayaVendor).toLocaleString("id-ID")}{" "}
+                      <br />
                     </Box>
                   )}
-
                   <strong>Total Biaya GMJ:</strong> Rp{" "}
                   {Math.round(totalBiayaGMJ).toLocaleString("id-ID")} <br />
                   <strong>Total Biaya Seluruhnya:</strong> Rp{" "}
@@ -773,7 +804,6 @@ const handleSubmit = async (e: React.FormEvent) => {
                   <strong>Total Harga: Rp.</strong>{" "}
                   {Math.round(calculateBerat()).toLocaleString("id-ID")}
                   <br />
-
                   {calculateBerat() < 50 && (
                     <span style={{ color: "red", fontStyle: "italic" }}>
                       Minimal berat pengiriman adalah 50 kg
