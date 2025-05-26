@@ -132,6 +132,30 @@ export default function InventoryPage() {
       ? data
       : data.filter((item) => item.status_barang === filter);
 
+  const handleMarkAsSelesai = async (id: string) => {
+    try {
+      const res = await fetch(`/api/pengiriman/${id}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ status_barang: "telah_selesai" }),
+      });
+
+      if (!res.ok) throw new Error("Gagal update status.");
+
+      // Refresh data setelah berhasil update
+      const updated = await fetch("/api/pengiriman").then((res) => res.json());
+      const parsed = updated.map((item: any) => ({
+        ...item,
+        barang: Array.isArray(item.barang)
+          ? item.barang
+          : JSON.parse(item.barang),
+      }));
+      setData(parsed);
+    } catch (err) {
+      console.error("Gagal update ke telah_selesai:", err);
+    }
+  };
+
   const handleOpenDialog = async (item: Pengiriman) => {
     setSelectedItem(item);
     setOpenDialog(true);
@@ -246,7 +270,16 @@ export default function InventoryPage() {
                         </Button>
                       </TableCell>
                       <TableCell align="center">
-                        {userRole === "USER" ? (
+                        {item.status_barang === "telah_diterima" &&
+                        userRole === "SUPERADMIN" ? (
+                          <Button
+                            variant="outlined"
+                            color="info"
+                            onClick={() => handleMarkAsSelesai(String(item.id))}
+                          >
+                            Tandai Selesai
+                          </Button>
+                        ) : userRole === "USER" ? (
                           item.status_barang === "telah_diterima" ? (
                             <Button
                               variant="outlined"

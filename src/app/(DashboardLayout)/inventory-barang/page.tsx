@@ -1,6 +1,10 @@
-'use client';
+"use client";
 
+<<<<<<< HEAD
 import { useEffect, useState } from 'react';
+=======
+import React, { useEffect, useState } from "react";
+>>>>>>> 903de93 (merge)
 import {
   TextField,
   Select,
@@ -16,6 +20,7 @@ import {
   FormControl,
   InputLabel,
   Typography,
+<<<<<<< HEAD
   SelectChangeEvent,
   Button,
   Dialog,
@@ -29,6 +34,12 @@ import { format, isToday, isThisMonth, isThisYear } from 'date-fns';
 import * as XLSX from 'xlsx';
 import { saveAs } from 'file-saver';
 import React from 'react';
+=======
+  SelectChangeEvent, // Correctly imported for Select's onChange event
+} from "@mui/material";
+import { styled } from "@mui/material/styles"; // Correct for custom styling
+import { format, isToday, isThisMonth, isThisYear } from "date-fns";
+>>>>>>> 903de93 (merge)
 
 const exportToExcel = (data: PengirimanItem[]) => {
   const groupedData: any[] = [];
@@ -110,18 +121,18 @@ type PengirimanItem = {
 
 const StyledTableHeadCell = styled(TableCell)(({ theme }) => ({
   backgroundColor: theme.palette.grey[200],
-  fontWeight: 'bold',
-  whiteSpace: 'nowrap',
+  fontWeight: "bold",
+  whiteSpace: "nowrap",
 }));
 
 const StyledTableRow = styled(TableRow)(({ theme }) => ({
-  '&:nth-of-type(odd)': {
+  "&:nth-of-type(odd)": {
     backgroundColor: theme.palette.action.hover,
   },
-  '&:hover': {
+  "&:hover": {
     backgroundColor: theme.palette.grey[300],
   },
-  '&:last-child td, &:last-child th': {
+  "&:last-child td, &:last-child th": {
     border: 0,
   },
 }));
@@ -129,15 +140,19 @@ const StyledTableRow = styled(TableRow)(({ theme }) => ({
 export default function PengirimanTable() {
   const [allData, setAllData] = useState<PengirimanItem[]>([]);
   const [displayData, setDisplayData] = useState<PengirimanItem[]>([]);
-  const [search, setSearch] = useState('');
+  const [search, setSearch] = useState("");
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
   const [totalFiltered, setTotalFiltered] = useState(0);
+<<<<<<< HEAD
   const [dateFilter, setDateFilter] = useState('all');
   const [openEdit, setOpenEdit] = useState(false);
   const [editItem, setEditItem] = useState<PengirimanItem | null>(null);
    const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
   const [itemToDelete, setItemToDelete] = useState<number | null>(null);
+=======
+  const [dateFilter, setDateFilter] = useState("all");
+>>>>>>> 903de93 (merge)
 
   // Fungsi untuk membuka dialog konfirmasi
   const openDeleteConfirm = (id: number) => {
@@ -164,16 +179,33 @@ export default function PengirimanTable() {
   useEffect(() => {
     const fetchInitialData = async () => {
       try {
+<<<<<<< HEAD
         const res = await fetch('/api/barang');
         if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
+=======
+        const res = await fetch("/api/barang"); // This will call your Next.js API route
+        if (!res.ok) {
+          // Added a check for response status
+          throw new Error(`HTTP error! status: ${res.status}`);
+        }
+>>>>>>> 903de93 (merge)
         const json = await res.json();
         if (json.success) {
           setAllData(json.data);
         } else {
+<<<<<<< HEAD
           console.error('Gagal mengambil data:', json.message);
         }
       } catch (err) {
         console.error('Gagal mengambil data:', err);
+=======
+          console.error("Gagal mengambil data:", json.message);
+          setAllData([]);
+        }
+      } catch (err) {
+        console.error("Gagal mengambil data:", err);
+        setAllData([]); // Ensure state is reset on error
+>>>>>>> 903de93 (merge)
       }
     };
     fetchInitialData();
@@ -182,6 +214,7 @@ export default function PengirimanTable() {
   useEffect(() => {
     let filtered = [...allData];
 
+<<<<<<< HEAD
     if (dateFilter !== 'all') {
       filtered = filtered.filter((item) => {
         const itemDate = new Date(item.tgl);
@@ -190,6 +223,25 @@ export default function PengirimanTable() {
         if (dateFilter === 'thisMonth') return isThisMonth(itemDate);
         if (dateFilter === 'thisYear') return isThisYear(itemDate);
         return true;
+=======
+    // 1. Terapkan Filter Tanggal
+    if (dateFilter !== "all") {
+      processedData = processedData.filter((item: PengirimanItem) => {
+        try {
+          const itemDate = new Date(item.createdAt);
+          if (isNaN(itemDate.getTime())) return false;
+
+          if (dateFilter === "today") return isToday(itemDate);
+          if (dateFilter === "thisMonth") return isThisMonth(itemDate);
+          if (dateFilter === "thisYear") return isThisYear(itemDate);
+          return true; // Should not be reached if dateFilter is one of the above
+        } catch (e) {
+          console.warn(
+            `Invalid date format for item ID ${item.id}: ${item.createdAt}`
+          );
+          return false;
+        }
+>>>>>>> 903de93 (merge)
       });
     }
          if (search) {
@@ -202,6 +254,7 @@ export default function PengirimanTable() {
     }
 
 
+<<<<<<< HEAD
     filtered.sort((a, b) => {
       const sttA = Number(a.stt);
       const sttB = Number(b.stt);
@@ -214,6 +267,16 @@ export default function PengirimanTable() {
 
   const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setSearch(e.target.value);
+=======
+    // 3. Paginasi
+    const start = (page - 1) * PAGE_SIZE;
+    const paginated = processedData.slice(start, start + PAGE_SIZE);
+    setDisplayData(paginated);
+  }, [allData, search, dateFilter, page]);
+
+  const handleSearchChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    setSearch(event.target.value);
+>>>>>>> 903de93 (merge)
     setPage(1);
   };
   const handleDelete = async (id: number) => {
@@ -284,20 +347,56 @@ const submitEdit = async () => {
 
 
   return (
+<<<<<<< HEAD
     <Box sx={{ p: 2 }}>
       <Typography variant="h5" gutterBottom>Data Pengiriman</Typography>
 
       <Paper sx={{ p: 2, mb: 3 }}>
         <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 2 }}>
+=======
+    <Box sx={{ p: { xs: 2, md: 3 } }}>
+      <Typography
+        variant="h5"
+        gutterBottom
+        sx={{ mb: 2, fontWeight: "medium" }}
+      >
+        Data Pengiriman
+      </Typography>
+        {" "}
+        {/* Subtle shadow for filter Paper */}
+        <Box
+          sx={{
+            display: "flex",
+            flexDirection: { xs: "column", md: "row" },
+            gap: 2,
+            alignItems: "center",
+            mb: 2,
+          }}
+        >
+>>>>>>> 903de93 (merge)
           <TextField
             label="Cari Nama Pengirim / No. Resi (STTB)"
             value={search}
             onChange={handleSearchChange}
             fullWidth
           />
+<<<<<<< HEAD
           <FormControl sx={{ minWidth: 200 }}>
             <InputLabel>Filter Tanggal</InputLabel>
             <Select value={dateFilter} label="Filter Tanggal" onChange={handleDateFilterChange}>
+=======
+          <FormControl
+            variant="outlined"
+            sx={{ minWidth: 200, width: { xs: "100%", md: "auto" } }}
+          >
+            <InputLabel id="date-filter-label">Filter Tanggal</InputLabel>
+            <Select
+              labelId="date-filter-label"
+              value={dateFilter}
+              label="Filter Tanggal"
+              onChange={handleDateFilterChange}
+            >
+>>>>>>> 903de93 (merge)
               <MenuItem value="all">Semua</MenuItem>
               <MenuItem value="today">Hari Ini</MenuItem>
               <MenuItem value="thisMonth">Bulan Ini</MenuItem>
@@ -305,7 +404,6 @@ const submitEdit = async () => {
             </Select>
           </FormControl>
         </Box>
-      </Paper>
 
       <Button onClick={() => exportToExcel(displayData)} sx={{ mb: 2 }}>Download Excel</Button>
 
@@ -313,6 +411,7 @@ const submitEdit = async () => {
         <Table>
           <TableHead>
             <TableRow>
+<<<<<<< HEAD
               <StyledTableHeadCell>Tanggal</StyledTableHeadCell>
               <StyledTableHeadCell>STTB</StyledTableHeadCell>
               <StyledTableHeadCell>Tujuan</StyledTableHeadCell>
@@ -330,14 +429,34 @@ const submitEdit = async () => {
               <StyledTableHeadCell align="right">Tagihan</StyledTableHeadCell>
               <StyledTableHeadCell>Alamat</StyledTableHeadCell>
               <StyledTableHeadCell align='center'>Aksi</StyledTableHeadCell>
+=======
+              <TableCell>TGL & WAKTU</TableCell>
+              <TableCell>STTB</TableCell>
+              <TableCell>TUJUAN</TableCell>
+              <TableCell>PENERIMA</TableCell>
+              <TableCell>PENGIRIM</TableCell>
+              <TableCell>JENIS</TableCell>
+              <TableCell>CATATAN</TableCell>
+              <TableCell align="right">KOLI</TableCell>
+              <TableCell align="right">P (cm)</TableCell>
+              <TableCell align="right">L (cm)</TableCell>
+              <TableCell align="right">T (cm)</TableCell>
+              <TableCell align="right">M³</TableCell>
+              <TableCell align="right">VW (Kg)</TableCell>
+              <TableCell align="right">KG</TableCell>
+              <TableCell align="right">TAGIHAN (Rp)</TableCell>
+              <TableCell>ALAMAT / HP / KET</TableCell>
+>>>>>>> 903de93 (merge)
             </TableRow>
           </TableHead>
+
           <TableBody>
             {displayData.length === 0 ? (
               <TableRow>
                 <TableCell colSpan={16} align="center">Tidak ada data ditemukan.</TableCell>
               </TableRow>
             ) : (
+<<<<<<< HEAD
               displayData.map((item) => (
                 <StyledTableRow key={item.id}>
                   <TableCell>{new Date(item.tgl).toLocaleDateString("id-ID", {
@@ -402,11 +521,74 @@ const submitEdit = async () => {
                       </TableCell>
                 </StyledTableRow>
               ))
+=======
+              displayData.map((item) => {
+                const barang = item.barang?.[0] || {
+                  panjang: 0,
+                  lebar: 0,
+                  tinggi: 0,
+                };
+                const p = Number(barang.panjang);
+                const l = Number(barang.lebar);
+                const t = Number(barang.tinggi);
+                const m3 = (p * l * t) / 1000000;
+
+                let formattedDate = "Tanggal Invalid";
+                try {
+                  formattedDate = format(
+                    new Date(item.createdAt),
+                    "dd/MM/yyyy"
+                  );
+                } catch (e) {
+                  console.warn(
+                    `Invalid date format for item ID ${item.id}: ${item.createdAt}`
+                  );
+                }
+
+                return (
+                  <TableRow key={item.id}>
+                    <TableCell sx={{ whiteSpace: "nowrap" }}>
+                      {formattedDate}
+                    </TableCell>
+                    <TableCell>{item.sttb}</TableCell>
+                    <TableCell>{item.wilayah}</TableCell>
+                    <TableCell>{item.nama_penerima}</TableCell>
+                    <TableCell>{item.nama_pengirim}</TableCell>
+                    <TableCell>{item.jenis}</TableCell>
+                    <TableCell>{item.catatan || "-"}</TableCell>
+                    <TableCell align="right">{item.jumlah_barang}</TableCell>
+                    <TableCell align="right">{p}</TableCell>
+                    <TableCell align="right">{l}</TableCell>
+                    <TableCell align="right">{t}</TableCell>
+                    <TableCell align="right">{m3.toFixed(3)}</TableCell>
+                    <TableCell align="right">
+                      {(m3 * item.volume_rb).toFixed(3)}
+                    </TableCell>
+                    <TableCell align="right">{item.berat ?? "-"}</TableCell>
+                    <TableCell align="right">
+                      {item.biaya.toLocaleString("id-ID")}
+                    </TableCell>
+                    <TableCell sx={{ minWidth: 250 }}>
+                      {item.alamat_pengiriman && (
+                        <div>Alamat: {item.alamat_pengiriman}</div>
+                      )}
+                      {item.nomor_hp_pengirim && (
+                        <div>Pengirim HP: {item.nomor_hp_pengirim}</div>
+                      )}
+                      {item.nomor_hp_penerima && (
+                        <div>Penerima HP: {item.nomor_hp_penerima}</div>
+                      )}
+                    </TableCell>
+                  </TableRow>
+                );
+              })
+>>>>>>> 903de93 (merge)
             )}
           </TableBody>
         </Table>
       </TableContainer>
 
+<<<<<<< HEAD
       <Paper sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', p: 2, mt: 2 }}>
         <Typography>Halaman {page} dari {totalPages || 1} (Total {totalFiltered} item)</Typography>
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
@@ -473,6 +655,41 @@ const submitEdit = async () => {
           </DialogActions>
         </Dialog>
 
+=======
+      {displayData.length > 0 && (
+        <Paper
+          sx={{
+            display: "flex",
+            justifyContent: "space-between",
+            alignItems: "center",
+            p: 2,
+            mt: 2,
+            borderRadius: 2,
+            boxShadow: 1,
+          }}
+        >
+          <Typography variant="body2">
+            Halaman {page} dari {totalPages || 1} (Total {totalFiltered} item)
+          </Typography>
+          <Box sx={{ display: "flex", gap: 1 }}>
+            <Button
+              variant="outlined"
+              disabled={page === 1}
+              onClick={() => setPage(page - 1)}
+            >
+              Sebelumnya
+            </Button>
+            <Button
+              variant="outlined"
+              disabled={page === totalPages || totalPages === 0}
+              onClick={() => setPage(page + 1)}
+            >
+              Berikutnya
+            </Button>
+          </Box>
+        </Paper>
+      )}
+>>>>>>> 903de93 (merge)
     </Box>
     
   );
