@@ -318,6 +318,9 @@ export default function InventoryPage() {
                       <strong>Nomor Resi:</strong>{" "}
                       {selectedItem.nomor_resi || "-"}
                     </Typography>
+                    <Typography>
+                      <strong>Status:</strong> {selectedItem.status_barang}
+                    </Typography>
                   </Box>
                 </Grid>
 
@@ -325,16 +328,37 @@ export default function InventoryPage() {
                 <Grid item xs={12} sm={6}>
                   <Box display="flex" flexDirection="column" gap={1}>
                     <Typography>
-                      <strong>Jumlah Barang:</strong>{" "}
-                      {selectedItem.jumlah_barang}
+                      <strong>Nama Penerima:</strong>{" "}
+                      {selectedItem.nama_penerima}
                     </Typography>
                     <Typography>
-                      <strong>Status:</strong> {selectedItem.status_barang}
+                      <strong>Nomor HP:</strong>{" "}
+                      {selectedItem.nomor_hp_penerima}
+                    </Typography>
+                    <Typography>
+                      <strong>Jumlah Barang:</strong>{" "}
+                      {selectedItem.jumlah_barang}
                     </Typography>
                     <Typography>
                       <strong>Jenis:</strong> {selectedItem.jenis}
                     </Typography>
                   </Box>
+                </Grid>
+              </Grid>
+
+              <Divider sx={{ my: 2 }} />
+
+              <Grid container spacing={2}>
+                <Grid item xs={12}>
+                  <Box display="flex" flexDirection="column" gap={1} sx={{ wordBreak: 'break-word' }}>
+                    <Typography>
+                      <strong>Wilayah:</strong> {selectedItem.wilayah}
+                    </Typography>
+                    <Typography>
+                      <strong>Alamat:</strong> {selectedItem.alamat_pengiriman}
+                    </Typography>
+                  </Box>
+
                 </Grid>
               </Grid>
 
