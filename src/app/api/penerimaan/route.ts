@@ -11,15 +11,15 @@ export const dynamic = "force-dynamic";
 
 const uploadDir = path.join(process.cwd(), "public/uploads-penerimaan-barang");
 
-function readableWebToNodeStream(webStream: ReadableStream<Uint8Array>) {
-  const reader = webStream.getReader();
-  return new Readable({
-    async read() {
-      const { done, value } = await reader.read();
-      this.push(done ? null : Buffer.from(value));
-    },
-  });
-}
+// function readableWebToNodeStream(webStream: ReadableStream<Uint8Array>) {
+//   const reader = webStream.getReader();
+//   return new Readable({
+//     async read() {
+//       const { done, value } = await reader.read();
+//       this.push(done ? null : Buffer.from(value));
+//     },
+//   });
+// }
 
 export async function POST(request: Request) {
   try {
