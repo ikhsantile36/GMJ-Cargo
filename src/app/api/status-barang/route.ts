@@ -1,3 +1,4 @@
+// app/api/status/route.ts
 import { NextResponse } from "next/server";
 
 export enum StatusBarang {
@@ -7,7 +8,8 @@ export enum StatusBarang {
   telah_selesai = "telah_selesai",
 }
 
+// GET handler untuk API route
 export async function GET() {
-  const values = Object.values(StatusBarang); 
-  return NextResponse.json(values);
+  const values = Object.values(StatusBarang);
+  return NextResponse.json({ statusList: values });
 }

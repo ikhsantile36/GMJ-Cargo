@@ -2,25 +2,12 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { format } from 'date-fns';
 
-export const generateSTTB = async (): Promise<string> => {
-  const now = new Date();
-  const bulan = format(now, 'MM');
-  const tahun = format(now, 'yyyy');
+import { generateSTTB } from "@/utils/generateSTTB";
 
-  const count = await prisma.pengiriman.count({
-    where: {
-      createdAt: {
-        gte: new Date(`${tahun}-${bulan}-01T00:00:00Z`),
-        lt: new Date(`${tahun}-${bulan}-31T23:59:59Z`),
-      },
-    },
-  });
 
-  const urutan = count + 1;
-  return `${bulan}${String(urutan).padStart(3, '0')}`;
-};
 
 export async function POST(req: NextRequest) {
+  
   try {
     const body = await req.json();
     console.log('Received data:', body);
@@ -57,6 +44,7 @@ export async function POST(req: NextRequest) {
         { success: false, message: "Data yang diperlukan tidak lengkap" },
         { status: 400 }
       );
+
     }
 
     // 1. Cek atau buat user
@@ -75,10 +63,10 @@ export async function POST(req: NextRequest) {
         },
       });
     }
-
+    
     // 2. Generate STTB
     const sttb = await generateSTTB();
-
+    
     // 3. Validasi dan transformasi data array
     const barangArray = Array.isArray(barang) ? barang : [];
     const biayaSatuanArray = Array.isArray(biaya_satuan) ? biaya_satuan : [];

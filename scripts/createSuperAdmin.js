@@ -11,14 +11,14 @@ const createSuperAdmin = async () => {
 
     // Cek apakah superadmin sudah ada
     const existing = await prisma.user.findFirst({
-      where: { username: 'superadmin' },
+      where: { username: 'owner' },
     });
 
     if (!existing) {
       // Membuat user superadmin baru
       const admin = await prisma.user.create({
         data: {
-          username: 'OWNER',
+          username: 'owner',
           email: 'superadmin@example.com',
           password: hashedPassword,
           nomor_hp: '081234567890',

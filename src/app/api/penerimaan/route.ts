@@ -5,12 +5,7 @@ import fs from "fs";
 import path from "path";
 import { prisma } from "@/lib/prisma";
 
-// Disabling automatic body parsing
-export const config = {
-  api: {
-    bodyParser: false,
-  },
-};
+
 
 export const dynamic = "force-dynamic";
 

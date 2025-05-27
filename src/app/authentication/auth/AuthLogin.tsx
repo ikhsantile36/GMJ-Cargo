@@ -62,9 +62,9 @@ const AuthLogin = ({ title, subtitle, subtext }: loginType) => {
         case "OPERATOR":
           router.push("/status-barang");
           break;
-        case "OWNER":
-        case "ADMIN":
-          router.push("/");
+          case "OWNER":
+          case "ADMIN":
+          router.push("/dashboard");
           break;
         default:
           router.push("/");

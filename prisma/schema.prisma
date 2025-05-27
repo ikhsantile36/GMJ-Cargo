@@ -90,7 +90,7 @@ model Barang {
   tujuan          String
   penerima_dan_hp String
   pengirim_dan_hp String
-  jenis_kiriman   String
+  jenis_kiriman   String?
   catatan         String?
   koli            Int
   panjang         Float

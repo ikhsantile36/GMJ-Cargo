@@ -26,6 +26,7 @@ import ErrorIcon from "@mui/icons-material/Error";
 import DoneAllIcon from "@mui/icons-material/DoneAll";
 import VisibilityIcon from "@mui/icons-material/Visibility";
 import { useEffect, useState } from "react";
+import Image from 'next/image'
 import { Pengiriman } from "@/app/types/pengiriman";
 import { useRouter } from "next/navigation";
 import { Inventory } from "@/app/types/inventory";
@@ -565,7 +566,7 @@ export default function InventoryPage() {
                               target="_blank"
                               rel="noopener noreferrer"
                             >
-                              <img
+                              {/* <img
                                 src={log.foto}
                                 alt="Foto lokasi"
                                 style={{
@@ -576,7 +577,8 @@ export default function InventoryPage() {
                                   border: "1px solid #ccc",
                                   cursor: "pointer",
                                 }}
-                              />
+                              /> */}
+                              <Image src= {log.foto} alt="Foto Lokasi" width={100} height={100} />
                             </a>
                           </Box>
                         )}

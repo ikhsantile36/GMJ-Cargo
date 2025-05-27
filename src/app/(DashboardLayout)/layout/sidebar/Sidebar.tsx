@@ -1,5 +1,6 @@
 import { useMediaQuery, Box, Drawer } from "@mui/material";
 import SidebarItems from "./SidebarItems";
+import Image from 'next/image'
 import { Sidebar, Logo } from "react-mui-sidebar";
 
 interface ItemType {
@@ -70,11 +71,13 @@ const MSidebar = ({
               {/* Logo */}
               {/* ------------------------------------------- */}
               <Box sx={{ display: "flex", justifyContent: "center", mt: 3 }}>
-                <img
-                  src="/images/logos/gmj-logo-1.png"
-                  alt="GMJ Logo"
+                
+                <Image src="/images/logos/gmj-logo-1.png" alt="GMJ Logo" width={100} height={100} />
+                {/* <img
+                  src=""
+                  alt=" Logo"
                   style={{ width: "100px", height: "auto" }} // Atur ukuran sesuai kebutuhan
-                />
+                /> */}
               </Box>
               <Box>
                 {/* ------------------------------------------- */}
