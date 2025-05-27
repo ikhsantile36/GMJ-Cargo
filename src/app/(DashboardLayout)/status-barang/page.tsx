@@ -92,6 +92,8 @@ export default function InventoryPage() {
   const searchParams = useSearchParams();
   const urlFilter = searchParams.get("filter") as InventoryStatus | null;
   const [userPhone, setUserPhone] = useState<string | null>(null);
+  const [searchQuery, setSearchQuery] = useState("");
+
 
   type Props = {
     data: User[];
@@ -144,10 +146,19 @@ export default function InventoryPage() {
     }
   }, []);
 
-      const filteredData =
-        userRole === "USER"
-          ? data.filter((item) => item.nomor_hp_pengirim === userPhone)
-          : data.filter((item) => item.status_barang === filter);
+      const filteredData = data.filter((item) => {
+  const matchesRole =
+    userRole === "USER"
+      ? item.nomor_hp_pengirim === userPhone
+      : item.status_barang === filter;
+
+  const matchesSearch =
+    item.sttb?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    searchQuery.trim() === "";
+
+  return matchesRole && matchesSearch;
+});
+
 
   const handleMarkAsSelesai = async (id: string) => {
     try {
@@ -222,7 +233,25 @@ export default function InventoryPage() {
             ))}
           </Stack>
         </Stack>
+        
       )}
+          {userRole !== "USER" && (
+            <Stack direction="row" spacing={2} alignItems="center" mb={2}>
+              <Typography variant="body1">Cari STT:</Typography>
+              <input
+                type="text"
+                placeholder="Masukkan STT"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                style={{
+                  padding: "8px",
+                  borderRadius: "4px",
+                  border: "1px solid #ccc",
+                  width: "250px",
+                }}
+              />
+            </Stack>
+          )}
 
       {loading ? (
         <Box mt={4} display="flex" justifyContent="center">
@@ -236,7 +265,11 @@ export default function InventoryPage() {
                 <TableCell>Nama Pengirim</TableCell>
                 <TableCell align="center">Nomor Resi</TableCell>
                 <TableCell align="center">Alamat Pengiriman</TableCell>
-                <TableCell align="center">Status</TableCell>
+                {userRole === "USER" ? (
+                    <TableCell align="center">Status</TableCell>
+                  ) : (
+                    <TableCell align="center">STT</TableCell>
+                  )}
                 <TableCell align="center">View Detail</TableCell>
                 <TableCell align="center">Update</TableCell>
               </TableRow>
@@ -269,15 +302,21 @@ export default function InventoryPage() {
                       >
                         {item.alamat_pengiriman}
                       </TableCell>
-                      <TableCell align="center">
+                     <TableCell align="center">
                         <Chip
-                          icon={statusItem?.icon}
-                          label={statusItem?.label || item.status_barang}
-                          color={(statusItem?.color as MuiColor) || "default"}
+                          label={
+                            userRole === "USER"
+                              ? statusItem?.label || item.status_barang
+                              : item.sttb || "STT"
+                          }
+                          icon={userRole === "USER" ? statusItem?.icon : undefined}
+                          color={userRole === "USER" ? (statusItem?.color as MuiColor) || "default" : "default"}
                           variant="outlined"
                           size="small"
                         />
                       </TableCell>
+
+
                       <TableCell align="center">
                         <Button
                           startIcon={<VisibilityIcon />}
@@ -326,6 +365,14 @@ export default function InventoryPage() {
                             onClick={() => router.push(`/validasi/${item.id}`)}
                           >
                             Update
+                          </Button>
+                        ) : item.status_barang === "telah_selesai" && (userRole === "ADMIN" ) ? (
+                          <Button
+                            variant="outlined"
+                            color="primary"
+                            onClick={() => router.push(`/validasi/${item.id}`)}
+                          >
+                            BUKTI
                           </Button>
                         ) : (
                           "-"

@@ -8,65 +8,61 @@ import dynamic from 'next/dynamic';
 
 const Chart = dynamic(() => import('react-apexcharts'), { ssr: false });
 
-interface Barang {
+interface Pengiriman {
   id: number;
-  tgl: string;
-  tujuan: string;
-  tagihan: number;
+  createdAt: string;
+  wilayah: string;
+  jumlah_barang: number;
 }
 
 type Mode = 'bulan' | 'tahun';
 
-const SalesOverview = () => {
+const PengirimanOverview = () => {
   const [mode, setMode] = useState<Mode>('bulan');
-  const [selectedTujuan, setSelectedTujuan] = useState<string>('semua');
-  const [data, setData] = useState<Barang[]>([]);
+  const [selectedWilayah, setSelectedWilayah] = useState('Semua');
+  const [data, setData] = useState<Pengiriman[]>([]);
+  const [wilayahList, setWilayahList] = useState<string[]>([]);
+
+  const theme = useTheme();
+  const primary = theme.palette.primary.main;
 
   const handleModeChange = (event: any) => {
     setMode(event.target.value);
   };
 
-  const handleTujuanChange = (event: any) => {
-    setSelectedTujuan(event.target.value);
+  const handleWilayahChange = (event: any) => {
+    setSelectedWilayah(event.target.value);
   };
 
   useEffect(() => {
     const fetchData = async () => {
-      const res = await fetch('/api/barang');
+      const res = await fetch('/api/pengiriman');
       const json = await res.json();
-      setData(Array.isArray(json) ? json : json.data || []);
+      const dataArray = Array.isArray(json) ? json : json.data || [];
+      setData(dataArray);
+
+      // Ambil list wilayah unik
+      const uniqueWilayah = Array.from(new Set(dataArray.map((item: Pengiriman) => item.wilayah))) as string[];
+      setWilayahList(uniqueWilayah);
     };
     fetchData();
   }, []);
 
-  const theme = useTheme();
-  const primary = theme.palette.primary.main;
-
-  // Ambil daftar tujuan unik
-  const tujuanList = Array.from(new Set(data.map(item => item.tujuan))).sort();
-
-  // Filter data sesuai tujuan
-  const filteredData =
-    selectedTujuan === 'semua'
-      ? data
-      : data.filter((item) => item.tujuan === selectedTujuan);
-
-  // 🔄 Agregasi berdasarkan bulan/tahun
+  // 🔄 Filter dan agregasi data
   const aggregated: { [key: string]: number } = {};
 
-  filteredData.forEach((item) => {
-    const date = new Date(item.tgl);
-    const key =
-      mode === 'bulan'
-        ? `${date.getFullYear()}-${(date.getMonth() + 1)
-            .toString()
-            .padStart(2, '0')}`
-        : `${date.getFullYear()}`;
+  data
+    .filter((item) => selectedWilayah === 'Semua' || item.wilayah === selectedWilayah)
+    .forEach((item) => {
+      const date = new Date(item.createdAt);
+      const key =
+        mode === 'bulan'
+          ? `${date.getFullYear()}-${(date.getMonth() + 1).toString().padStart(2, '0')}` // ex: 2025-05
+          : `${date.getFullYear()}`; // ex: 2025
 
-    aggregated[key] = (aggregated[key] || 0) + item.tagihan;
-  });
+      aggregated[key] = (aggregated[key] || 0) + item.jumlah_barang;
+    });
 
-  // Ubah object menjadi array untuk chart
   const categories = Object.keys(aggregated).sort();
   const seriesData = categories.map((key) => aggregated[key]);
 
@@ -105,47 +101,41 @@ const SalesOverview = () => {
     },
     tooltip: {
       y: {
-        formatter: (val: number) => `Rp ${val.toLocaleString('id-ID')}`,
+        formatter: (val: number) => `${val} barang`,
       },
     },
   };
 
   const series = [
     {
-      name: 'Total Pendapatan',
+      name: 'Total Barang',
       data: seriesData,
     },
   ];
 
   return (
     <DashboardCard
-      title="Statistik Penjualan"
+      title="Statistik Pengiriman"
       action={
-        <div style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
+        <div style={{ display: 'flex', gap: '8px' }}>
           <Select value={mode} size="small" onChange={handleModeChange}>
             <MenuItem value="bulan">Per Bulan</MenuItem>
             <MenuItem value="tahun">Per Tahun</MenuItem>
           </Select>
-          <Select value={selectedTujuan} size="small" onChange={handleTujuanChange}>
-            <MenuItem value="semua">Semua Tujuan</MenuItem>
-            {tujuanList.map((tujuan) => (
-              <MenuItem key={tujuan} value={tujuan}>
-                {tujuan}
+          <Select value={selectedWilayah} size="small" onChange={handleWilayahChange}>
+            <MenuItem value="Semua">Semua Tujuan</MenuItem>
+            {wilayahList.map((wilayah) => (
+              <MenuItem key={wilayah} value={wilayah}>
+                {wilayah}
               </MenuItem>
             ))}
           </Select>
         </div>
       }
     >
-      <Chart
-        options={options}
-        series={series}
-        type="bar"
-        height={370}
-        width="100%"
-      />
+      <Chart options={options} series={series} type="bar" height={370} width="100%" />
     </DashboardCard>
   );
 };
 
-export default SalesOverview;
+export default PengirimanOverview;

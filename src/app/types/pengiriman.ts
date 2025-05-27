@@ -7,6 +7,7 @@ export interface Pengiriman {
   nama_penerima: string;
   nomor_hp_penerima: string;
   namaBarang: string;
+  sttb: string
   status_barang: "sedang_dikirim" | "telah_diterima" | "butuh_validasi" | "telah_selesai"
   barang: [{ panjang: string, lebar: string, tinggi: string }],
   jenis: string;

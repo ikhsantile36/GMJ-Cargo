@@ -382,20 +382,19 @@ const handleDelete = async (id: number) => {
   <DialogTitle>Edit Pengiriman</DialogTitle>
   <DialogContent sx={{ display: 'flex', flexDirection: 'column', gap: 2, mt: 1 }}>
     <TextField
-      label="Tujuan"
-      value={editingItem?.tujuan || ''}
-      onChange={(e) => setEditingItem((prev) => prev ? { ...prev, tujuan: e.target.value } : null)}
+      label="Nama Pengirim / No. HP"
+      value={editingItem?.pengirim_dan_hp || ''}
+      onChange={(e) => setEditingItem((prev) => prev ? { ...prev, pengirim_dan_hp_dan_hp: e.target.value } : null)}
     />
     <TextField
-      label="Penerima"
+      label="Nama Penerima / No. HP"
       value={editingItem?.penerima_dan_hp || ''}
       onChange={(e) => setEditingItem((prev) => prev ? { ...prev, penerima_dan_hp: e.target.value } : null)}
     />
     <TextField
-      label="Tagihan"
-      type="number"
-      value={editingItem?.tagihan || 0}
-      onChange={(e) => setEditingItem((prev) => prev ? { ...prev, tagihan: Number(e.target.value) } : null)}
+      label="Alamat"
+      value={editingItem?.alamat || 0}
+      onChange={(e) => setEditingItem((prev) => prev ? { ...prev, alamat: e.target.value } : null)}
     />
     {/* Tambah field lain sesuai kebutuhan */}
   </DialogContent>

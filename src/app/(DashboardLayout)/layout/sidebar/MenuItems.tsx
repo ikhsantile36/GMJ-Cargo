@@ -40,7 +40,7 @@ const Menuitems = [
   },
   {
     id: uniqueId(),
-    title: "Inventory Barang",
+    title: "Rekap Pengiriman",
     icon: IconTruckDelivery,
     href: "/inventory-barang",
     allowedRoles: ["OWNER", "ADMIN"],
