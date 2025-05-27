@@ -72,7 +72,7 @@ const Profile = () => {
           },
         }}
       >
-        <Link href="/my-profile" passHref legacyBehavior>
+        <Link href="/my-profile-info" passHref legacyBehavior>
           <MenuItem>
             <ListItemIcon>
               <IconUser width={20} />

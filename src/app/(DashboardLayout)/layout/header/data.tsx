@@ -65,7 +65,7 @@ const notifications = [
 
 const profile = [
   {
-    href: '/user-profile',
+    href: '/my-profile-info',
     title: 'My Profile',
     subtitle: 'Account Settings',
     icon: icon1,

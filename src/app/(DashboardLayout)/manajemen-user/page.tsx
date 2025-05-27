@@ -172,8 +172,8 @@ const ManajemenUser = () => {
                 </Select>
               </FormControl>
               <Stack direction="row" spacing={2}>
-                <Button variant="contained" onClick={handleAddOrUpdateUser}>
-                  {editId ? "Update User" : "Create User"}
+                <Button variant="contained" onClick={handleAddOrUpdateUser} color="warning">
+                  {editId ? "Update User" : "Simpan User"}
                 </Button>
                 {editId && (
                   <Button variant="outlined" onClick={resetForm}>
@@ -233,6 +233,7 @@ const ManajemenUser = () => {
                         size="small"
                         variant="contained"
                         color="error"
+                        sx={{ ml: 1 }}
                         onClick={() => handleDeleteUser(u.id)}
                       >
                         Delete

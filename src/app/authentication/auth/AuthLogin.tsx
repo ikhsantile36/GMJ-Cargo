@@ -56,13 +56,14 @@ const AuthLogin = ({ title, subtitle, subtext }: loginType) => {
       localStorage.setItem("username", data.user.username);
       localStorage.setItem("role", data.user.role);
 
-      // Redirect berdasarkan role
       switch (data.user.role) {
         case "USER":
         case "OPERATOR":
           router.push("/status-barang");
           break;
         case "OWNER":
+          router.push("/");
+          break;
         case "ADMIN":
           router.push("/");
           break;
@@ -122,6 +123,7 @@ const AuthLogin = ({ title, subtitle, subtext }: loginType) => {
             name="password"
             value={form.password}
             onChange={handleChange}
+            autocomplete="current-password"
           />
         </Box>
 
