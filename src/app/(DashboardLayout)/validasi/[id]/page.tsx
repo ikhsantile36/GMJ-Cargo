@@ -124,33 +124,26 @@ export default function ValidasiPage() {
 
       <Stack direction="row" spacing={2} justifyContent="center" mt={4}>
         <Stack direction="row" spacing={2} justifyContent="center" mt={4}>
-          {userRole === "ADMIN" && (
-            <Button
-              variant="contained"
-              color="success"
-              onClick={() => handleUpdateStatus("telah_selesai")}
-            >
-              Approve
-            </Button>
+          {userRole === "ADMIN" && data.status_barang === "butuh_validasi" && (
+            <>
+              <Button
+                variant="contained"
+                color="success"
+                onClick={() => handleUpdateStatus("telah_selesai")}
+              >
+                Approve
+              </Button>
+            </>
           )}
-
-          {userRole === "USER" && (
-            <Button
-              variant="contained"
-              color="primary"
-              onClick={() => handleUpdateStatus("butuh_validasi")}
-            >
-              Simpan Data
-            </Button>
-          )}
-
           <Button
             variant="outlined"
             color="secondary"
-            onClick={() => router.push(`/status-barang/`)}
+            onClick= {() => router.push(`/status-barang/`)}
           >
             Kembali
           </Button>
+
+
         </Stack>
       </Stack>
     </Box>

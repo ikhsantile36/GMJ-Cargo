@@ -326,57 +326,63 @@ export default function InventoryPage() {
                         </Button>
                       </TableCell>
                         <TableCell align="center">
-                          {item.status_barang === "telah_diterima" && (userRole === "ADMIN" || userRole === "USER") ? (
-                            <Button
-                              variant="outlined"
-                              color="primary"
-                              onClick={() => router.push(`/penerimaan-barang/${item.id}`)}
-                            >
-                              Update
-                            </Button>
-                        ) : userRole === "USER" ? (
-                          item.status_barang === "telah_diterima" ? (
-                            <Button
-                              variant="outlined"
-                              color="primary"
-                              onClick={() =>
-                                router.push(`/penerimaan-barang/${item.id}`)
-                              }
-                            >
-                              Update
-                            </Button>
-                          ) : (
-                            "-"
-                          )
-                        ) : item.status_barang === "sedang_dikirim" ? (
-                          <Button
-                            variant="outlined"
-                            color="warning"
-                            onClick={() =>
-                              router.push(`/status-barang/update/${item.id}`)
-                            }
-                          >
-                            Update
-                          </Button>
-                        ) : userRole === "ADMIN" && item.status_barang === "butuh_validasi" ? (
-                          <Button
-                            variant="outlined"
-                            color="success"
-                            onClick={() => router.push(`/validasi/${item.id}`)}
-                          >
-                            Update
-                          </Button>
-                        ) : item.status_barang === "telah_selesai" && (userRole === "ADMIN" ) ? (
-                          <Button
-                            variant="outlined"
-                            color="primary"
-                            onClick={() => router.push(`/validasi/${item.id}`)}
-                          >
-                            BUKTI
-                          </Button>
-                        ) : (
-                          "-"
-                        )}
+                        {(() => {
+                          if (item.status_barang === "telah_diterima" && (userRole === "ADMIN" || userRole === "USER")) {
+                            return (
+                              <Button
+                                variant="outlined"
+                                color="primary"
+                                onClick={() => router.push(`/penerimaan-barang/${item.id}`)}
+                              >
+                                Update
+                              </Button>
+                            );
+                          }
+
+                          if (item.status_barang === "sedang_dikirim") {
+                            return (
+                              <Button
+                                variant="outlined"
+                                color="warning"
+                                onClick={() => router.push(`/status-barang/update/${item.id}`)}
+                              >
+                                Update
+                              </Button>
+                            );
+                          }
+
+                          if (
+                            item.status_barang === "butuh_validasi" &&
+                            userRole === "ADMIN"
+                          ) {
+                            return (
+                              <Button
+                                variant="outlined"
+                                color="success"
+                                onClick={() => router.push(`/validasi/${item.id}`)}
+                              >
+                                Update
+                              </Button>
+                            );
+                          }
+
+                          if (
+                            item.status_barang === "telah_selesai" &&
+                            (userRole === "ADMIN" || userRole === "USER")
+                          ) {
+                            return (
+                              <Button
+                                variant="outlined"
+                                color="primary"
+                                onClick={() => router.push(`/validasi/${item.id}`)}
+                              >
+                                BUKTI
+                              </Button>
+                            );
+                          }
+
+                          return "-";
+                        })()}
                       </TableCell>
                     </TableRow>
                   );
