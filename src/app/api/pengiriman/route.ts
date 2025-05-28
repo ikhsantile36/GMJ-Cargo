@@ -14,6 +14,8 @@ export async function POST(req: NextRequest) {
 
     // Destructuring dengan validasi default
     const {
+      tanggal,
+      hari,
       nomor_resi,
       jenis,
       nama_pengirim,
@@ -111,17 +113,21 @@ export async function POST(req: NextRequest) {
       const vw = (panjang * lebar * tinggi) / 4000;
       const beratItem = beratSatuanArray[index] || 0;
       const tagihan = biayaSatuanArray[index] || 0;
+      const tanggalString = result.createdAt.toLocaleDateString('id-ID'); 
+
+
 
 
 
       await prisma.barang.create({
         data: {
           tgl: new Date(),
+          hari: result.createdAt.toLocaleDateString('id-ID'), // ⬅️ ini jadi string "dd/mm/yyyy"
           stt: result.sttb,
           tujuan: result.wilayah,
           penerima_dan_hp: `${result.nama_penerima} / ${result.nomor_hp_penerima}`,
           pengirim_dan_hp: `${result.nama_pengirim} / ${result.nomor_hp_pengirim}`,
-          jenis_kiriman: result.jenis,
+          jenis_kiriman: result.isi_barang,
           catatan: result.catatan || "",
           koli: index + 1, // ⬅️ nomor urut
           panjang: parseFloat(b.panjang),

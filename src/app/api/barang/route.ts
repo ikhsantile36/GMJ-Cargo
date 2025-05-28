@@ -3,19 +3,61 @@ import { prisma } from '@/lib/prisma';
 
 // GET: Ambil semua data barang
 export async function GET(req: NextRequest) {
+  const { searchParams } = new URL(req.url);
+  const distinct = searchParams.get('distinct');
+
   try {
-    const data = await prisma.barang.findMany({
-      orderBy: {
-        tgl: 'desc',
-      },
-    });
+    if (distinct === 'tujuan') {
+      const tujuanList = await prisma.barang.findMany({
+        distinct: ['tujuan'],
+        select: { tujuan: true },
+      });
+
+      return NextResponse.json({
+        success: true,
+        data: tujuanList.map((item) => item.tujuan),
+      });
+    }
+
+    // Default: ambil semua barang
+const data = await prisma.barang.findMany({
+  select: {
+    id: true,
+    // tgl: true, // 🔴 HAPUS untuk sementara
+    hari: true,
+    stt: true,
+    tujuan: true,
+    penerima_dan_hp: true,
+    pengirim_dan_hp: true,
+    jenis_kiriman: true,
+    catatan: true,
+    koli: true,
+    panjang: true,
+    lebar: true,
+    tinggi: true,
+    m3: true,
+    vw: true,
+    kg: true,
+    tagihan: true,
+    alamat: true,
+  },
+  orderBy: {
+    id: 'desc',
+  },
+});
+
+
 
     return NextResponse.json({ success: true, data });
   } catch (error) {
     console.error('GET /api/barang error:', error);
-    return NextResponse.json({ success: false, message: 'Gagal mengambil data barang.' }, { status: 500 });
+    return NextResponse.json(
+      { success: false, message: 'Gagal mengambil data barang.' },
+      { status: 500 }
+    );
   }
 }
+
 
 // PUT: Update data barang
 export async function PUT(req: NextRequest) {

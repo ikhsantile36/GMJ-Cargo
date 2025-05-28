@@ -84,8 +84,9 @@ model Pengiriman {
 }
 
 model Barang {
-  id              Int         @id @default(autoincrement())
-  tgl             DateTime
+  id              Int       @id @default(autoincrement())
+  tgl             DateTime?
+  hari            String?
   stt             String
   tujuan          String
   penerima_dan_hp String
@@ -100,11 +101,12 @@ model Barang {
   vw              Float
   kg              Float?
   tagihan         Float
-  alamat          String
+  alamat          String?
 
-  pengirimanId    Int
-  pengiriman      Pengiriman  @relation(fields: [pengirimanId], references: [id])
+  pengirimanId    Int?
+  pengiriman      Pengiriman? @relation(fields: [pengirimanId], references: [id]) // ✅ aktifkan lagi ini
 }
+
 
 
 

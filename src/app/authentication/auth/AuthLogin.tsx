@@ -57,17 +57,19 @@ const AuthLogin = ({ title, subtitle, subtext }: loginType) => {
       localStorage.setItem("role", data.user.role);
 
       switch (data.user.role) {
+        case "OWNER":
+          router.push("/dashboard");
+          break;
+        case "ADMIN":
+          router.push("/dashboard");
+          break;
         case "USER":
+          router.push("/status-barang");
+          break;
         case "OPERATOR":
           router.push("/status-barang");
           break;
-          case "OWNER":
-          case "ADMIN":
-          router.push("/dashboard");
-          break;
-        default:
-          router.push("/");
-          break;
+          
       }
     } catch (error) {
       console.error("Network error:", error);

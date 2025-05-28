@@ -26,7 +26,7 @@ export default function MyProfilePage() {
   const [saving, setSaving] = useState(false);
   const [formData, setFormData] = useState({
     username: "",
-    nomor_hp: "",
+    email: "",
     password: "",
   });
   const [notif, setNotif] = useState({
@@ -54,7 +54,7 @@ export default function MyProfilePage() {
         setProfile(data);
         setFormData({
           username: data.username,
-          nomor_hp: data.nomor_hp,
+          email: data.email || "",
           password: "",
         });
       } catch (err: any) {
@@ -76,45 +76,53 @@ export default function MyProfilePage() {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
-  const handleSubmit = async () => {
-    setSaving(true);
-    try {
-      const token = localStorage.getItem("token");
-      if (!token) throw new Error("Token tidak ditemukan.");
+ const handleSubmit = async () => {
+  setSaving(true);
+  try {
+    const token = localStorage.getItem("token");
+    if (!token) throw new Error("Token tidak ditemukan.");
 
-      const res = await fetch("/api/users", {
-        method: "PUT",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify({
-          id: profile.id,
-          username: formData.username,
-          nomor_hp: formData.nomor_hp,
-          password: formData.password || undefined,
-        }),
-      });
+    const res = await fetch("/api/users", {
+      method: "PUT",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify({
+        id: profile.id,
+        username: formData.username,
+        email: formData.email,
+        password: formData.password || undefined,
+      }),
+    });
 
-      const result = await res.json();
-      if (!res.ok) throw new Error(result.message);
+    const result = await res.json();
+    if (!res.ok) throw new Error(result.message);
 
-      setNotif({
-        open: true,
-        message: "✅ Profil berhasil diperbarui",
-        severity: "success",
-      });
-      setFormData({ ...formData, password: "" });
-    } catch (err: any) {
-      setNotif({
-        open: true,
-        message: err.message || "Gagal update profil",
-        severity: "error",
-      });
-    } finally {
-      setSaving(false);
-    }
-  };
+    // ➕ update profile state agar table ikut refresh
+    setProfile({
+      ...profile,
+      username: formData.username,
+      email: formData.email,
+    });
+
+    setNotif({
+      open: true,
+      message: "✅ Profil berhasil diperbarui",
+      severity: "success",
+    });
+    setFormData({ ...formData, password: "" });
+  } catch (err: any) {
+    setNotif({
+      open: true,
+      message: err.message || "Gagal update profil",
+      severity: "error",
+    });
+  } finally {
+    setSaving(false);
+  }
+};
+
 
   if (loading)
     return (
@@ -138,9 +146,9 @@ export default function MyProfilePage() {
                 fullWidth
               />
               <TextField
-                label="Nomor HP"
-                name="nomor_hp"
-                value={formData.nomor_hp}
+                label="Email"
+                name="email"
+                value={formData.email}
                 onChange={handleChange}
                 fullWidth
               />

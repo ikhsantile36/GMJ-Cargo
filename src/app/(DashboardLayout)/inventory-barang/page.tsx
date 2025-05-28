@@ -29,6 +29,11 @@ import { format, isToday, isThisMonth, isThisYear } from 'date-fns';
 import * as XLSX from 'xlsx';
 import { saveAs } from 'file-saver';
 import jwt from "jsonwebtoken";
+import { parse } from 'date-fns';
+
+const parseTanggal = (strTanggal: string) => {
+  return parse(strTanggal, 'd/M/yyyy', new Date());
+};
 
 
 const exportToExcel = (data: PengirimanItem[]) => {
@@ -36,11 +41,12 @@ const exportToExcel = (data: PengirimanItem[]) => {
   let currentSTT = null;
 
   data.forEach((item, index) => {
-    const itemDate = new Date(item.tgl);
+    const itemDate = new Date(item.hari);
     const formattedDate = `${itemDate.getDate()}/${itemDate.getMonth() + 1}/${itemDate.getFullYear()}`;
 
     const row = {
-      Tanggal: formattedDate,
+      Hari : item.hari,
+      //Tanggal: formattedDate,
       STT: item.stt,
       Tujuan: item.tujuan,
       Penerima: item.penerima_dan_hp,
@@ -92,6 +98,7 @@ const exportToExcel = (data: PengirimanItem[]) => {
 type PengirimanItem = {
   id: number;
   tgl: string;
+  hari: string;
   stt: string;
   tujuan: string;
   penerima_dan_hp: string;
@@ -139,6 +146,12 @@ export default function PengirimanTable() {
   const totalPages = Math.ceil(totalFiltered / pageSize);
   const [editingItem, setEditingItem] = useState<PengirimanItem | null>(null);
   const [editModalOpen, setEditModalOpen] = useState(false);
+  const [startDate, setStartDate] = useState<Date | null>(null);
+  const [endDate, setEndDate] = useState<Date | null>(null);
+  const [tujuanFilter, setTujuanFilter] = useState<string>('');
+
+
+  
 
 
   useEffect(() => {
@@ -173,38 +186,45 @@ export default function PengirimanTable() {
 }, []);
 
   useEffect(() => {
-    let filtered = [...allData];
+  let filtered = [...allData];
 
-    if (dateFilter !== 'all') {
-      filtered = filtered.filter((item) => {
-        const itemDate = new Date(item.tgl);
-        if (isNaN(itemDate.getTime())) return false;
-        if (dateFilter === 'today') return isToday(itemDate);
-        if (dateFilter === 'thisMonth') return isThisMonth(itemDate);
-        if (dateFilter === 'thisYear') return isThisYear(itemDate);
-        return true;
-      });
-    }
-         if (search) {
-        const query = search.toLowerCase();
-        filtered = filtered.filter(
-        (item) =>
-          item.pengirim_dan_hp.toLowerCase().includes(query) ||
-          item.stt.toLowerCase().includes(query)
-      );
-    }
+  // Filter berdasarkan rentang tanggal
+ if (startDate && endDate) {
+  filtered = filtered.filter((item) => {
+    const itemDate = parseTanggal(item.hari); // <- pakai parser sendiri
+    return itemDate >= startDate && itemDate <= endDate;
+  });
+}
 
 
-    filtered.sort((a, b) => {
-      const sttA = Number(a.stt);
-      const sttB = Number(b.stt);
-      return sttA === sttB ? a.koli - b.koli : sttA - sttB;
-    });
-    
 
-    setTotalFiltered(filtered.length);
-    setDisplayData(filtered.slice((page - 1) * pageSize, page * pageSize));
-  }, [allData, search, dateFilter, page, pageSize]);
+  // Filter berdasarkan tujuan
+  if (tujuanFilter) {
+    filtered = filtered.filter((item) => item.tujuan === tujuanFilter);
+  }
+
+  // Filter berdasarkan pencarian
+  if (search) {
+    const query = search.toLowerCase();
+    filtered = filtered.filter(
+      (item) =>
+        item.pengirim_dan_hp.toLowerCase().includes(query) ||
+        item.stt.toLowerCase().includes(query)
+    );
+  }
+
+  // Urutkan berdasarkan STT dan koli
+  filtered.sort((a, b) => {
+    const sttA = Number(a.stt);
+    const sttB = Number(b.stt);
+    return sttA === sttB ? a.koli - b.koli : sttA - sttB;
+  });
+
+  setTotalFiltered(filtered.length);
+  setDisplayData(filtered.slice((page - 1) * pageSize, page * pageSize));
+}, [allData, search, startDate, endDate, tujuanFilter, page, pageSize]);
+
+
 
   const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setSearch(e.target.value);
@@ -265,16 +285,41 @@ const handleDelete = async (id: number) => {
             onChange={handleSearchChange}
             fullWidth
           />
-          <FormControl sx={{ minWidth: 200 }}>
-            <InputLabel>Filter Tanggal</InputLabel>
-            <Select value={dateFilter} label="Filter Tanggal" onChange={handleDateFilterChange}>
-              <MenuItem value="all">Semua</MenuItem>
-              <MenuItem value="today">Hari Ini</MenuItem>
-              <MenuItem value="thisMonth">Bulan Ini</MenuItem>
-              <MenuItem value="thisYear">Tahun Ini</MenuItem>
-            </Select>
-          </FormControl>
+          <TextField
+            label="Dari Tanggal"
+            type="date"
+            InputLabelProps={{ shrink: true }}
+            value={startDate ? format(startDate, 'yyyy-MM-dd') : ''}
+            onChange={(e) => setStartDate(e.target.value ? new Date(e.target.value) : null)}
+          />
+          <TextField
+            label="Sampai Tanggal"
+            type="date"
+            InputLabelProps={{ shrink: true }}
+            value={endDate ? format(endDate, 'yyyy-MM-dd') : ''}
+            onChange={(e) => setEndDate(e.target.value ? new Date(e.target.value) : null)}
+          />
+        <FormControl sx={{ minWidth: 200 }}>
+          <InputLabel>Filter Tujuan</InputLabel>
+          <Select
+            label="Filter Tujuan"
+            value={tujuanFilter}
+            onChange={(e) => {
+              setTujuanFilter(e.target.value);
+              setPage(1); // reset ke halaman 1 saat ganti filter
+            }}
+          >
+            <MenuItem value="">Semua Tujuan</MenuItem>
+            {[...new Set(allData.map(item => item.tujuan))]
+              .sort()
+              .map((tujuan) => (
+                <MenuItem key={tujuan} value={tujuan}>{tujuan}</MenuItem>
+            ))}
+          </Select>
+        </FormControl>
         </Box>
+
+
       </Paper>
 
       <Button onClick={() => exportToExcel(displayData)} sx={{ mb: 2 }}>Download Excel</Button>
@@ -311,10 +356,7 @@ const handleDelete = async (id: number) => {
             ) : (
               displayData.map((item) => (
                 <StyledTableRow key={item.id}>
-                  <TableCell>{new Date(item.tgl).toLocaleDateString("id-ID", {
-                      timeZone: "Asia/Jakarta",
-                    })
-                  }</TableCell>
+                  <TableCell>{item.hari}</TableCell>
                   <TableCell>{item.stt}</TableCell>
                   <TableCell>{item.tujuan}</TableCell>
                   <TableCell>{item.penerima_dan_hp}</TableCell>
@@ -325,10 +367,16 @@ const handleDelete = async (id: number) => {
                   <TableCell align="right">{item.panjang}</TableCell>
                   <TableCell align="right">{item.lebar}</TableCell>
                   <TableCell align="right">{item.tinggi}</TableCell>
-                  <TableCell align="right">{item.m3.toFixed(3)}</TableCell>
-                  <TableCell align="right">{item.vw.toFixed(2)}</TableCell>
+                  <TableCell align="right">{item.m3 ? item.m3.toFixed(3) : '-'}</TableCell>
+                  <TableCell align="right">
+  {typeof item.vw === 'number' ? item.vw.toFixed(2) : '-'}
+</TableCell>
+
                   <TableCell align="right">{item.kg ?? '-'}</TableCell>
-                  <TableCell align="right">{item.tagihan.toLocaleString('id-ID')}</TableCell>
+                  <TableCell align="right">
+  {typeof item.tagihan === 'number' ? item.tagihan.toLocaleString('id-ID') : '-'}
+</TableCell>
+
                   <TableCell>{item.alamat}</TableCell>
                     {userRole === 'OWNER' && (
                       <TableCell align="center">
