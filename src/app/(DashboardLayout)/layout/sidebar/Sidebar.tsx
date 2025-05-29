@@ -1,7 +1,7 @@
 import { useMediaQuery, Box, Drawer } from "@mui/material";
 import SidebarItems from "./SidebarItems";
-import Image from 'next/image'
 import { Sidebar, Logo } from "react-mui-sidebar";
+import styles from "../../../../styles.module.css";
 
 interface ItemType {
   isMobileSidebarOpen: boolean;
@@ -67,18 +67,17 @@ const MSidebar = ({
               themeSecondaryColor="#49beff"
               showProfile={false}
             >
+              <Box sx={{ display: "flex", justifyContent: "center", mt: 3 }}>
+                <img
+                  src="/images/logos/gmj-logo-1.png"
+                  alt="GMJ Logo"
+                  className={styles.logo}
+                />
+              </Box>
+              
               {/* ------------------------------------------- */}
               {/* Logo */}
               {/* ------------------------------------------- */}
-              <Box sx={{ display: "flex", justifyContent: "center", mt: 3 }}>
-                
-                <Image src="/images/logos/gmj-logo-1.png" alt="GMJ Logo" width={100} height={100} />
-                {/* <img
-                  src=""
-                  alt=" Logo"
-                  style={{ width: "100px", height: "auto" }} // Atur ukuran sesuai kebutuhan
-                /> */}
-              </Box>
               <Box>
                 {/* ------------------------------------------- */}
                 {/* Sidebar Items */}
@@ -123,10 +122,13 @@ const MSidebar = ({
           {/* ------------------------------------------- */}
           {/* Logo */}
           {/* ------------------------------------------- */}
-          <Logo
-            img="/images/logos/GMJ-logo-1.png"
-            style={{ width: "150px", height: "auto" }}
-          />
+          <Box sx={{ display: "flex", justifyContent: "center", mt: 3 }}>
+            <img
+              src="/images/logos/gmj-logo-1.png"
+              alt="GMJ Logo"
+              className={styles.logo}
+            />
+          </Box>
           {/* ------------------------------------------- */}
           {/* Sidebar Items */}
           {/* ------------------------------------------- */}

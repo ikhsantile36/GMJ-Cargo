@@ -18,19 +18,35 @@ export async function GET() {
 export async function POST(req: Request) {
   try {
     const body = await req.json();
-    const newTarif = await prisma.tarif_wilayah.create({ data: body });
+
+    const { jenis, wilayah, benda_ringan_rb, benda_berat_rb, volume_rb, cost_minimum, estimasi } = body;
+
+    const newTarif = await prisma.tarif_wilayah.create({
+      data: {
+        jenis,
+        wilayah,
+        benda_ringan_rb,
+        benda_berat_rb,
+        volume_rb,
+        cost_minimum,
+        estimasi,
+      },
+    });
+
     return NextResponse.json(newTarif, { status: 201 });
   } catch (error) {
     console.error('POST error:', error);
-    return NextResponse.json({ error: 'Failed to create data' }, { status: 500 });
+    const errorMessage = (error instanceof Error) ? error.message : 'Failed to create data';
+    return NextResponse.json({ error: errorMessage }, { status: 500 });
   }
 }
+
 
 // UPDATE existing data by ID
 export async function PUT(req: Request) {
   try {
     const body = await req.json();
-    const { id, ...updateData } = body;
+    const { id, jenis, wilayah, benda_ringan_rb, benda_berat_rb, volume_rb, cost_minimum, estimasi } = body;
 
     if (!id) {
       return NextResponse.json({ error: 'Missing ID for update' }, { status: 400 });
@@ -46,15 +62,25 @@ export async function PUT(req: Request) {
 
     const updated = await prisma.tarif_wilayah.update({
       where: { id },
-      data: updateData,
+      data: {
+        jenis,
+        wilayah,
+        benda_ringan_rb,
+        benda_berat_rb,
+        volume_rb,
+        cost_minimum,
+        estimasi,
+      },
     });
 
     return NextResponse.json(updated, { status: 200 });
   } catch (error) {
     console.error('PUT error:', error);
-    return NextResponse.json({ error: 'Failed to update data' }, { status: 500 });
+    const errorMessage = (error instanceof Error) ? error.message : 'Failed to update data';
+    return NextResponse.json({ error: errorMessage }, { status: 500 });
   }
 }
+
 
 // DELETE data by ID
 export async function DELETE(req: Request) {
