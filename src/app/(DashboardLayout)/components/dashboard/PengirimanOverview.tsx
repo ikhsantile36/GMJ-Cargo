@@ -10,8 +10,8 @@ const Chart = dynamic(() => import('react-apexcharts'), { ssr: false });
 
 interface Pengiriman {
   id: number;
-  createdAt: string;
-  wilayah: string;
+  hari: string; // format: 'd/m/yyyy'
+  tujuan: string;
   jumlah_barang: number;
 }
 
@@ -19,9 +19,9 @@ type Mode = 'bulan' | 'tahun';
 
 const PengirimanOverview = () => {
   const [mode, setMode] = useState<Mode>('bulan');
-  const [selectedWilayah, setSelectedWilayah] = useState('Semua');
+  const [selectedtujuan, setSelectedtujuan] = useState('Semua');
   const [data, setData] = useState<Pengiriman[]>([]);
-  const [wilayahList, setWilayahList] = useState<string[]>([]);
+  const [tujuanList, settujuanList] = useState<string[]>([]);
 
   const theme = useTheme();
   const primary = theme.palette.primary.main;
@@ -30,37 +30,43 @@ const PengirimanOverview = () => {
     setMode(event.target.value);
   };
 
-  const handleWilayahChange = (event: any) => {
-    setSelectedWilayah(event.target.value);
+  const handletujuanChange = (event: any) => {
+    setSelectedtujuan(event.target.value);
   };
 
   useEffect(() => {
     const fetchData = async () => {
-      const res = await fetch('/api/pengiriman');
+      const res = await fetch('/api/barang'); // ganti endpoint sesuai sumber data
       const json = await res.json();
       const dataArray = Array.isArray(json) ? json : json.data || [];
       setData(dataArray);
 
-      // Ambil list wilayah unik
-      const uniqueWilayah = Array.from(new Set(dataArray.map((item: Pengiriman) => item.wilayah))) as string[];
-      setWilayahList(uniqueWilayah);
+      const uniquetujuan = Array.from(
+        new Set(dataArray.map((item: Pengiriman) => item.tujuan))
+      ) as string[];
+      settujuanList(uniquetujuan);
     };
     fetchData();
   }, []);
 
-  // 🔄 Filter dan agregasi data
   const aggregated: { [key: string]: number } = {};
 
   data
-    .filter((item) => selectedWilayah === 'Semua' || item.wilayah === selectedWilayah)
+    .filter((item) => selectedtujuan === 'Semua' || item.tujuan === selectedtujuan)
     .forEach((item) => {
-      const date = new Date(item.createdAt);
-      const key =
-        mode === 'bulan'
-          ? `${date.getFullYear()}-${(date.getMonth() + 1).toString().padStart(2, '0')}` // ex: 2025-05
-          : `${date.getFullYear()}`; // ex: 2025
+      if (!item.hari || typeof item.hari !== 'string') return;
 
-      aggregated[key] = (aggregated[key] || 0) + item.jumlah_barang;
+      const parts = item.hari.split('/');
+      if (parts.length !== 3) return;
+
+      const [d, m, y] = parts.map(Number);
+      if (!y || !m || isNaN(d)) return;
+
+      const key = mode === 'bulan'
+        ? `${y}-${String(m).padStart(2, '0')}` // contoh: 2025-01
+        : `${y}`; // contoh: 2025
+
+      aggregated[key] = (aggregated[key] || 0) + 1;
     });
 
   const categories = Object.keys(aggregated).sort();
@@ -122,11 +128,11 @@ const PengirimanOverview = () => {
             <MenuItem value="bulan">Per Bulan</MenuItem>
             <MenuItem value="tahun">Per Tahun</MenuItem>
           </Select>
-          <Select value={selectedWilayah} size="small" onChange={handleWilayahChange}>
+          <Select value={selectedtujuan} size="small" onChange={handletujuanChange}>
             <MenuItem value="Semua">Semua Tujuan</MenuItem>
-            {wilayahList.map((wilayah) => (
-              <MenuItem key={wilayah} value={wilayah}>
-                {wilayah}
+            {tujuanList.map((tujuan) => (
+              <MenuItem key={tujuan} value={tujuan}>
+                {tujuan}
               </MenuItem>
             ))}
           </Select>

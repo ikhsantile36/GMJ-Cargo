@@ -9,9 +9,11 @@ import DashboardCard from '@/app/(DashboardLayout)/components/shared/DashboardCa
 
 const Chart = dynamic(() => import('react-apexcharts'), { ssr: false });
 
+// ... bagian import tetap sama ...
+
 interface Barang {
   id: number;
-  tgl: string;
+  hari: string; // ubah ini sesuai dengan field yang kamu pakai
   tagihan: number;
 }
 
@@ -31,11 +33,14 @@ const MonthlyEarnings = () => {
     fetchData();
   }, []);
 
-  // Agregasi total tagihan per bulan
+  // Gunakan "hari" sebagai basis waktu
   const monthlyTotals: { [key: string]: number } = {};
+
   data.forEach((item) => {
-    const date = new Date(item.tgl);
-    const key = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`; // ex: 2025-05
+    const [day, month, year] = item.hari.split("/").map(Number); // "2/1/2025" → [2,1,2025]
+    if (!year || !month) return; // jaga-jaga kalau format salah
+
+    const key = `${year}-${String(month).padStart(2, '0')}`; // Contoh: "2025-01"
     monthlyTotals[key] = (monthlyTotals[key] || 0) + item.tagihan;
   });
 
@@ -43,11 +48,10 @@ const MonthlyEarnings = () => {
   const latestMonth = sortedKeys[sortedKeys.length - 1] || '';
   const latestTotal = latestMonth ? monthlyTotals[latestMonth] : 0;
 
-  // Ambil data untuk mini chart (5 bulan terakhir)
   const recentMonths = sortedKeys.slice(-5);
   const chartData = recentMonths.map((key) => Math.round(monthlyTotals[key]));
 
-  // Chart options
+  // Chart config tetap sama
   const optionscolumnchart: any = {
     chart: {
       type: 'area',
@@ -58,18 +62,9 @@ const MonthlyEarnings = () => {
       sparkline: { enabled: true },
       group: 'sparklines',
     },
-    stroke: {
-      curve: 'smooth',
-      width: 2,
-    },
-    fill: {
-      colors: [secondarylight],
-      type: 'solid',
-      opacity: 0.05,
-    },
-    markers: {
-      size: 0,
-    },
+    stroke: { curve: 'smooth', width: 2 },
+    fill: { colors: [secondarylight], type: 'solid', opacity: 0.05 },
+    markers: { size: 0 },
     tooltip: {
       theme: theme.palette.mode === 'dark' ? 'dark' : 'light',
       y: {

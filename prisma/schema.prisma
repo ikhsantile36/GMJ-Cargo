@@ -87,20 +87,20 @@ model Barang {
   id              Int       @id @default(autoincrement())
   tgl             DateTime?
   hari            String?
-  stt             String
-  tujuan          String
-  penerima_dan_hp String
-  pengirim_dan_hp String
+  stt             String?
+  tujuan          String?
+  penerima_dan_hp String?
+  pengirim_dan_hp String?
   jenis_kiriman   String?
   catatan         String?
-  koli            Int
-  panjang         Float
-  lebar           Float
-  tinggi          Float
-  m3              Float
-  vw              Float
+  koli            Int?
+  panjang         Float?
+  lebar           Float?
+  tinggi          Float?
+  m3              Float?
+  vw              Float?
   kg              Float?
-  tagihan         Float
+  tagihan         Float?
   alamat          String?
 
   pengirimanId    Int?

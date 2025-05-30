@@ -43,14 +43,15 @@ export default function UpdateInventoriClientPage() {
 
         setData(pengirimanData);
         setStatus(pengirimanData.status_barang);
-        setStatusOptions(
-          statusData.filter(
-            (status: string) =>
-              status === "sedang_dikirim" || status === "telah_diterima"
-          )
+
+        const filteredStatus = statusData.statusList.filter(
+          (status: string) =>
+            status === "sedang_dikirim" || status === "telah_diterima"
         );
 
-        console.log("Status Options:", statusData);
+        setStatusOptions(filteredStatus);
+
+        console.log("Status Options:", filteredStatus);
       } catch (error) {
         console.error("Gagal fetch data:", error);
       } finally {
@@ -60,6 +61,7 @@ export default function UpdateInventoriClientPage() {
 
     fetchData();
   }, [id]);
+
 
   const handleSubmit = async (e: any) => {
     e.preventDefault();

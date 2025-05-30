@@ -88,6 +88,11 @@ export default function ValidasiPage() {
   if (loading) return <CircularProgress />;
   if (error) return <Alert severity="error">{error}</Alert>;
   if (!data) return <Alert severity="info">Data tidak ditemukan</Alert>;
+console.log("=== DEBUG INFO ===");
+console.log("userRole:", userRole);
+console.log("data.status_barang:", data.status_barang);
+console.log("Full data object:", data);
+
 
   return (
     <Box sx={{ maxWidth: 800, margin: "0 auto", mt: 4 }}>
@@ -124,7 +129,7 @@ export default function ValidasiPage() {
 
       <Stack direction="row" spacing={2} justifyContent="center" mt={4}>
         <Stack direction="row" spacing={2} justifyContent="center" mt={4}>
-          {userRole === "ADMIN" && data.status_barang === "butuh_validasi" && (
+          {userRole === "ADMIN" && data.pengiriman?.status_barang === "butuh_validasi" &&  (
             <>
               <Button
                 variant="contained"

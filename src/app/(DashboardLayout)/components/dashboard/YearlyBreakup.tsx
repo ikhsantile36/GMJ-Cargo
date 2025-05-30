@@ -9,9 +9,10 @@ import { IconArrowUpLeft } from '@tabler/icons-react';
 import DashboardCard from '@/app/(DashboardLayout)/components/shared/DashboardCard';
 
 interface Barang {
-  tgl: string;
+  hari: string; // format: d/m/yyyy
   tagihan: number;
 }
+
 
 const YearlyBreakup = () => {
   const theme = useTheme();
@@ -22,26 +23,31 @@ const YearlyBreakup = () => {
   const [series, setSeries] = useState<number[]>([]);
   const [yearLabels, setYearLabels] = useState<string[]>([]);
 
-  useEffect(() => {
-    const fetchData = async () => {
-      const res = await fetch('/api/barang');
-      const json = await res.json();
-      const data: Barang[] = Array.isArray(json) ? json : json.data || [];
+ useEffect(() => {
+  const fetchData = async () => {
+    const res = await fetch('/api/barang');
+    const json = await res.json();
+    const data: Barang[] = Array.isArray(json) ? json : json.data || [];
 
-      // Kelompokkan berdasarkan tahun
-      const yearlyTotals: { [year: string]: number } = {};
+    const yearlyTotals: { [year: string]: number } = {};
 
-      data.forEach((item) => {
-        const year = new Date(item.tgl).getFullYear().toString();
-        yearlyTotals[year] = (yearlyTotals[year] || 0) + item.tagihan;
-      });
+    data.forEach((item) => {
+      if (!item.hari || typeof item.hari !== 'string') return;
 
-      setSeries(Object.values(yearlyTotals));
-      setYearLabels(Object.keys(yearlyTotals));
-    };
+      const parts = item.hari.split('/');
+      if (parts.length !== 3) return;
 
-    fetchData();
-  }, []);
+      const year = parts[2]; // ambil tahun dari format d/m/yyyy
+      yearlyTotals[year] = (yearlyTotals[year] || 0) + item.tagihan;
+    });
+
+    setSeries(Object.values(yearlyTotals));
+    setYearLabels(Object.keys(yearlyTotals));
+  };
+
+  fetchData();
+}, []);
+
 
   const optionscolumnchart = {
     chart: {

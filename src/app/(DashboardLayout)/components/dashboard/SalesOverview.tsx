@@ -10,7 +10,7 @@ const Chart = dynamic(() => import('react-apexcharts'), { ssr: false });
 
 interface Barang {
   id: number;
-  tgl: string;
+  hari: string;
   tujuan: string;
   tagihan: number;
 }
@@ -55,16 +55,21 @@ const SalesOverview = () => {
   const aggregated: { [key: string]: number } = {};
 
   filteredData.forEach((item) => {
-    const date = new Date(item.tgl);
-    const key =
-      mode === 'bulan'
-        ? `${date.getFullYear()}-${(date.getMonth() + 1)
-            .toString()
-            .padStart(2, '0')}`
-        : `${date.getFullYear()}`;
+  if (!item.hari || typeof item.hari !== 'string') return; // abaikan jika null/kosong
 
-    aggregated[key] = (aggregated[key] || 0) + item.tagihan;
-  });
+  const parts = item.hari.split('/');
+  if (parts.length !== 3) return;
+
+  const [d, m, y] = parts.map(Number);
+  if (!y || !m || isNaN(d)) return;
+
+  const key =
+    mode === 'bulan'
+      ? `${y}-${String(m).padStart(2, '0')}`
+      : `${y}`;
+
+  aggregated[key] = (aggregated[key] || 0) + item.tagihan;
+});
 
   // Ubah object menjadi array untuk chart
   const categories = Object.keys(aggregated).sort();

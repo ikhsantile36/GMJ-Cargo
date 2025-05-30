@@ -209,7 +209,7 @@ export default function PengirimanTable() {
     filtered = filtered.filter(
       (item) =>
         item.pengirim_dan_hp.toLowerCase().includes(query) ||
-        item.stt.toLowerCase().includes(query)
+        item.stt.toLowerCase().includes(query) || item.penerima_dan_hp.toLowerCase().includes(query)
     );
   }
 
@@ -374,8 +374,11 @@ const handleDelete = async (id: number) => {
 
                   <TableCell align="right">{item.kg ?? '-'}</TableCell>
                   <TableCell align="right">
-  {typeof item.tagihan === 'number' ? item.tagihan.toLocaleString('id-ID') : '-'}
+  {typeof item.tagihan === 'number'
+    ? item.tagihan.toLocaleString('id-ID', { minimumFractionDigits: 3, maximumFractionDigits: 3 })
+    : '-'}
 </TableCell>
+
 
                   <TableCell>{item.alamat}</TableCell>
                     {userRole === 'OWNER' && (
@@ -423,8 +426,9 @@ const handleDelete = async (id: number) => {
           </Paper>
           <Box sx={{ mt: 2 }}>
   <Typography variant="h6">
-    Total Tagihan (halaman ini): Rp {totalTagihan.toLocaleString('id-ID')}
-  </Typography>
+  Total Tagihan (halaman ini): Rp {totalTagihan.toLocaleString('id-ID', { minimumFractionDigits: 3 })}
+</Typography>
+
 </Box>
               <Dialog open={editModalOpen} onClose={() => setEditModalOpen(false)} maxWidth="sm" fullWidth>
   <DialogTitle>Edit Pengiriman</DialogTitle>

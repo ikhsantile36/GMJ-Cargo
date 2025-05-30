@@ -105,15 +105,14 @@ export default function InventoryPage() {
       .then((res) => res.json())
       .then((res) => {
         console.error(res);
-        const parsedData = res.map((item: any) => ({
+        const arr = Array.isArray(res) ? res : res.data || [];
+        const parsedData = arr.map((item: any) => ({
           ...item,
-          barang: Array.isArray(item.barang)
-            ? item.barang
-            : JSON.parse(item.barang),
+          barang: item.barang,
         }));
         setData(parsedData);
         setLoading(false);
-        console.log("datanya adalah", res);
+        console.log("datanya adalah", arr);
       });
   }, []);
 
@@ -340,17 +339,21 @@ export default function InventoryPage() {
                             );
                           }
 
-                          if (item.status_barang === "sedang_dikirim") {
-                            return (
-                              <Button
-                                variant="outlined"
-                                color="warning"
-                                onClick={() => router.push(`/status-barang/update/${item.id}`)}
-                              >
-                                Update
-                              </Button>
-                            );
-                          }
+                if (item.status_barang === "sedang_dikirim") {
+                    if (userRole !== "USER") {
+                      return (
+                        <Button
+                          variant="outlined"
+                          color="warning"
+                          onClick={() => router.push(`/status-barang/update/${item.id}`)}
+                        >
+                          Update
+                        </Button>
+                      );
+                    }
+                  }
+
+
 
                           if (
                             item.status_barang === "butuh_validasi" &&
