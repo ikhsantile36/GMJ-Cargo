@@ -209,7 +209,7 @@ export default function PengirimanTable() {
     filtered = filtered.filter(
       (item) =>
         item.pengirim_dan_hp.toLowerCase().includes(query) ||
-        item.stt.toLowerCase().includes(query) || item.penerima_dan_hp.toLowerCase().includes(query)
+        item.stt.toLowerCase().includes(query) || item.penerima_dan_hp.toLowerCase().includes(query) || item.tujuan.toLowerCase().includes(query)
     );
   }
 
@@ -280,7 +280,7 @@ const handleDelete = async (id: number) => {
       <Paper sx={{ p: 2, mb: 3 }}>
         <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 2 }}>
           <TextField
-            label="Cari Nama Pengirim / No. Resi (STTB)"
+            label="Cari Nama Pengirim / Penerima / No. Resi (STTB)"
             value={search}
             onChange={handleSearchChange}
             fullWidth
@@ -415,7 +415,7 @@ const handleDelete = async (id: number) => {
           <FormControl size="small">
             <InputLabel>Rows / Page</InputLabel>
             <Select value={pageSize.toString()} label="Rows / Page" onChange={handleRowsPerPageChange}>
-              {[5, 10, 20, 50, 100].map((num) => (
+              {[5, 10, 20, 50, 1000].map((num) => (
                 <MenuItem key={num} value={num}>{num}</MenuItem>
               ))}
             </Select>

@@ -104,7 +104,7 @@ export default function InventoryPage() {
     fetch("/api/pengiriman")
       .then((res) => res.json())
       .then((res) => {
-        console.error(res);
+        //console.error(res);
         const arr = Array.isArray(res) ? res : res.data || [];
         const parsedData = arr.map((item: any) => ({
           ...item,

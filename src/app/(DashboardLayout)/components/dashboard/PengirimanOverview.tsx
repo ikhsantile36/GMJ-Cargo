@@ -8,20 +8,18 @@ import dynamic from 'next/dynamic';
 
 const Chart = dynamic(() => import('react-apexcharts'), { ssr: false });
 
-interface Pengiriman {
+interface Barang {
   id: number;
-  hari: string; // format: 'd/m/yyyy'
+  hari: string;     // format: dd/mm/yyyy
   tujuan: string;
-  jumlah_barang: number;
 }
 
 type Mode = 'bulan' | 'tahun';
 
-const PengirimanOverview = () => {
+const PengirimanChart = () => {
   const [mode, setMode] = useState<Mode>('bulan');
-  const [selectedtujuan, setSelectedtujuan] = useState('Semua');
-  const [data, setData] = useState<Pengiriman[]>([]);
-  const [tujuanList, settujuanList] = useState<string[]>([]);
+  const [selectedTujuan, setSelectedTujuan] = useState<string>('semua');
+  const [data, setData] = useState<Barang[]>([]);
 
   const theme = useTheme();
   const primary = theme.palette.primary.main;
@@ -30,47 +28,48 @@ const PengirimanOverview = () => {
     setMode(event.target.value);
   };
 
-  const handletujuanChange = (event: any) => {
-    setSelectedtujuan(event.target.value);
+  const handleTujuanChange = (event: any) => {
+    setSelectedTujuan(event.target.value);
   };
 
   useEffect(() => {
     const fetchData = async () => {
-      const res = await fetch('/api/barang'); // ganti endpoint sesuai sumber data
+      const res = await fetch('/api/barang');
       const json = await res.json();
-      const dataArray = Array.isArray(json) ? json : json.data || [];
-      setData(dataArray);
-
-      const uniquetujuan = Array.from(
-        new Set(dataArray.map((item: Pengiriman) => item.tujuan))
-      ) as string[];
-      settujuanList(uniquetujuan);
+      setData(Array.isArray(json) ? json : json.data || []);
     };
     fetchData();
   }, []);
 
+  // Ambil list tujuan unik
+  // Ambil tujuan unik (tanpa spasi dan case-insensitive)
+const tujuanList = Array.from(
+  new Set(data.map(item => item.tujuan.trim().toUpperCase()))
+).sort();
+
+  // Filter berdasarkan tujuan
+  const filteredData = selectedTujuan === 'semua'
+    ? data
+    : data.filter((item) => item.tujuan === selectedTujuan);
+
+  // Agregasi jumlah pengiriman berdasarkan bulan/tahun
   const aggregated: { [key: string]: number } = {};
 
-  data
-    .filter((item) => selectedtujuan === 'Semua' || item.tujuan === selectedtujuan)
-    .forEach((item) => {
-      if (!item.hari || typeof item.hari !== 'string') return;
+  filteredData.forEach((item) => {
+    if (!item.hari || typeof item.hari !== 'string') return;
 
-      const parts = item.hari.split('/');
-      if (parts.length !== 3) return;
+    const parts = item.hari.split('/');
+    if (parts.length !== 3) return;
 
-      const [d, m, y] = parts.map(Number);
-      if (!y || !m || isNaN(d)) return;
+    const [d, m, y] = parts.map(Number);
+    if (!y || !m || isNaN(d)) return;
 
-      const key = mode === 'bulan'
-        ? `${y}-${String(m).padStart(2, '0')}` // contoh: 2025-01
-        : `${y}`; // contoh: 2025
-
-      aggregated[key] = (aggregated[key] || 0) + 1;
-    });
+    const key = mode === 'bulan' ? `${y}-${String(m).padStart(2, '0')}` : `${y}`;
+    aggregated[key] = (aggregated[key] || 0) + 1; // jumlah pengiriman = jumlah record
+  });
 
   const categories = Object.keys(aggregated).sort();
-  const seriesData = categories.map((key) => aggregated[key]);
+  const seriesData = categories.map(key => aggregated[key]);
 
   const options = {
     chart: {
@@ -107,14 +106,14 @@ const PengirimanOverview = () => {
     },
     tooltip: {
       y: {
-        formatter: (val: number) => `${val} barang`,
+        formatter: (val: number) => `${val} pengiriman`,
       },
     },
   };
 
   const series = [
     {
-      name: 'Total Barang',
+      name: 'Jumlah Pengiriman',
       data: seriesData,
     },
   ];
@@ -123,13 +122,13 @@ const PengirimanOverview = () => {
     <DashboardCard
       title="Statistik Pengiriman"
       action={
-        <div style={{ display: 'flex', gap: '8px' }}>
+        <div style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
           <Select value={mode} size="small" onChange={handleModeChange}>
             <MenuItem value="bulan">Per Bulan</MenuItem>
             <MenuItem value="tahun">Per Tahun</MenuItem>
           </Select>
-          <Select value={selectedtujuan} size="small" onChange={handletujuanChange}>
-            <MenuItem value="Semua">Semua Tujuan</MenuItem>
+          <Select value={selectedTujuan} size="small" onChange={handleTujuanChange}>
+            <MenuItem value="semua">Semua Tujuan</MenuItem>
             {tujuanList.map((tujuan) => (
               <MenuItem key={tujuan} value={tujuan}>
                 {tujuan}
@@ -139,9 +138,15 @@ const PengirimanOverview = () => {
         </div>
       }
     >
-      <Chart options={options} series={series} type="bar" height={370} width="100%" />
+      <Chart
+        options={options}
+        series={series}
+        type="bar"
+        height={370}
+        width="100%"
+      />
     </DashboardCard>
   );
 };
 
-export default PengirimanOverview;
+export default PengirimanChart;

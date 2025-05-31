@@ -27,8 +27,8 @@ const SalesOverview = () => {
   };
 
   const handleTujuanChange = (event: any) => {
-    setSelectedTujuan(event.target.value);
-  };
+  setSelectedTujuan(event.target.value.toUpperCase());
+};
 
   useEffect(() => {
     const fetchData = async () => {
@@ -43,13 +43,21 @@ const SalesOverview = () => {
   const primary = theme.palette.primary.main;
 
   // Ambil daftar tujuan unik
-  const tujuanList = Array.from(new Set(data.map(item => item.tujuan))).sort();
+  const tujuanList = Array.from(
+  new Set(
+    data
+      .map((item) => item.tujuan?.trim().toUpperCase()) // normalisasi
+      .filter((t) => t) // buang yang null/kosong
+  )
+).sort();
+
 
   // Filter data sesuai tujuan
   const filteredData =
     selectedTujuan === 'semua'
       ? data
-      : data.filter((item) => item.tujuan === selectedTujuan);
+      : data.filter((item) => item.tujuan?.trim().toUpperCase() === selectedTujuan)
+
 
   // 🔄 Agregasi berdasarkan bulan/tahun
   const aggregated: { [key: string]: number } = {};
@@ -103,16 +111,16 @@ const SalesOverview = () => {
         },
       },
     },
-    yaxis: {
-      labels: {
-        style: { colors: '#000' },
-      },
-    },
-    tooltip: {
-      y: {
-        formatter: (val: number) => `Rp ${val.toLocaleString('id-ID')}`,
-      },
-    },
+ yaxis: {
+  labels: {
+    formatter: (val: number) => `Rp ${val.toLocaleString('id-ID')}`,
+  },
+},
+tooltip: {
+  y: {
+    formatter: (val: number) => `Rp ${val.toLocaleString('id-ID')}`,
+  },
+},
   };
 
   const series = [
