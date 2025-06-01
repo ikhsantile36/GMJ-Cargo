@@ -21,7 +21,7 @@ const Dashboard = () => {
     const token = localStorage.getItem("token");
 
     if (!token) {
-      router.replace("/authentication/login-user"); // Redirect kalau belum login
+      router.replace("/authentication/"); // Redirect kalau belum login
       return;
     }
 
@@ -29,7 +29,7 @@ const Dashboard = () => {
       const decoded = jwt.decode(token) as User | null;
       if (!decoded || !decoded.role) {
         localStorage.removeItem("token");
-        router.replace("/authentication/login-user");
+        router.replace("/authentication/");
       } else {
         console.log("Login sebagai:", decoded.role);
       }
