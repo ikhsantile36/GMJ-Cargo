@@ -69,7 +69,7 @@ const MSidebar = ({
             >
               <Box sx={{ display: "flex", justifyContent: "center", mt: 3 }}>
                 <img
-                  src="/images/logos/gmj-logo-1.png"
+                  src="/gmj-logo-1.png"
                   alt="GMJ Logo"
                   className={styles.logo}
                 />
@@ -124,7 +124,7 @@ const MSidebar = ({
           {/* ------------------------------------------- */}
           <Box sx={{ display: "flex", justifyContent: "center", mt: 3 }}>
             <img
-              src="/images/logos/gmj-logo-1.png"
+              src="/gmj-logo-1.png"
               alt="GMJ Logo"
               className={styles.logo}
             />
