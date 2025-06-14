@@ -274,10 +274,10 @@ const handleDelete = async (id: number) => {
 
 
   return (
-    <Box sx={{ p: 2 }}>
+    <Box >
       <Typography variant="h5" gutterBottom>Data Pengiriman</Typography>
 
-      <Paper sx={{ p: 2, mb: 3 }}>
+      <Paper sx={{ p: 2, mb: 3 , mt: 3}}>
         <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 2 }}>
           <TextField
             label="Cari Nama Pengirim / Penerima / No. Resi (STTB)"
@@ -426,7 +426,7 @@ const handleDelete = async (id: number) => {
           </Paper>
           <Box sx={{ mt: 2 }}>
   <Typography variant="h6">
-  Total Tagihan (halaman ini): Rp {totalTagihan.toLocaleString('id-ID', { minimumFractionDigits: 3 })}
+  Total Tagihan (halaman ini): Rp {totalTagihan.toLocaleString('id-ID')}
 </Typography>
 
 </Box>

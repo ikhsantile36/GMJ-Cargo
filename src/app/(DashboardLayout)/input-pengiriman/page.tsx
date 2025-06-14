@@ -18,12 +18,16 @@ import {
 import PageContainer from "@/app/(DashboardLayout)/components/container/PageContainer";
 import DashboardCard from "@/app/(DashboardLayout)/components/shared/DashboardCard";
 import { TarifWilayah } from "@/app/types/tarif-wilayah";
+import { useRouter } from "next/navigation";
+
+
 
 type Props = {
   data: TarifWilayah[];
 };
 
 const SamplePage = () => {
+  const router = useRouter();
   const [formData, setFormData] = useState({
     nomor_resi: "-",
     jenis: "",
@@ -48,6 +52,7 @@ const SamplePage = () => {
     barang: [{ panjang: "", lebar: "", tinggi: "" }],
     biaya_satuan: [],
   });
+
 
   const [wilayahOptions, setWilayahOptions] = useState<TarifWilayah[]>([]);
   const [jenisOptions, setJenisOptions] = useState<string[]>([]);
@@ -343,7 +348,7 @@ const SamplePage = () => {
       totalSemuaBiaya,
       totalBiayaVendor,
       totalVolume,
-      biayaSatuan, // Ambil biayaSatuan dari getTotalBiayaDanVolume
+      biayaSatuan, 
     } = getTotalBiayaDanVolume();
 
     e.preventDefault();
@@ -389,19 +394,19 @@ const SamplePage = () => {
     }
 
     try {
-      const result = calculateVolume();
+      const volumeResult = calculateVolume();
 
       const payload = {
         ...formData,
         berat_satuan: formData.berat_satuan,
         total_volume: totalVolume,
-        total_biaya_gmj: result.volume,
+        total_biaya_gmj: volumeResult.volume,
         total_biaya_vendor: totalBiayaVendor,
         biaya: totalSemuaBiaya,
         jumlah_barang,
         status_barang: "sedang_dikirim",
         nomor_resi: resiBaru,
-        biaya_satuan: biayaSatuan, // Tambahkan biaya_satuan ke payload
+        biaya_satuan: biayaSatuan, 
       };
 
       const res = await fetch("/api/pengiriman", {
@@ -409,9 +414,11 @@ const SamplePage = () => {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload),
       });
+      const result = await res.json();
 
       if (!res.ok) throw new Error("Gagal menyimpan data");
       alert("Data berhasil disimpan!");
+      router.push(`/invoice/${result.data.id}`);
       setFormData({
         nomor_resi: "-",
         jenis: "",

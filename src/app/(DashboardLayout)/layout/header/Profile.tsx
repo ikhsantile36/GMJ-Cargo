@@ -26,9 +26,10 @@ const Profile = () => {
   };
 
   const handleLogout = () => {
-    localStorage.removeItem("token"); // Hapus token
-    setAnchorEl2(null); // Tutup menu
-    router.push("/authentication"); // Arahkan ke halaman login
+    localStorage.removeItem("token");
+    localStorage.removeItem("syaratDiterima");
+    setAnchorEl2(null);
+    router.push("/authentication");
   };
 
   return (
@@ -72,14 +73,23 @@ const Profile = () => {
           },
         }}
       >
-        <Link href="/my-profile-info">
-  <MenuItem>
-    <ListItemIcon>
-      <IconUser width={20} />
-    </ListItemIcon>
-    Profile
-  </MenuItem>
-</Link>
+        <Link href="/my-profile-info" passHref legacyBehavior>
+          <MenuItem
+            component="a"
+            sx={{
+              color: "black",
+              textDecoration: "none",
+              "&:hover": {
+                backgroundColor: "#f5f5f5", // opsional hover
+              },
+            }}
+          >
+            <ListItemIcon>
+              <IconUser width={20} />
+            </ListItemIcon>
+            Profile
+          </MenuItem>
+        </Link> 
         {/* <MenuItem>
           <ListItemIcon>
             <IconMail width={20} />

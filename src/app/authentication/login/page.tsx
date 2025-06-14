@@ -18,7 +18,7 @@ const Login2 = () => {
             content: '""',
             background: "radial-gradient(#d2f1df, #d3d7fa, #bad8f4)",
             backgroundSize: "400% 400%",
-            animation: "gradient 15s ease infinite",
+            // animation: "gradient 15s ease infinite", 
             position: "absolute",
             height: "100%",
             width: "100%",

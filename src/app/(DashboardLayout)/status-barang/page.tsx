@@ -19,6 +19,7 @@ import {
   DialogActions,
   Grid,
   Divider,
+  Modal,
 } from "@mui/material";
 import LocalShippingIcon from "@mui/icons-material/LocalShipping";
 import CheckCircleIcon from "@mui/icons-material/CheckCircle";
@@ -26,7 +27,7 @@ import ErrorIcon from "@mui/icons-material/Error";
 import DoneAllIcon from "@mui/icons-material/DoneAll";
 import VisibilityIcon from "@mui/icons-material/Visibility";
 import { useEffect, useState } from "react";
-import Image from 'next/image'
+import Image from "next/image";
 import { Pengiriman } from "@/app/types/pengiriman";
 import { useRouter } from "next/navigation";
 import { Inventory } from "@/app/types/inventory";
@@ -87,6 +88,7 @@ export default function InventoryPage() {
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState<InventoryStatus>("sedang_dikirim");
   const [selectedItem, setSelectedItem] = useState<Pengiriman | null>(null);
+  const [open, setOpen] = useState(false);
   const [openDialog, setOpenDialog] = useState(false);
   const [inventoryHistory, setInventoryHistory] = useState<Inventory[]>([]);
   const [userRole, setUserRole] = useState<string | null>(null);
@@ -94,7 +96,6 @@ export default function InventoryPage() {
   const urlFilter = searchParams.get("filter") as InventoryStatus | null;
   const [userPhone, setUserPhone] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
-
 
   type Props = {
     data: User[];
@@ -117,28 +118,13 @@ export default function InventoryPage() {
   }, []);
 
   useEffect(() => {
-  const token = localStorage.getItem("token");
-  if (token) {
-    try {
-      const decoded = jwt.decode(token) as User | null;
-      if (decoded) {
-        setUserRole(decoded.role.toUpperCase());
-        setUserPhone(decoded.nomor_hp); // <-- tambahkan ini
-      }
-    } catch (err) {
-      console.error("Gagal decode token:", err);
-    }
-  }
-}, []);
-
-
-  useEffect(() => {
     const token = localStorage.getItem("token");
     if (token) {
       try {
         const decoded = jwt.decode(token) as User | null;
-        if (decoded && decoded.role) {
-          setUserRole(decoded.role.toUpperCase()); 
+        if (decoded) {
+          setUserRole(decoded.role.toUpperCase());
+          setUserPhone(decoded.nomor_hp); // <-- tambahkan ini
         }
       } catch (err) {
         console.error("Gagal decode token:", err);
@@ -146,19 +132,51 @@ export default function InventoryPage() {
     }
   }, []);
 
-      const filteredData = data.filter((item) => {
-  const matchesRole =
-    userRole === "USER"
-      ? item.nomor_hp_pengirim === userPhone
-      : item.status_barang === filter;
+  useEffect(() => {
+    const token = localStorage.getItem("token");
+    if (token) {
+      try {
+        const decoded = jwt.decode(token) as User | null;
+        if (decoded && decoded.role) {
+          setUserRole(decoded.role.toUpperCase());
+        }
+      } catch (err) {
+        console.error("Gagal decode token:", err);
+      }
+    }
+  }, []);
 
-  const matchesSearch =
-    item.sttb?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    searchQuery.trim() === "";
+  useEffect(() => {
+    const hasAccepted = localStorage.getItem("syaratDiterima");
+    if (!hasAccepted) {
+      setOpen(true);
+    }
+  }, []);
 
-  return matchesRole && matchesSearch;
-});
+  const handleSetuju = () => {
+    localStorage.setItem("syaratDiterima", "true");
+    setOpen(false);
+  };
 
+  const filteredData = data.filter((item) => {
+    const matchesRole =
+      userRole === "USER"
+        ? item.nomor_hp_pengirim === userPhone
+        : item.status_barang === filter;
+
+    const matchesSearch =
+      item.sttb?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      searchQuery.trim() === "";
+
+    return matchesRole && matchesSearch;
+  });
+
+  useEffect(() => {
+    const hasAccepted = localStorage.getItem("syaratDiterima");
+    if (!hasAccepted) {
+      setOpen(true);
+    }
+  }, []);
 
   const handleMarkAsSelesai = async (id: string) => {
     try {
@@ -208,7 +226,7 @@ export default function InventoryPage() {
   }, [urlFilter]);
 
   return (
-    <Box p={4}>
+    <Box>
       <Typography variant="h5" gutterBottom>
         Manajemen Status Barang
       </Typography>
@@ -233,168 +251,304 @@ export default function InventoryPage() {
             ))}
           </Stack>
         </Stack>
-        
       )}
-          {userRole !== "USER" && (
-            <Stack direction="row" spacing={2} alignItems="center" mb={2}>
-              <Typography variant="body1">Cari STT:</Typography>
-              <input
-                type="text"
-                placeholder="Masukkan STT"
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                style={{
-                  padding: "8px",
-                  borderRadius: "4px",
-                  border: "1px solid #ccc",
-                  width: "250px",
-                }}
-              />
-            </Stack>
-          )}
+      {userRole !== "USER" && (
+        <Stack direction="row" spacing={2} alignItems="center" mb={2}>
+          <Typography variant="body1">Cari STT:</Typography>
+          <input
+            type="text"
+            placeholder="Masukkan STT"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            style={{
+              padding: "8px",
+              borderRadius: "4px",
+              border: "1px solid #ccc",
+              width: "250px",
+            }}
+          />
+        </Stack>
+      )}
 
       {loading ? (
         <Box mt={4} display="flex" justifyContent="center">
           <CircularProgress />
         </Box>
       ) : (
-        <Paper elevation={2} sx={{ mt: userRole === "USER" ? 4 : 0 }}>
-          <Table>
-            <TableHead>
-              <TableRow>
-                <TableCell>Nama Pengirim</TableCell>
-                <TableCell align="center">Nomor Resi</TableCell>
-                <TableCell align="center">Alamat Pengiriman</TableCell>
-                {userRole === "USER" ? (
+        <>
+          {userRole === "USER" && (
+            <Stack direction="row" justifyContent="flex-end" mb={2}>
+              <Button
+                variant="outlined"
+                color="warning"
+                onClick={() => setOpen(true)}
+                startIcon={<VisibilityIcon />}
+              >
+                Lihat Syarat & Ketentuan
+              </Button>
+            </Stack>
+          )}
+          <Paper elevation={2} sx={{ mt: userRole === "USER" ? 4 : 0 }}>
+            <Table>
+              <TableHead>
+                <TableRow>
+                  <TableCell>Nama Pengirim</TableCell>
+                  <TableCell align="center">Nomor Resi</TableCell>
+                  <TableCell align="center">Alamat Pengiriman</TableCell>
+                  {userRole === "USER" ? (
                     <TableCell align="center">Status</TableCell>
                   ) : (
                     <TableCell align="center">STT</TableCell>
                   )}
-                <TableCell align="center">View Detail</TableCell>
-                <TableCell align="center">Update</TableCell>
-              </TableRow>
-            </TableHead>
-            <TableBody>
-              {filteredData.length === 0 ? (
-                <TableRow>
-                  <TableCell colSpan={5} align="center">
-                    Tidak ada data dengan status ini.
-                  </TableCell>
+                  <TableCell align="center">View Detail</TableCell>
+                  <TableCell align="center">Update</TableCell>
+                  {userRole !== "USER" && (
+                    <TableCell align="center">Edit</TableCell>
+                  )}
                 </TableRow>
-              ) : (
-                filteredData.map((item) => {
-                  const statusItem = statusList.find(
-                    (s) => s.key === item.status_barang
-                  );
+              </TableHead>
+              <TableBody>
+                {filteredData.length === 0 ? (
+                  <TableRow>
+                    <TableCell colSpan={5} align="center">
+                      Tidak ada data dengan status ini.
+                    </TableCell>
+                  </TableRow>
+                ) : (
+                  filteredData.map((item) => {
+                    const statusItem = statusList.find(
+                      (s) => s.key === item.status_barang
+                    );
 
-                  return (
-                    <TableRow key={item.id}>
-                      <TableCell>{item.nama_pengirim}</TableCell>
-                      <TableCell align="center">{item.nomor_resi}</TableCell>
-                      <TableCell
-                        align="center"
-                        sx={{
-                          maxWidth: 200, 
-                          whiteSpace: "nowrap", 
-                          overflow: "hidden", 
-                          textOverflow: "ellipsis", 
-                        }}
-                      >
-                        {item.alamat_pengiriman}
-                      </TableCell>
-                     <TableCell align="center">
-                        <Chip
-                          label={
-                            userRole === "USER"
-                              ? statusItem?.label || item.status_barang
-                              : item.sttb || "STT"
-                          }
-                          icon={userRole === "USER" ? statusItem?.icon : undefined}
-                          color={userRole === "USER" ? (statusItem?.color as MuiColor) || "default" : "default"}
-                          variant="outlined"
-                          size="small"
-                        />
-                      </TableCell>
-
-
-                      <TableCell align="center">
-                        <Button
-                          startIcon={<VisibilityIcon />}
-                          onClick={() => handleOpenDialog(item)}
+                    return (
+                      <TableRow key={item.id}>
+                        <TableCell>{item.nama_pengirim}</TableCell>
+                        <TableCell align="center">{item.nomor_resi}</TableCell>
+                        <TableCell
+                          align="center"
+                          sx={{
+                            maxWidth: 200,
+                            whiteSpace: "nowrap",
+                            overflow: "hidden",
+                            textOverflow: "ellipsis",
+                          }}
                         >
-                          View
-                        </Button>
-                      </TableCell>
+                          {item.alamat_pengiriman}
+                        </TableCell>
                         <TableCell align="center">
-                        {(() => {
-                          if (item.status_barang === "telah_diterima" && (userRole === "ADMIN" || userRole === "USER")) {
-                            return (
-                              <Button
-                                variant="outlined"
-                                color="primary"
-                                onClick={() => router.push(`/penerimaan-barang/${item.id}`)}
-                              >
-                                Update
-                              </Button>
-                            );
-                          }
+                          <Chip
+                            label={
+                              userRole === "USER"
+                                ? statusItem?.label || item.status_barang
+                                : item.sttb || "STT"
+                            }
+                            icon={
+                              userRole === "USER" ? statusItem?.icon : undefined
+                            }
+                            color={
+                              userRole === "USER"
+                                ? (statusItem?.color as MuiColor) || "default"
+                                : "default"
+                            }
+                            variant="outlined"
+                            size="small"
+                          />
+                        </TableCell>
 
-                if (item.status_barang === "sedang_dikirim") {
-                    if (userRole !== "USER") {
-                      return (
-                        <Button
-                          variant="outlined"
-                          color="warning"
-                          onClick={() => router.push(`/status-barang/update/${item.id}`)}
-                        >
-                          Update
-                        </Button>
-                      );
-                    }
-                  }
+                        <TableCell align="center">
+                          <Button
+                            startIcon={<VisibilityIcon />}
+                            onClick={() => handleOpenDialog(item)}
+                          >
+                            View
+                          </Button>
+                        </TableCell>
+                        <TableCell align="center">
+                          {(() => {
+                            if (
+                              item.status_barang === "telah_diterima" &&
+                              (userRole === "ADMIN" || userRole === "USER")
+                            ) {
+                              return (
+                                <Button
+                                  variant="outlined"
+                                  color="primary"
+                                  onClick={() =>
+                                    router.push(`/penerimaan-barang/${item.id}`)
+                                  }
+                                >
+                                  Update
+                                </Button>
+                              );
+                            }
 
+                            if (item.status_barang === "sedang_dikirim") {
+                              if (userRole !== "USER") {
+                                return (
+                                  <Button
+                                    variant="outlined"
+                                    color="warning"
+                                    onClick={() =>
+                                      router.push(
+                                        `/status-barang/update/${item.id}`
+                                      )
+                                    }
+                                  >
+                                    Update
+                                  </Button>
+                                );
+                              }
+                            }
 
+                            if (
+                              item.status_barang === "butuh_validasi" &&
+                              userRole === "ADMIN"
+                            ) {
+                              return (
+                                <Button
+                                  variant="outlined"
+                                  color="success"
+                                  onClick={() =>
+                                    router.push(`/validasi/${item.id}`)
+                                  }
+                                >
+                                  Update
+                                </Button>
+                              );
+                            }
 
-                          if (
-                            item.status_barang === "butuh_validasi" &&
-                            userRole === "ADMIN"
-                          ) {
-                            return (
-                              <Button
-                                variant="outlined"
-                                color="success"
-                                onClick={() => router.push(`/validasi/${item.id}`)}
-                              >
-                                Update
-                              </Button>
-                            );
-                          }
+                            if (
+                              item.status_barang === "telah_selesai" &&
+                              (userRole === "ADMIN" || userRole === "USER")
+                            ) {
+                              return (
+                                <Button
+                                  variant="outlined"
+                                  color="primary"
+                                  onClick={() =>
+                                    router.push(`/validasi/${item.id}`)
+                                  }
+                                >
+                                  BUKTI
+                                </Button>
+                              );
+                            }
 
-                          if (
-                            item.status_barang === "telah_selesai" &&
-                            (userRole === "ADMIN" || userRole === "USER")
-                          ) {
-                            return (
-                              <Button
-                                variant="outlined"
-                                color="primary"
-                                onClick={() => router.push(`/validasi/${item.id}`)}
-                              >
-                                BUKTI
-                              </Button>
-                            );
-                          }
+                            return "-";
+                          })()}
+                        </TableCell>
 
-                          return "-";
-                        })()}
-                      </TableCell>
-                    </TableRow>
-                  );
-                })
-              )}
-            </TableBody>
-          </Table>
-        </Paper>
+                        {userRole !== "USER" && (
+                          <TableCell align="center">
+                            <Button
+                              variant="contained"
+                              color="secondary"
+                              onClick={() =>
+                                router.push(`/pengiriman/edit/${item.id}`)
+                              }
+                            >
+                              Edit
+                            </Button>
+                          </TableCell>
+                        )}
+                      </TableRow>
+                    );
+                  })
+                )}
+              </TableBody>
+            </Table>
+          </Paper>
+        </>
+      )}
+
+      {userRole === "USER" && (
+        <Modal open={open}>
+          <Box
+            sx={{
+              position: "absolute",
+              top: "50%",
+              left: "50%",
+              transform: "translate(-50%, -50%)",
+              width: "90%",
+              maxWidth: 800,
+              maxHeight: "90vh",
+              overflowY: "auto",
+              bgcolor: "#fff",
+              boxShadow: 10,
+              borderRadius: 3,
+              p: 4,
+            }}
+          >
+            <Typography
+              variant="h6"
+              fontWeight={700}
+              gutterBottom
+              color={"warning.main"}
+              sx={{ mb: 2 }}
+              align="center"
+            >
+              PEMBERITAHUAN TENTANG BATAS TANGGUNG JAWAB PENGANGKUT
+            </Typography>
+            <Typography variant="body1" sx={{ mb: 2, textAlign: "justify" }}>
+              Jika pengangkutan Udara dan Laut, maka tunduk kepada undang-undang
+              yang berlaku mengatur,barang pada waktu penyerahan dari pengirim
+              kepada pengangkut dan dengan tarif pembayaran yang di isyaratkan
+              oleh pengangkut membatasi tanggung jawab pengangkut atas ganti
+              rugi karena kehilangan, kerusakan dan keterlambatan yang di
+              sebabkan kesalahan pengangkutan dengan besaran nilai ganti
+              kerugian tertentu. Kecuali jika ada pernyataan khusus tentang
+              harga barang pada waktu penyerahan dari pengirim kepada pengangkut
+              dari pengirim kepada pengangkut dengan tarif yang berlaku.
+            </Typography>
+
+            <Divider sx={{ my: 3 }} />
+
+            <Typography
+              variant="h6"
+              fontWeight={700}
+              gutterBottom
+              color={"warning.main"}
+              align="center"
+            >
+              SYARAT DAN KETENTUAN PENGANGKUTAN / KIRIMAN BARANG
+            </Typography>
+
+            <Box component="ol" sx={{ pl: 3, pr: 1, mb: 2 }}>
+              {[
+                "Pengirim wajib mengikuti  segala syarat dan ketentuan kiriman yang di keluarkan pihak GMJ / Pengangkut dan wajib meminta surat tanda terima saat menyerahkan barang kiriman kepada.",
+                "Isi barang kiriman tidak DIPERIKSA pihak GMJ/pengangkut, dan sepenuhnya menjadi tanggung jawab pengirim.",
+                "Barang yang dikirim harus dibungkus/packaging secara Sempurna. Pengepakan yang kurang sempurna dapat menimbulkan kerugian yang menjadi tanggung jawab dari pihak pengirim sepenuhnya. Pengirim di sarankan mengasuransikan barang  yang mudah rusak yang mempunyai nilai tinggi. ",
+                "GMJ/Pengangkut tidak bertanggung jawab atas kiriman barang yang dianggap ilegal. Pengirim tidak berkeberatan jika barang kiriman dicurigai sehingga pihak berwenang memeriksa dan menahan kiriman jika barang tersebut ilegal. Jika terjadi sesuatu dan lain hal barang tersebut di tahan oleh pihak berwajib,maka pemilik barang tersebut yang bertanggung jawab  dan menyelesaikan",
+                "Claim paling lambat 1 x 24 jam setelah barang telah diterima oleh penerima. Claim  Ganti rugi diakibatkan barang hilang setinggi-tingginya 10 (sepuluh) kali dari biaya kiriman yang tertera pada biaya pengiriman (Invoice), dan berlakunya ganti rugi apabila pengirim telah dibayar lunas  dan melampirkan tanda bukti kiriman yang sah dan bukti-bukti lainnya.",
+                "GMJ/Pengangkut tidak memberikan ganti rugi apapun atas akibat keterlambatan, kerusakan atau kehilangan barang yang disebabkan oleh kondisi lalu lintas pengangkutan atau di karenakan terjadi faktor cuaca buruk, Bencana alam, huru- hara, penjarahan, kecelakaan penerbangan, kecelakaan laut dan peperangan (force majeure). saat proses pengiriman	",
+                "GMJ/Pengangkut tidak menerima kiriman: surat warkat,surat berharga, wesel.cek,emas,perak,permata,logam mulia,uang meskipun di asuransikan.",
+                " Dilarang mengirim barang yang mudah meledak, mudah menyala atau terbakar, barang yang dapat membahayakan keselamatan umum.Dan barang yang dilarang pemerintah dan melanggar hukum.",
+                " GMJ/Pengangkut hanya bertanggung jawab atas penyampaian barang kiriman ke alamat barang yang di tuju (penerima)/sesuai alamat, jika terjadi sesuatu dan lain hal barang tersebut di tahan oleh pihak berwajib,maka pemilik barang tersebut yang bertanggung jawab dan menyelesaikan permasalahan tersebut.  ",
+              ].map((text, idx) => (
+                <Typography
+                  key={idx}
+                  component="li"
+                  variant="body2"
+                  sx={{ mb: 1, textAlign: "justify" }}
+                >
+                  {text}
+                </Typography>
+              ))}
+            </Box>
+
+            <Box textAlign="right" mt={4}>
+              <Button
+                variant="contained"
+                color="warning"
+                size="large"
+                onClick={handleSetuju}
+                sx={{ borderRadius: 2, px: 4 }}
+              >
+                Saya Mengerti & Setuju
+              </Button>
+            </Box>
+          </Box>
+        </Modal>
       )}
 
       {/* MODAL DETAIL */}
@@ -402,7 +556,7 @@ export default function InventoryPage() {
         open={openDialog}
         onClose={handleCloseDialog}
         fullWidth
-        maxWidth="sm"
+        maxWidth="md"
       >
         <DialogTitle>Detail Inventori</DialogTitle>
         <DialogContent dividers>
@@ -456,7 +610,12 @@ export default function InventoryPage() {
 
               <Grid container spacing={2}>
                 <Grid item xs={12}>
-                  <Box display="flex" flexDirection="column" gap={1} sx={{ wordBreak: 'break-word' }}>
+                  <Box
+                    display="flex"
+                    flexDirection="column"
+                    gap={1}
+                    sx={{ wordBreak: "break-word" }}
+                  >
                     <Typography>
                       <strong>Wilayah:</strong> {selectedItem.wilayah}
                     </Typography>
@@ -464,7 +623,6 @@ export default function InventoryPage() {
                       <strong>Alamat:</strong> {selectedItem.alamat_pengiriman}
                     </Typography>
                   </Box>
-
                 </Grid>
               </Grid>
 
@@ -581,7 +739,12 @@ export default function InventoryPage() {
                                   cursor: "pointer",
                                 }}
                               /> */}
-                              <Image src= {log.foto} alt="Foto Lokasi" width={100} height={100} />
+                              <Image
+                                src={log.foto}
+                                alt="Foto Lokasi"
+                                width={100}
+                                height={100}
+                              />
                             </a>
                           </Box>
                         )}

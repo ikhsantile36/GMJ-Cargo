@@ -15,7 +15,6 @@ const createSuperAdmin = async () => {
     });
 
     if (!existing) {
-      // Membuat user superadmin baru
       const admin = await prisma.user.create({
         data: {
           username: "owner",

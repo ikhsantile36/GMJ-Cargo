@@ -40,7 +40,7 @@ const AuthLogin = ({ title, subtitle, subtext }: loginType) => {
       const res = await fetch("/api/auth/login", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(form),
+        body: JSON.stringify({...form, nomorHp: null}),
       });
 
       const data = await res.json();
@@ -123,7 +123,7 @@ const AuthLogin = ({ title, subtitle, subtext }: loginType) => {
             name="password"
             value={form.password}
             onChange={handleChange}
-            autocomplete="current-password"
+            autoComplete="current-password"
           />
         </Box>
 

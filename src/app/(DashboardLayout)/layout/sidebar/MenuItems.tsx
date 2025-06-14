@@ -13,7 +13,8 @@ import {
   IconArrowAutofitRight,
   IconTruckDelivery,
   IconPackage,
-  IconChecklist 
+  IconChecklist,
+  IconReceipt 
 } from "@tabler/icons-react";
 
 import { uniqueId } from "lodash";
@@ -45,12 +46,12 @@ const Menuitems = [
     href: "/inventory-barang",
     allowedRoles: ["OWNER", "ADMIN"],
   },
-   {
+  {
     id: uniqueId(),
     title: "Status Barang",
     icon: IconChecklist,
     href: "/status-barang",
-    allowedRoles: ["ADMIN" , "USER", "OPERATOR","OWNER"],
+    allowedRoles: ["ADMIN", "USER", "OPERATOR", "OWNER"],
   },
   // {
   //   id: uniqueId(),
@@ -79,6 +80,13 @@ const Menuitems = [
     icon: IconMap2,
     href: "/manajemen-user",
     allowedRoles: ["OWNER"],
+  },
+  {
+    id: uniqueId(),
+    title: "Invoice",
+    icon: IconReceipt,
+    href: "/invoice",
+    allowedRoles: ["ADMIN", "USER", "OPERATOR", "OWNER"],
   },
 ];
 

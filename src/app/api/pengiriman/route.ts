@@ -1,16 +1,13 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { format } from 'date-fns';
+import { format } from "date-fns";
 
 import { generateSTTB } from "@/utils/generateSTTB";
 
-
-
 export async function POST(req: NextRequest) {
-  
   try {
     const body = await req.json();
-    console.log('Received data:', body);
+    console.log("Received data:", body);
 
     // Destructuring dengan validasi default
     const {
@@ -41,12 +38,17 @@ export async function POST(req: NextRequest) {
     } = body;
 
     // Validasi data yang diperlukan
-    if (!nomor_resi || !nama_pengirim || !nama_penerima || !nomor_hp_pengirim || !wilayah) {
+    if (
+      !nomor_resi ||
+      !nama_pengirim ||
+      !nama_penerima ||
+      !nomor_hp_pengirim ||
+      !wilayah
+    ) {
       return NextResponse.json(
         { success: false, message: "Data yang diperlukan tidak lengkap" },
         { status: 400 }
       );
-
     }
 
     // 1. Cek atau buat user
@@ -57,7 +59,9 @@ export async function POST(req: NextRequest) {
     if (!existingUser) {
       existingUser = await prisma.user.create({
         data: {
-          username: `${nama_pengirim.replace(/\s+/g, "_").toLowerCase()}_${Date.now()}`,
+          username: `${nama_pengirim
+            .replace(/\s+/g, "_")
+            .toLowerCase()}_${Date.now()}`,
           email: `user${Date.now()}@autogen.local`,
           nomor_hp: nomor_hp_pengirim,
           password: "",
@@ -65,10 +69,10 @@ export async function POST(req: NextRequest) {
         },
       });
     }
-    
+
     // 2. Generate STTB
     const sttb = await generateSTTB();
-    
+
     // 3. Validasi dan transformasi data array
     const barangArray = Array.isArray(barang) ? barang : [];
     const biayaSatuanArray = Array.isArray(biaya_satuan) ? biaya_satuan : [];
@@ -113,16 +117,12 @@ export async function POST(req: NextRequest) {
       const vw = (panjang * lebar * tinggi) / 4000;
       const beratItem = beratSatuanArray[index] || 0;
       const tagihan = biayaSatuanArray[index] || 0;
-      const tanggalString = result.createdAt.toLocaleDateString('id-ID'); 
-
-
-
-
+      const tanggalString = result.createdAt.toLocaleDateString("id-ID");
 
       await prisma.barang.create({
         data: {
           tgl: new Date(),
-          hari: result.createdAt.toLocaleDateString('id-ID'), // ⬅️ ini jadi string "dd/mm/yyyy"
+          hari: result.createdAt.toLocaleDateString("id-ID"), // ⬅️ ini jadi string "dd/mm/yyyy"
           stt: result.sttb,
           tujuan: result.wilayah,
           penerima_dan_hp: `${result.nama_penerima} / ${result.nomor_hp_penerima}`,
@@ -133,30 +133,41 @@ export async function POST(req: NextRequest) {
           panjang: parseFloat(b.panjang),
           lebar: parseFloat(b.lebar),
           tinggi: parseFloat(b.tinggi),
-          m3: (parseFloat(b.panjang) * parseFloat(b.lebar) * parseFloat(b.tinggi)) / 1000000,
-          vw: (parseFloat(b.panjang) * parseFloat(b.lebar) * parseFloat(b.tinggi)) / 4000,
+          m3:
+            (parseFloat(b.panjang) *
+              parseFloat(b.lebar) *
+              parseFloat(b.tinggi)) /
+            1000000,
+          vw:
+            (parseFloat(b.panjang) *
+              parseFloat(b.lebar) *
+              parseFloat(b.tinggi)) /
+            4000,
           kg: beratSatuanArray[index] || 0,
           tagihan: biaya_satuan[index] || 0,
           alamat: result.alamat_pengiriman,
 
-          pengiriman: { connect: { id: result.id } }
-        }
+          pengiriman: { connect: { id: result.id } },
+        },
       });
     }
 
-    return NextResponse.json({ 
-      success: true, 
-      data: result,
-      message: "Data pengiriman berhasil disimpan" 
-    }, { status: 201 });
-
+    return NextResponse.json(
+      {
+        success: true,
+        id: result.id,
+        data: result,
+        message: "Data pengiriman berhasil disimpan",
+      },
+      { status: 201 }
+    );
   } catch (error) {
     console.error("POST /api/pengiriman error:", error);
     return NextResponse.json(
-      { 
-        success: false, 
+      {
+        success: false,
         message: "Terjadi kesalahan pada server.",
-        error: error instanceof Error ? error.message : String(error)
+        error: error instanceof Error ? error.message : String(error),
       },
       { status: 500 }
     );
@@ -167,16 +178,16 @@ export async function GET() {
   try {
     const data = await prisma.pengiriman.findMany({
       include: { user: true },
-      orderBy: { createdAt: 'desc' },
+      orderBy: { createdAt: "desc" },
     });
     return NextResponse.json(data, { status: 200 });
   } catch (error) {
     console.error("GET /api/pengiriman error:", error);
     return NextResponse.json(
-      { 
-        success: false, 
+      {
+        success: false,
         message: "Terjadi kesalahan pada server.",
-        error: error instanceof Error ? error.message : String(error)
+        error: error instanceof Error ? error.message : String(error),
       },
       { status: 500 }
     );
