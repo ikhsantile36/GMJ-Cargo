@@ -442,9 +442,9 @@ export default function InventoryPage() {
                           <TableCell align="center">
                             <Button
                               variant="contained"
-                              color="secondary"
+                              color="primary"
                               onClick={() =>
-                                router.push(`/pengiriman/edit/${item.id}`)
+                                router.push(`/input-pengiriman/edit/${item.id}`)
                               }
                             >
                               Edit

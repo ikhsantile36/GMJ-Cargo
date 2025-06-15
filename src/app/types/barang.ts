@@ -1,4 +1,5 @@
 export interface Barang {
+  biaya_satuan: any;
   id: number;
   tgl?: string; // ISO string format (DateTime)
   hari?: string;
