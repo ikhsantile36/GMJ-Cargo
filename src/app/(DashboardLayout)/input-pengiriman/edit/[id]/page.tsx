@@ -79,6 +79,28 @@ export default function EditPengirimanForm() {
       }));
     }
   };
+const handleDelete = async () => {
+  const confirmDelete = confirm("Yakin ingin menghapus pengiriman ini?");
+  if (!confirmDelete) return;
+
+  try {
+    const res = await fetch(`/api/pengiriman/${id}`, {
+      method: "DELETE",
+    });
+
+    if (!res.ok) {
+      const errorText = await res.text();
+      console.error("Delete error:", errorText);
+      throw new Error("Gagal menghapus data");
+    }
+
+    alert("Data berhasil dihapus");
+    router.push("/status-barang"); // Redirect ke halaman daftar pengiriman
+  } catch (error) {
+    console.error("Delete request error:", error);
+    alert("Terjadi kesalahan saat menghapus");
+  }
+};
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -205,6 +227,14 @@ export default function EditPengirimanForm() {
         <Grid item xs={12} mt={2}>
           <Box display="flex" justifyContent="flex-end">
             <Button
+  variant="contained"
+  color="error"
+  onClick={handleDelete}
+  sx={{ mr: 2, minWidth: 160 }}
+>
+  Hapus Pengiriman
+</Button>
+            <Button
               type="submit"
               variant="contained"
               color="warning"
@@ -212,6 +242,8 @@ export default function EditPengirimanForm() {
             >
               Simpan Perubahan
             </Button>
+            
+
           </Box>
         </Grid>
       </Grid>

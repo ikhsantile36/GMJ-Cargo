@@ -69,15 +69,52 @@ export async function PUT(
   return NextResponse.json(updatedPengiriman);
 }
 
-
 export async function DELETE(
   req: NextRequest,
   { params }: { params: { id: string } }
 ) {
   const id = parseInt(params.id);
-  if (isNaN(id))
-    return NextResponse.json({ message: "Invalid ID" }, { status: 400 });
+  if (isNaN(id)) {
+    return NextResponse.json({ message: "ID tidak valid" }, { status: 400 });
+  }
 
-  await prisma.pengiriman.delete({ where: { id } });
-  return new NextResponse(null, { status: 204 });
+  try {
+    // Hapus semua data barang yang terkait
+    await prisma.barang.deleteMany({
+      where: { pengirimanId: id },
+    });
+
+    // Hapus data inventory yang berelasi (berdasarkan nomor_resi)
+    const pengiriman = await prisma.pengiriman.findUnique({
+      where: { id },
+    });
+
+    if (pengiriman?.nomor_resi) {
+      await prisma.inventory.deleteMany({
+        where: { nomor_resi: pengiriman.nomor_resi },
+      });
+    }
+
+    // Hapus data penerimaan barang jika ada
+    await prisma.penerimaanBarang.deleteMany({
+      where: { pengirimanId: id },
+    });
+
+    // Hapus pengiriman
+    await prisma.pengiriman.delete({
+      where: { id },
+    });
+
+    return new NextResponse(null, { status: 204 }); // Sukses tanpa isi
+  } catch (error) {
+    console.error("DELETE /api/pengiriman/[id] error:", error);
+    return NextResponse.json(
+      {
+        message: "Gagal menghapus data",
+        error: error instanceof Error ? error.message : String(error),
+      },
+      { status: 500 }
+    );
+  }
 }
+
