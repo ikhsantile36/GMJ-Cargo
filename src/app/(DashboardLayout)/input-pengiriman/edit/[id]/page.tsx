@@ -6,6 +6,7 @@ import {
   MenuItem,
   TextField,
   Typography,
+  Grid,
 } from "@mui/material";
 import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
@@ -25,6 +26,8 @@ export default function EditPengirimanForm() {
     biaya: 0,
     jenis_kiriman: "",
     penerima_dan_hp: "",
+    stt: "",
+    sttb: "",
   });
 
   const [barangOptions, setBarangOptions] = useState<Barang[]>([]);
@@ -45,6 +48,8 @@ export default function EditPengirimanForm() {
           biaya: dataPengiriman.biaya || 0,
           jenis_kiriman: barangPertama?.jenis_kiriman || "",
           penerima_dan_hp: barangPertama?.penerima_dan_hp || "",
+          stt: barangPertama?.stt || "",
+          sttb: dataPengiriman.sttb || "",
         });
 
         setLoading(false);
@@ -60,26 +65,48 @@ export default function EditPengirimanForm() {
   const handleChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
   ) => {
-    setForm({ ...form, [e.target.name]: e.target.value });
+    const { name, value } = e.target;
+
+    if (name === "stt") {
+      setForm((prev) => ({
+        ...prev,
+        stt: value,
+        sttb: value,       }));
+    } else {
+      setForm((prev) => ({
+        ...prev,
+        [name]: value,
+      }));
+    }
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+
+    const dataToSend = {
+      ...form,
+      biaya: Number(form.biaya), 
+    };
+
     try {
       const res = await fetch(`/api/pengiriman/${id}`, {
         method: "PUT",
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify(form),
+        body: JSON.stringify(dataToSend),
       });
 
-      if (!res.ok) throw new Error("Gagal update data");
+      if (!res.ok) {
+        const errorText = await res.text();
+        console.error("Response error:", errorText);
+        throw new Error("Gagal update data");
+      }
 
-      alert("Berhasil update data pengiriman");
-      router.push("/pengiriman");
+      alert("Berhasil update data");
+      router.push("/status-barang");
     } catch (error) {
-      console.error(error);
+      console.error("Update error:", error);
       alert("Terjadi kesalahan saat update");
     }
   };
@@ -96,61 +123,98 @@ export default function EditPengirimanForm() {
     <Box
       component="form"
       onSubmit={handleSubmit}
-      maxWidth={600}
-      mx="auto"
-      mt={4}
+      sx={{
+        maxWidth: "100%",
+        width: "100%",
+        px: 3,
+        py: 4,
+        mx: "auto",
+        backgroundColor: "#fff",
+        borderRadius: 2,
+        boxShadow: 3,
+      }}
     >
       <Typography variant="h5" mb={3}>
         Edit Data Pengiriman
       </Typography>
-      <TextField
-        fullWidth
-        label="Nama Pengirim"
-        name="nama_pengirim"
-        value={form.nama_pengirim}
-        onChange={handleChange}
-        margin="normal"
-      />
-      <TextField
-        fullWidth
-        label="Alamat Pengiriman"
-        name="alamat_pengiriman"
-        value={form.alamat_pengiriman}
-        onChange={handleChange}
-        margin="normal"
-      />
-      <TextField
-        fullWidth
-        type="number"
-        label="Biaya"
-        name="biaya"
-        value={form.biaya}
-        onChange={handleChange}
-        margin="normal"
-      />
-      <TextField
-        label="Jenis Kiriman"
-        name="jenis_kiriman"
-        fullWidth
-        margin="normal"
-        value={form.jenis_kiriman}
-        onChange={handleChange}
-      />
 
-      <TextField
-        label="Penerima dan Nomor HP"
-        name="penerima_dan_hp"
-        fullWidth
-        margin="normal"
-        value={form.penerima_dan_hp}
-        onChange={handleChange}
-      />
+      <Grid container spacing={2}>
+        <Grid item xs={12}>
+          <TextField
+            label="STT"
+            name="stt"
+            fullWidth
+            value={form.stt}
+            onChange={handleChange}
+          />
+        </Grid>
 
-      <Box mt={3}>
-        <Button type="submit" variant="contained" color="primary">
-          Simpan Perubahan
-        </Button>
-      </Box>
+        <Grid item xs={12} sm={6}>
+          <TextField
+            label="Nama Pengirim"
+            name="nama_pengirim"
+            fullWidth
+            value={form.nama_pengirim}
+            onChange={handleChange}
+          />
+        </Grid>
+
+        <Grid item xs={12} sm={6}>
+          <TextField
+            label="Penerima & No. HP"
+            name="penerima_dan_hp"
+            fullWidth
+            value={form.penerima_dan_hp}
+            onChange={handleChange}
+          />
+        </Grid>
+
+        <Grid item xs={12}>
+          <TextField
+            label="Alamat Pengiriman"
+            name="alamat_pengiriman"
+            fullWidth
+            multiline
+            minRows={2}
+            value={form.alamat_pengiriman}
+            onChange={handleChange}
+          />
+        </Grid>
+
+        <Grid item xs={12} sm={6}>
+          <TextField
+            type="number"
+            label="Biaya"
+            name="biaya"
+            fullWidth
+            value={form.biaya}
+            onChange={handleChange}
+          />
+        </Grid>
+
+        <Grid item xs={12} sm={6}>
+          <TextField
+            label="Jenis Kiriman"
+            name="jenis_kiriman"
+            fullWidth
+            value={form.jenis_kiriman}
+            onChange={handleChange}
+          />
+        </Grid>
+
+        <Grid item xs={12} mt={2}>
+          <Box display="flex" justifyContent="flex-end">
+            <Button
+              type="submit"
+              variant="contained"
+              color="warning"
+              sx={{ minWidth: 160 }} // opsional agar ukuran tidak terlalu kecil
+            >
+              Simpan Perubahan
+            </Button>
+          </Box>
+        </Grid>
+      </Grid>
     </Box>
   );
 }

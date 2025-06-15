@@ -34,13 +34,41 @@ export async function PUT(
     return NextResponse.json({ message: "Invalid ID" }, { status: 400 });
 
   const body = await req.json();
-  const updated = await prisma.pengiriman.update({
+
+  const {
+    stt,
+    sttb,
+    nama_pengirim,
+    alamat_pengiriman,
+    biaya,
+    jenis_kiriman,
+    penerima_dan_hp,
+  } = body;
+
+  // 1. Update pengiriman
+  const updatedPengiriman = await prisma.pengiriman.update({
     where: { id },
-    data: body,
+    data: {
+      nama_pengirim,
+      alamat_pengiriman,
+      biaya,
+      sttb,
+    },
   });
 
-  return NextResponse.json(updated);
+  // 2. Update semua barang terkait pengiriman ini
+  await prisma.barang.updateMany({
+    where: { pengirimanId: id },
+    data: {
+      stt,
+      jenis_kiriman,
+      penerima_dan_hp,
+    },
+  });
+
+  return NextResponse.json(updatedPengiriman);
 }
+
 
 export async function DELETE(
   req: NextRequest,
