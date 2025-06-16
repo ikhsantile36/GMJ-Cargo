@@ -16,7 +16,7 @@ import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
 import { Pengiriman } from "@/app/types/pengiriman";
 import { Barang } from "@/app/types/barang";
-import styles from '../InvoicePrint.module.css';
+import styles from '.InvoicePrint.module.css';
 
 
 

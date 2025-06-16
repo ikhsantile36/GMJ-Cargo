@@ -71,7 +71,8 @@ export default function EditPengirimanForm() {
       setForm((prev) => ({
         ...prev,
         stt: value,
-        sttb: value,       }));
+        sttb: value,
+      }));
     } else {
       setForm((prev) => ({
         ...prev,
@@ -79,35 +80,35 @@ export default function EditPengirimanForm() {
       }));
     }
   };
-const handleDelete = async () => {
-  const confirmDelete = confirm("Yakin ingin menghapus pengiriman ini?");
-  if (!confirmDelete) return;
+  const handleDelete = async () => {
+    const confirmDelete = confirm("Yakin ingin menghapus pengiriman ini?");
+    if (!confirmDelete) return;
 
-  try {
-    const res = await fetch(`/api/pengiriman/${id}`, {
-      method: "DELETE",
-    });
+    try {
+      const res = await fetch(`/api/pengiriman/${id}`, {
+        method: "DELETE",
+      });
 
-    if (!res.ok) {
-      const errorText = await res.text();
-      console.error("Delete error:", errorText);
-      throw new Error("Gagal menghapus data");
+      if (!res.ok) {
+        const errorText = await res.text();
+        console.error("Delete error:", errorText);
+        throw new Error("Gagal menghapus data");
+      }
+
+      alert("Data berhasil dihapus");
+      router.push("/status-barang"); // Redirect ke halaman daftar pengiriman
+    } catch (error) {
+      console.error("Delete request error:", error);
+      alert("Terjadi kesalahan saat menghapus");
     }
-
-    alert("Data berhasil dihapus");
-    router.push("/status-barang"); // Redirect ke halaman daftar pengiriman
-  } catch (error) {
-    console.error("Delete request error:", error);
-    alert("Terjadi kesalahan saat menghapus");
-  }
-};
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
     const dataToSend = {
       ...form,
-      biaya: Number(form.biaya), 
+      biaya: Number(form.biaya),
     };
 
     try {
@@ -227,13 +228,13 @@ const handleDelete = async () => {
         <Grid item xs={12} mt={2}>
           <Box display="flex" justifyContent="flex-end">
             <Button
-  variant="contained"
-  color="error"
-  onClick={handleDelete}
-  sx={{ mr: 2, minWidth: 160 }}
->
-  Hapus Pengiriman
-</Button>
+              variant="outlined"
+              color="error"
+              onClick={handleDelete}
+              sx={{ mr: 2, minWidth: 160 }}
+            >
+              Hapus Pengiriman
+            </Button>
             <Button
               type="submit"
               variant="contained"
@@ -242,8 +243,6 @@ const handleDelete = async () => {
             >
               Simpan Perubahan
             </Button>
-            
-
           </Box>
         </Grid>
       </Grid>

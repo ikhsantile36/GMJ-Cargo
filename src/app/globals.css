@@ -16,8 +16,15 @@
     background: white;
   }
 
+  
+
   /* Optional: sembunyikan tombol dsb */
   .noPrint, button, .MuiButtonBase-root {
     display: none !important;
   }
+}
+
+@page {
+  size: A4 portrait;
+  margin: 10mm;
 }
