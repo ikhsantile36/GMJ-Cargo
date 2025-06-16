@@ -344,12 +344,8 @@ const SamplePage = () => {
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
-    let {
-      totalSemuaBiaya,
-      totalBiayaVendor,
-      totalVolume,
-      biayaSatuan, 
-    } = getTotalBiayaDanVolume();
+    let { totalSemuaBiaya, totalBiayaVendor, totalVolume, biayaSatuan } =
+      getTotalBiayaDanVolume();
 
     e.preventDefault();
     const resiBaru = generateNomorResi();
@@ -406,7 +402,7 @@ const SamplePage = () => {
         jumlah_barang,
         status_barang: "sedang_dikirim",
         nomor_resi: resiBaru,
-        biaya_satuan: biayaSatuan, 
+        biaya_satuan: biayaSatuan,
       };
 
       const res = await fetch("/api/pengiriman", {
