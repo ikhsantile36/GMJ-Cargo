@@ -1,34 +1,23 @@
 @media print {
-  /* Sembunyikan semua elemen */
+  /* Hide all content except printArea */
   body * {
-    visibility: hidden;
+    visibility: hidden !important;
   }
 
-  /* Tampilkan hanya area invoice */
-  .printArea,
-  .printArea * {
-    visibility: visible;
+  .printArea, .printArea * {
+    visibility: visible !important;
   }
 
-  /* Posisi ulang agar invoice di pojok kiri atas */
   .printArea {
     position: absolute;
-    top: 0;
     left: 0;
+    top: 0;
     width: 100%;
+    background: white;
   }
 
-  /* Sembunyikan Sidebar & Header dari layout.tsx */
-  .mainwrapper > div:first-of-type, /* Sidebar */
-  .page-wrapper > header,           /* Header kalau ada */
-  .MuiDrawer-root,                  /* Drawer MUI */
-  button                            /* Semua tombol */
-  {
+  /* Optional: sembunyikan tombol dsb */
+  .noPrint, button, .MuiButtonBase-root {
     display: none !important;
-  }
-
-  html, body {
-    background: white !important;
-    overflow: hidden !important;
   }
 }
