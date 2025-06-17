@@ -302,9 +302,10 @@ export default function InventoryPage() {
                   )}
                   <TableCell align="center">View Detail</TableCell>
                   <TableCell align="center">Update</TableCell>
-                  {userRole !== "USER" && (
+                  {(userRole === "ADMIN" || userRole === "OWNER") && (
                     <TableCell align="center">Edit</TableCell>
                   )}
+  
                 </TableRow>
               </TableHead>
               <TableBody>
@@ -438,19 +439,20 @@ export default function InventoryPage() {
                           })()}
                         </TableCell>
 
-                        {userRole !== "USER" && (
-                          <TableCell align="center">
-                            <Button
-                              variant="contained"
-                              color="primary"
-                              onClick={() =>
-                                router.push(`/input-pengiriman/edit/${item.id}`)
-                              }
-                            >
-                              Edit
-                            </Button>
-                          </TableCell>
-                        )}
+                       {(userRole === "ADMIN" || userRole === "OWNER") && (
+  <TableCell align="center">
+    <Button
+      variant="contained"
+      color="primary"
+      onClick={() =>
+        router.push(`/input-pengiriman/edit/${item.id}`)
+      }
+    >
+      Edit
+    </Button>
+  </TableCell>
+)}
+
                       </TableRow>
                     );
                   })
