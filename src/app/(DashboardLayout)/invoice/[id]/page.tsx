@@ -113,8 +113,8 @@ export default function InvoicePage() {
           </Box>
 
           {/* Tabel Invoice */}
-          <Box sx={{ width: "100%", overflowX: "auto" }}>
-            <Table size="small" sx={{ border: "1px solid black", minWidth: 1000 }}>
+          <Box sx={{ width: "100%" ,  overflowX: "auto",}}>
+            <Table size="small" sx={{ border: "1px solid black" }}>
               <TableHead>
                 <TableRow>
                   <TableCell rowSpan={2} sx={{ border: "1px solid black" }}>NO STTB</TableCell>
