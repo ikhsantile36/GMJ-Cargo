@@ -86,7 +86,7 @@ const Menuitems = [
     title: "Invoice",
     icon: IconReceipt,
     href: "/invoice",
-    allowedRoles: ["ADMIN", "USER", "OPERATOR", "OWNER"],
+    allowedRoles: ["ADMIN", "OPERATOR", "OWNER"],
   },
 ];
 
