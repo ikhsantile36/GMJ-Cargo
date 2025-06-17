@@ -7,7 +7,7 @@
   .printArea, .printArea * {
     visibility: visible !important;
   }
-  
+
   .printArea {
     position: absolute;
     left: 0;
