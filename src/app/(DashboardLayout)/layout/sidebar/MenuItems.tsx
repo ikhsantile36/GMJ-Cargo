@@ -81,13 +81,13 @@ const Menuitems = [
     href: "/manajemen-user",
     allowedRoles: ["OWNER"],
   },
-  {
-    id: uniqueId(),
-    title: "Invoice",
-    icon: IconReceipt,
-    href: "/invoice",
-    allowedRoles: ["ADMIN", "OPERATOR", "OWNER"],
-  },
+  // {
+  //   id: uniqueId(),
+  //   title: "Invoice",
+  //   icon: IconReceipt,
+  //   href: "/invoice",
+  //   allowedRoles: ["ADMIN", "OPERATOR", "OWNER"],
+  // },
 ];
 
 export default Menuitems;
