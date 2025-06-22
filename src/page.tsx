@@ -87,7 +87,7 @@ export default function InvoicePage() {
           {/* Header & Logo */}
           <Box display="flex" justifyContent="space-between" alignItems="center">
             <Box>
-              <img src="/gmj-logo-1.png" alt="Logo GMJ" style={{ height: 50 }} />
+              <img src="/GMJ-logo-1.png" alt="Logo GMJ" style={{ height: 50 }} />
               <Typography variant="h6" fontWeight="bold">GMJ CARGO</Typography>
               <Typography variant="body2">
                 Jasa Pengiriman Expedisi Cargo

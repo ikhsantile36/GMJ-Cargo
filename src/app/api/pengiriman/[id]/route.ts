@@ -43,31 +43,54 @@ export async function PUT(
     biaya,
     jenis_kiriman,
     penerima_dan_hp,
+    barangList = [], // <-- tambahkan default agar aman
   } = body;
 
-  // 1. Update pengiriman
-  const updatedPengiriman = await prisma.pengiriman.update({
-    where: { id },
-    data: {
-      nama_pengirim,
-      alamat_pengiriman,
-      biaya,
-      sttb,
-    },
-  });
+  try {
+    // 1. Update data pengiriman
+    const updatedPengiriman = await prisma.pengiriman.update({
+      where: { id },
+      data: {
+        nama_pengirim,
+        alamat_pengiriman,
+        biaya,
+        sttb,
+      },
+    });
 
-  // 2. Update semua barang terkait pengiriman ini
-  await prisma.barang.updateMany({
-    where: { pengirimanId: id },
-    data: {
-      stt,
-      jenis_kiriman,
-      penerima_dan_hp,
-    },
-  });
+    // 2. Update data barang umum (jika ada perubahan global)
+    await prisma.barang.updateMany({
+      where: { pengirimanId: id },
+      data: {
+        stt,
+        jenis_kiriman,
+        penerima_dan_hp,
+      },
+    });
 
-  return NextResponse.json(updatedPengiriman);
+    // 3. Update tagihan satu per satu jika barangList diberikan
+    for (const barang of barangList) {
+      if (barang.id && typeof barang.tagihan === "number") {
+        await prisma.barang.update({
+          where: { id: barang.id },
+          data: { tagihan: barang.tagihan },
+        });
+      }
+    }
+
+    return NextResponse.json(updatedPengiriman);
+  } catch (error) {
+    console.error("PUT /api/pengiriman/[id] error:", error);
+    return NextResponse.json(
+      {
+        message: "Gagal mengupdate data",
+        error: error instanceof Error ? error.message : String(error),
+      },
+      { status: 500 }
+    );
+  }
 }
+
 
 export async function DELETE(
   req: NextRequest,

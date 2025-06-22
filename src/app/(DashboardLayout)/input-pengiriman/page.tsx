@@ -32,6 +32,7 @@ const SamplePage = () => {
     nomor_resi: "-",
     jenis: "",
     nama_pengirim: "",
+    biaya_admin: "",
     nama_penerima: "",
     nomor_hp_pengirim: "",
     nomor_hp_penerima: "",
@@ -427,6 +428,7 @@ const SamplePage = () => {
         catatan: "",
         wilayah: "",
         biaya: 0,
+        biaya_admin: "",
         berat_satuan: [],
         jumlah_barang: 0,
         volume_rb: 0,
@@ -538,6 +540,15 @@ const SamplePage = () => {
                 label="Catatan (opsional)"
                 name="catatan"
                 value={formData.catatan}
+                onChange={handleChange}
+              />
+            </Grid>
+            <Grid item xs={12}>
+              <TextField
+                fullWidth
+                label="Biaya Admin"
+                name="biaya_admin"
+                value={formData.biaya_admin}
                 onChange={handleChange}
               />
             </Grid>
@@ -788,10 +799,10 @@ const SamplePage = () => {
                       <br />
                     </Box>
                   )}
-                  <strong>Total Biaya GMJ:</strong> Rp{" "}
-                  {Math.round(totalBiayaGMJ).toLocaleString("id-ID")} <br />
-                  <strong>Total Biaya Seluruhnya:</strong> Rp{" "}
-                  {Math.round(totalSemuaBiaya).toLocaleString("id-ID")} <br />
+                  <strong>Biaya Admin:</strong> Rp {Number(formData.biaya_admin).toLocaleString("id-ID")}<br />
+                  <strong>Total Biaya:</strong> Rp {Math.round(totalSemuaBiaya).toLocaleString("id-ID")}<br />
+                  <strong>Total Biaya Seluruhnya:</strong> Rp {((totalSemuaBiaya) + Number(formData.biaya_admin)).toLocaleString("id-ID")}<br />
+
                 </Box>
               ) : (
                 <Box

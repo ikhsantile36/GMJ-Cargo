@@ -375,7 +375,7 @@ const handleDelete = async (id: number) => {
                   <TableCell align="right">{item.kg ?? '-'}</TableCell>
                   <TableCell align="right">
   {typeof item.tagihan === 'number'
-    ? item.tagihan.toLocaleString('id-ID', { minimumFractionDigits: 3, maximumFractionDigits: 3 })
+    ? item.tagihan.toLocaleString('id-ID', { minimumFractionDigits: 0, maximumFractionDigits: 0 })
     : '-'}
 </TableCell>
 

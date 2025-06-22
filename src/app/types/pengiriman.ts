@@ -1,5 +1,6 @@
 export interface Pengiriman {
   id: number;
+  biaya_admin: number;
   nomor_resi: string;
   jumlah_barang: number;
   nomor_hp_pengirim: string;

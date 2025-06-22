@@ -16,15 +16,14 @@ import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
 import { Pengiriman } from "@/app/types/pengiriman";
 import { Barang } from "@/app/types/barang";
-import styles from '.InvoicePrint.module.css';
-
-
-
+import dayjs from "dayjs";
 
 export default function InvoicePage() {
   const { id } = useParams();
   const [data, setData] = useState<Pengiriman | null>(null);
   const [barangList, setBarangList] = useState<Barang[]>([]);
+  const [manualJumlah, setManualJumlah] = useState<number | null>(null);
+
 
   useEffect(() => {
     if (!id) return;
@@ -49,29 +48,13 @@ export default function InvoicePage() {
 
     fetchData();
   }, [id]);
-  useEffect(() => {
-    if (!id) return;
 
-    fetch(`/api/pengiriman/${id}`)
-      .then((res) => res.json())
-      .then(setData)
-      .catch((err) => console.error("Error fetching data pengiriman:", err));
+  const subtotal = barangList.reduce((sum, barang) => sum + (barang.tagihan || 0), 0);
+  const biayaAdmin = data?.biaya_admin || 0;
+  const total = subtotal + biayaAdmin;
 
-    fetch(`/api/barang`)
-      .then((res) => res.json())
-      .then((data) => {
-        console.log("DATA BARANG DARI API:", data); // ← log dulu isinya
-        const filtered = data.filter(
-          (item: Barang) => item.pengirimanId === Number(id)
-        );
-        setBarangList(filtered);
-      })
-      .catch((err) => console.error("Error fetching barang:", err));
-  }, [id]);
-  
- return (
-    <>
-      {/* Tombol Aksi - Tidak Dicetak */}
+  return (
+    <Box p={4}>
       <Box display="flex" justifyContent="space-between" mb={2} className="noPrint">
         <Button variant="outlined" onClick={() => window.history.back()} color="error">
           Kembali
@@ -81,39 +64,70 @@ export default function InvoicePage() {
         </Button>
       </Box>
 
-      {/* Area yang Dicetak */}
-      <Box className="printArea" p={4}>
-        <Paper elevation={3} sx={{ p: 4 }}>
-          {/* Header & Logo */}
-          <Box display="flex" justifyContent="space-between" alignItems="center">
-            <Box>
-              <img src="/GMJ-logo-1.png" alt="Logo GMJ" style={{ height: 50 }} />
-              <Typography variant="h6" fontWeight="bold">GMJ CARGO</Typography>
-              <Typography variant="body2">
-                Jasa Pengiriman Expedisi Cargo
-                <br />
-                Kantor Pusat: Jl. KH. Mas Mansyur, Kebon Kacang V No. 29 Tanah Abang - Jakarta Pusat
-                <br />
-                Telp : 0811-1352-477
-              </Typography>
-            </Box>
+      <Box className="printArea">
+      <Paper elevation={3} sx={{ p: 4 }}>
+        {/* Header */}
+        <Box mb={3}>
+  <Box display="flex" alignItems="center" justifyContent="center">
+    <img src="/GMJ-logo-1.png" alt="Logo GMJ" style={{ height: 80, marginRight: 16 }} />
+    <Box textAlign="left">
+      <Typography variant="h5" fontWeight="bold" sx={{ fontSize: '1.8rem' }}>
+        PT GEMILANG MARIO JAYA
+      </Typography>
+      <Typography variant="subtitle1" fontWeight="medium">
+        JASA PENGIRIMAN TRANSPORTASI
+      </Typography>
+    </Box>
+  </Box>
+  <Typography
+    variant="body2"
+    fontStyle="italic"
+    align="center"
+    sx={{ mt: 1 }}
+  >
+    Kantor Pusat : Jl. KH. Mas Mansyur, Kebon Kacang V No. 29 Tanah Abang - Jakarta Pusat. Telp./Fax : (021) 31922131 - 08111352477
+  </Typography>
+  <Divider sx={{ borderBottom: '2px solid black', my: 1 }} />
+  <Divider sx={{ borderBottom: '3px double black', mb: 2 }} />
+  <Typography variant="h5" fontWeight="bold" align="center">INVOICE</Typography>
+        </Box>
+
+        <Box display="flex" justifyContent="space-between" mb={2}>
+          <Box>
+            <Box display="flex" flexDirection="column" gap={1}>
+  <Box display="flex" alignItems="center" gap={1}>
+    <Typography variant="body2">Freight Service:</Typography>
+    <input
+      type="text"
+      placeholder="Isi Freight Service"
+      style={{ border: 'none', borderBottom: '1px solid black', outline: 'none', width: '200px' }}
+    />
+  </Box>
+  <Box display="flex" alignItems="center" gap={1}>
+    <Typography variant="body2">Date of Service:</Typography>
+    <input
+      type="text"
+      placeholder="Contoh: 20 Juni 2025"
+      style={{ border: 'none', borderBottom: '1px solid black', outline: 'none', width: '200px' }}
+    />
+  </Box>
+  <Box display="flex" alignItems="center" gap={1}>
+    <Typography variant="body2">Origin:</Typography>
+    <input
+      type="text"
+      placeholder="Jakarta"
+      style={{ border: 'none', borderBottom: '1px solid black', outline: 'none', width: '200px' }}
+    />
+  </Box>
+</Box>
+
           </Box>
+        </Box>
 
-          <Divider sx={{ my: 3 }} />
+        <Divider sx={{ my: 2 }} />
 
-          {/* Info Pengiriman */}
-          <Box mb={2}>
-            <Typography variant="body2">Freight Service</Typography>
-            <Typography variant="body2">
-              Date of Service: <b>{data?.createdAt ? new Date(data.createdAt).toLocaleDateString("id-ID", { day: "2-digit", month: "long", year: "numeric" }) : "-"}</b>
-            </Typography>
-            <Typography variant="body2">
-              Destination: <b>Jakarta - {data?.wilayah || ""}</b>
-            </Typography>
-          </Box>
-
-          {/* Tabel Invoice */}
-          <Box sx={{ width: "100%" ,  overflowX: "auto",}}>
+        {/* Table */}
+        <Box sx={{ width: "100%" ,  overflowX: "auto",}}>
             <Table size="small" sx={{ border: "1px solid black" }}>
               <TableHead>
                 <TableRow>
@@ -138,80 +152,170 @@ export default function InvoicePage() {
                   <TableCell align="center" sx={{ border: "1px solid black" }}>Harga/M3</TableCell>
                   <TableCell align="center" sx={{ border: "1px solid black" }}>RP</TableCell>
                   <TableCell align="center" sx={{ border: "1px solid black" }}>Tagihan</TableCell>
+                  <TableCell align="center" sx={{ border: "1px solid black" }} className="noPrint">
+  Aksi
+</TableCell>
                 </TableRow>
               </TableHead>
-              <TableBody>
-                {barangList.map((barang, index) => (
-                  <TableRow key={index}>
-                    <TableCell sx={{ border: "1px solid black" }}>{index === 0 ? data?.sttb : ""}</TableCell>
-                    <TableCell sx={{ border: "1px solid black" }}>{index === 0 ? data?.nama_pengirim : ""}</TableCell>
-                    <TableCell sx={{ border: "1px solid black" }}>{index === 0 ? data?.nama_penerima : ""}</TableCell>
-                    <TableCell sx={{ border: "1px solid black" }}>{index === 0 ? data?.wilayah : ""}</TableCell>
-                    <TableCell sx={{ border: "1px solid black" }}>{barang.jenis_kiriman}</TableCell>
-                    <TableCell sx={{ border: "1px solid black" }}>{index === 0 ? data?.jumlah_barang : ""}</TableCell>
-                    <TableCell sx={{ border: "1px solid black" }}>{barang.kg || barang.m3}</TableCell>
-                    <TableCell sx={{ border: "1px solid black" }}>{barang.tagihan?.toLocaleString()}</TableCell>
-                    <TableCell sx={{ border: "1px solid black" }}>{barang.tagihan?.toLocaleString()}</TableCell>
-                    <TableCell sx={{ border: "1px solid black" }}>{index === 0 ? data?.biaya : ""}</TableCell>
-                  </TableRow>
-                ))}
-                <TableRow>
-  <TableCell colSpan={9} align="center" sx={{ border: "1px solid black", backgroundColor: "#f0f0f0" }}>
-    <b>TOTAL</b>
-  </TableCell>
-  <TableCell sx={{ border: "1px solid black" }}>
-    <b>{data?.biaya?.toLocaleString("id-ID") || "-"}</b>
-  </TableCell>
-</TableRow>
+             <TableBody>
+  {barangList.map((barang, index) => (
+    <TableRow key={index}>
+      <TableCell sx={{ border: "1px solid black" }}>
+        <input
+          value={index === 0 ? data?.sttb : ""}
+          disabled
+          style={{ border: "none", background: "transparent", width: "100%" }}
+        />
+      </TableCell>
+      <TableCell sx={{ border: "1px solid black" }}>
+        <input
+          value={index === 0 ? data?.nama_pengirim : ""}
+          disabled
+          style={{ border: "none", background: "transparent", width: "100%" }}
+        />
+      </TableCell>
+      <TableCell sx={{ border: "1px solid black" }}>
+        <input
+          value={index === 0 ? data?.nama_penerima : ""}
+          disabled
+          style={{ border: "none", background: "transparent", width: "100%" }}
+        />
+      </TableCell>
+      <TableCell sx={{ border: "1px solid black" }}>
+        <input
+          value={index === 0 ? data?.wilayah : ""}
+          disabled
+          style={{ border: "none", background: "transparent", width: "100%" }}
+        />
+      </TableCell>
+      <TableCell sx={{ border: "1px solid black" }}>
+        <input
+          value={index === 0 ? barang.jenis_kiriman : ""}
+          disabled
+          style={{ border: "none", background: "transparent", width: "100%" }}
+        />
+      </TableCell>
+      <TableCell sx={{ border: "1px solid black" }}>
+  <input
+    type="number"
+    value={index === 0 ? (manualJumlah ?? barangList.length) : ""}
 
-              </TableBody>
+    onChange={(e) => {
+      const val = parseInt(e.target.value);
+      setManualJumlah(isNaN(val) ? null : val);
+    }}
+    style={{
+      border: "none",
+      outline: "none",
+      background: "transparent",
+      width: "100%",
+      textAlign: "center"
+    }}
+  />
+</TableCell>
+
+
+      <TableCell sx={{ border: "1px solid black" }}>
+        <input
+          type="number"
+          value={barang.kg || barang.m3 || 0}
+          onChange={(e) => {
+            const updated = [...barangList];
+            updated[index].kg = parseFloat(e.target.value);
+            setBarangList(updated);
+          }}
+          style={{ border: "none", outline: "none", width: "100%" }}
+        />
+      </TableCell>
+      <TableCell sx={{ border: "1px solid black" }}>
+        <input
+          type="number"
+          value={barang.tagihan || 0}
+          onChange={(e) => {
+            const updated = [...barangList];
+            updated[index].tagihan = parseInt(e.target.value) || 0;
+            setBarangList(updated);
+          }}
+          style={{ border: "none", outline: "none", width: "100%" }}
+        />
+      </TableCell>
+      <TableCell sx={{ border: "1px solid black" }}>
+        Rp {barang.tagihan?.toLocaleString("id-ID")}
+      </TableCell>
+                          <TableCell sx={{ border: "1px solid black" }}>{index === 0 ? data?.biaya : ""}</TableCell>
+
+      <TableCell sx={{ border: "1px solid black" }} className="noPrint">
+  <button
+    onClick={() => {
+      const updated = barangList.filter((_, i) => i !== index);
+      setBarangList(updated);
+    }}
+    className="noPrint"
+    style={{
+      backgroundColor: "red",
+      color: "white",
+      border: "none",
+      padding: "4px 8px",
+      cursor: "pointer",
+      borderRadius: "4px"
+    }}
+  >
+    Hapus
+  </button>
+</TableCell>
+
+    </TableRow>
+  ))}
+</TableBody>
+
+
             </Table>
           </Box>
 
-          {/* Footer */}
-          <Box mt={2}>
+        {/* Pembayaran Info */}
+        <Box mt={3}>
+          <Typography variant="body2">
+            Pembayaran dapat dilakukan via transfer ke:
+            <br />REK. BANK BNI: 0169302862 a/n H. ANDI CAKRAWALI.,SE
+            <br />REK. BANK MANDIRI: 162 000 7708 245 a/n H. ANDI CAKRAWALI.,SE
+            <br />REK. BANK BRI: 0532 01003488 501 a/n H. ANDI CAKRAWALI.,SE
+            <br />REK. BANK BRI: 0532 01000712 309 a/n PT. GEMILANG MARIO JAYA
+          </Typography>
+        </Box>
+
+        {/* Total Summary */}
+        <Box display="flex" justifyContent="flex-end" mt={4}>
+          <Table size="small">
+            <TableBody>
+              <TableRow>
+                <TableCell align="right">SUBTOTAL</TableCell>
+                <TableCell align="right">Rp {subtotal.toLocaleString("id-ID")}</TableCell>
+              </TableRow>
+              <TableRow>
+                <TableCell align="right">BIAYA ADMIN</TableCell>
+                <TableCell align="right">Rp {biayaAdmin.toLocaleString("id-ID")}</TableCell>
+              </TableRow>
+              <TableRow>
+                <TableCell align="right"><strong>TOTAL</strong></TableCell>
+                <TableCell align="right"><strong>Rp {total.toLocaleString("id-ID")}</strong></TableCell>
+              </TableRow>
+            </TableBody>
+          </Table>
+        </Box>
+
+        {/* Tanda Tangan */}
+        <Box mt={4} display="flex" justifyContent="flex-end">
+          <Box textAlign="center">
             <Typography variant="body2">
-              Pembayaran dapat dilakukan via transfer ke : <b>ADMIN</b>
-              <br />
-              REK. BANK BRI : <b>200601008318508</b> a/n <b>FERI SETIAWAN</b>
+              Jakarta, {data?.createdAt ? dayjs(data.createdAt).format("D MMMM YYYY") : "-"}
             </Typography>
+            <img src="/ttd.jpg" alt="Tanda Tangan" style={{ width: 150 }} />
+            <Typography variant="body2" fontWeight="bold">H. ANDI CAKRAWALI, SE</Typography>
+            <Typography variant="body2">Direktur</Typography>
           </Box>
-
-          {/* Total Section */}
-          <Box display="flex" justifyContent="flex-end" mt={3}>
-            <Table size="small">
-              <TableBody>
-                <TableRow><TableCell align="right">SUBTOTAL</TableCell><TableCell align="right">Rp</TableCell></TableRow>
-                <TableRow><TableCell align="right">DP</TableCell><TableCell align="right">Rp</TableCell><TableCell align="right">-</TableCell></TableRow>
-                <TableRow><TableCell align="right">BIAYA PACKING</TableCell><TableCell align="right">Rp</TableCell><TableCell align="right">-</TableCell></TableRow>
-                <TableRow><TableCell align="right">PPN 10%</TableCell><TableCell align="right">Rp</TableCell><TableCell align="right">-</TableCell></TableRow>
-                <TableRow>
-                  <TableCell align="right"><b>TOTAL</b></TableCell>
-                  <TableCell align="right">Rp</TableCell>
-                  <TableCell align="right">
-                    <b>{barangList.reduce((sum, barang) => sum + (barang.tagihan || 0), 0).toLocaleString("id-ID")}</b>
-                  </TableCell>
-                </TableRow>
-              </TableBody>
-            </Table>
-          </Box>
-
-          {/* Tanda Tangan */}
-          <Box mt={4} display="flex" justifyContent="flex-end">
-            <Box textAlign="center">
-              <Typography variant="body2">
-                Jakarta, {data?.createdAt && new Date(data.createdAt).toLocaleDateString("id-ID", { day: "2-digit", month: "long", year: "numeric" })}
-              </Typography>
-              <Box>
-                <img src="/ttd.jpg" alt="Tanda Tangan" style={{ width: 150 }} />
-              </Box>
-              <Typography variant="body2" fontWeight="bold">H. ANDI CAKRAWALI .SE</Typography>
-              <Typography variant="body2">Direktur</Typography>
-            </Box>
-          </Box>
-        </Paper>
-      </Box>
-    </>
+        </Box>
+      </Paper>
+    </Box>
+    </Box>
   );
-
 }

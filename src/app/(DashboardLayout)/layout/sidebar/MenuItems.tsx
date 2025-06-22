@@ -39,13 +39,13 @@ const Menuitems = [
     href: "/input-pengiriman",
     allowedRoles: ["ADMIN", "OPERATOR"],
   },
-  // {
-  //   id: uniqueId(),
-  //   title: "Rekap Pengiriman",
-  //   icon: IconTruckDelivery,
-  //   href: "/inventory-barang",
-  //   allowedRoles: ["OWNER", "ADMIN"],
-  // },
+  {
+    id: uniqueId(),
+    title: "Rekap Pengiriman",
+    icon: IconTruckDelivery,
+    href: "/inventory-barang",
+    allowedRoles: ["OWNER", "ADMIN"],
+  },
   {
     id: uniqueId(),
     title: "Status Barang",
@@ -81,13 +81,13 @@ const Menuitems = [
     href: "/manajemen-user",
     allowedRoles: ["OWNER"],
   },
-  // {
-  //   id: uniqueId(),
-  //   title: "Invoice",
-  //   icon: IconReceipt,
-  //   href: "/invoice",
-  //   allowedRoles: ["ADMIN", "OPERATOR", "OWNER"],
-  // },
+  {
+    id: uniqueId(),
+    title: "Invoice",
+    icon: IconReceipt,
+    href: "/invoice",
+    allowedRoles: ["ADMIN", "OPERATOR", "OWNER"],
+  },
 ];
 
 export default Menuitems;
