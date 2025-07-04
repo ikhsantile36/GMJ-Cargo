@@ -43,11 +43,12 @@ export async function PUT(
     biaya,
     jenis_kiriman,
     penerima_dan_hp,
-    barangList = [], // <-- tambahkan default agar aman
+    barangList = [],
+    status_barang, // ✅ tambahkan ini
   } = body;
 
   try {
-    // 1. Update data pengiriman
+    // 1. Update data pengiriman (✅ tambahkan status_barang jika ada)
     const updatedPengiriman = await prisma.pengiriman.update({
       where: { id },
       data: {
@@ -55,10 +56,11 @@ export async function PUT(
         alamat_pengiriman,
         biaya,
         sttb,
+        ...(status_barang && { status_barang }), // ✅ hanya update jika ada
       },
     });
 
-    // 2. Update data barang umum (jika ada perubahan global)
+    // 2. Update data barang umum
     await prisma.barang.updateMany({
       where: { pengirimanId: id },
       data: {
@@ -68,7 +70,7 @@ export async function PUT(
       },
     });
 
-    // 3. Update tagihan satu per satu jika barangList diberikan
+    // 3. Update tagihan barang
     for (const barang of barangList) {
       if (barang.id && typeof barang.tagihan === "number") {
         await prisma.barang.update({
@@ -90,6 +92,7 @@ export async function PUT(
     );
   }
 }
+
 
 
 export async function DELETE(
