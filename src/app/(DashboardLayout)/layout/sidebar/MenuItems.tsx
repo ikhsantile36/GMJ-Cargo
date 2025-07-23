@@ -14,6 +14,7 @@ import {
   IconTruckDelivery,
   IconPackage,
   IconChecklist,
+  IconEdit,
   IconReceipt 
 } from "@tabler/icons-react";
 
@@ -37,21 +38,28 @@ const Menuitems = [
     title: "Input Pengiriman",
     icon: IconPackageImport,
     href: "/input-pengiriman",
-    allowedRoles: ["ADMIN", "OPERATOR"],
+    allowedRoles: ["ADMIN", "OPERATOR", "OWNER"],
   },
-  // {
-  //   id: uniqueId(),
-  //   title: "Rekap Pengiriman",
-  //   icon: IconTruckDelivery,
-  //   href: "/inventory-barang",
-  //   allowedRoles: ["OWNER", "ADMIN"],
-  // },
+  {
+    id: uniqueId(),
+    title: "Rekap Pengiriman",
+    icon: IconTruckDelivery,
+    href: "/inventory-barang",
+    allowedRoles: ["OWNER", "ADMIN"],
+  },
   {
     id: uniqueId(),
     title: "Status Barang",
     icon: IconChecklist,
     href: "/status-barang",
     allowedRoles: ["ADMIN", "USER", "OPERATOR", "OWNER"],
+  },
+  {
+    id: uniqueId(),
+    title: "Manual Input",
+    icon: IconEdit,
+    href: "/manual-input",
+    allowedRoles: ["OWNER", "ADMIN", "OPERATOR"],
   },
   // {
   //   id: uniqueId(),
