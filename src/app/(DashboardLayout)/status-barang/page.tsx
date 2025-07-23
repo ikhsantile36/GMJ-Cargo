@@ -293,6 +293,7 @@ export default function InventoryPage() {
               <TableHead>
                 <TableRow>
                   <TableCell>Nama Pengirim</TableCell>
+                  <TableCell align="center">Nama Penerima</TableCell>
                   <TableCell align="center">Nomor Resi</TableCell>
                   <TableCell align="center">Alamat Pengiriman</TableCell>
                   {userRole === "USER" ? (
@@ -302,9 +303,10 @@ export default function InventoryPage() {
                   )}
                   <TableCell align="center">View Detail</TableCell>
                   <TableCell align="center">Update</TableCell>
-                  {userRole !== "USER" && (
+                  {(userRole === "ADMIN" || userRole === "OWNER") && (
                     <TableCell align="center">Edit</TableCell>
                   )}
+  
                 </TableRow>
               </TableHead>
               <TableBody>
@@ -323,6 +325,7 @@ export default function InventoryPage() {
                     return (
                       <TableRow key={item.id}>
                         <TableCell>{item.nama_pengirim}</TableCell>
+                        <TableCell align="center">{item.nama_penerima}</TableCell>
                         <TableCell align="center">{item.nomor_resi}</TableCell>
                         <TableCell
                           align="center"
@@ -377,7 +380,7 @@ export default function InventoryPage() {
                                     router.push(`/penerimaan-barang/${item.id}`)
                                   }
                                 >
-                                  Update
+                                  Form Penerimaan Barang
                                 </Button>
                               );
                             }
@@ -412,7 +415,7 @@ export default function InventoryPage() {
                                     router.push(`/validasi/${item.id}`)
                                   }
                                 >
-                                  Update
+                                  Validasi Barang
                                 </Button>
                               );
                             }
@@ -438,19 +441,20 @@ export default function InventoryPage() {
                           })()}
                         </TableCell>
 
-                        {userRole !== "USER" && (
-                          <TableCell align="center">
-                            <Button
-                              variant="contained"
-                              color="primary"
-                              onClick={() =>
-                                router.push(`/input-pengiriman/edit/${item.id}`)
-                              }
-                            >
-                              Edit
-                            </Button>
-                          </TableCell>
-                        )}
+                       {(userRole === "ADMIN" || userRole === "OWNER") && (
+  <TableCell align="center">
+    <Button
+      variant="contained"
+      color="primary"
+      onClick={() =>
+        router.push(`/input-pengiriman/edit/${item.id}`)
+      }
+    >
+      Edit
+    </Button>
+  </TableCell>
+)}
+
                       </TableRow>
                     );
                   })

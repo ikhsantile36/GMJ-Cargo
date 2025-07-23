@@ -375,7 +375,7 @@ const handleDelete = async (id: number) => {
                   <TableCell align="right">{item.kg ?? '-'}</TableCell>
                   <TableCell align="right">
   {typeof item.tagihan === 'number'
-    ? item.tagihan.toLocaleString('id-ID', { minimumFractionDigits: 3, maximumFractionDigits: 3 })
+    ? item.tagihan.toLocaleString('id-ID', { minimumFractionDigits: 0, maximumFractionDigits: 0 })
     : '-'}
 </TableCell>
 
@@ -438,6 +438,7 @@ const handleDelete = async (id: number) => {
       value={editingItem?.pengirim_dan_hp || ''}
       onChange={(e) => setEditingItem((prev) => prev ? { ...prev, pengirim_dan_hp_dan_hp: e.target.value } : null)}
     />
+    
     <TextField
       label="Nama Penerima / No. HP"
       value={editingItem?.penerima_dan_hp || ''}

@@ -62,6 +62,7 @@ model Pengiriman {
   berat_satuan        Json?
   biaya               Float
   biaya_satuan        Json?
+  biaya_admin         Float?
   metode_penghitungan String
   kategori_barang     String?
   jumlah_barang       Int

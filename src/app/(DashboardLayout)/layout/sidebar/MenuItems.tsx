@@ -14,8 +14,13 @@ import {
   IconTruckDelivery,
   IconPackage,
   IconChecklist,
+<<<<<<< HEAD
   IconReceipt ,
   IconEdit 
+=======
+  IconEdit,
+  IconReceipt 
+>>>>>>> d36e0cf4c106bd80711eaf7d207d3d1ba0c6f1bd
 } from "@tabler/icons-react";
 
 import { uniqueId } from "lodash";
@@ -38,7 +43,7 @@ const Menuitems = [
     title: "Input Pengiriman",
     icon: IconPackageImport,
     href: "/input-pengiriman",
-    allowedRoles: ["ADMIN", "OPERATOR"],
+    allowedRoles: ["ADMIN", "OPERATOR", "OWNER"],
   },
   {
     id: uniqueId(),
@@ -57,9 +62,15 @@ const Menuitems = [
   {
     id: uniqueId(),
     title: "Manual Input",
+<<<<<<< HEAD
     icon: IconEdit ,
     href: "/manual-input",
     allowedRoles: ["OPERATOR"],
+=======
+    icon: IconEdit,
+    href: "/manual-input",
+    allowedRoles: ["OWNER", "ADMIN", "OPERATOR"],
+>>>>>>> d36e0cf4c106bd80711eaf7d207d3d1ba0c6f1bd
   },
   // {
   //   id: uniqueId(),
@@ -94,7 +105,7 @@ const Menuitems = [
     title: "Invoice",
     icon: IconReceipt,
     href: "/invoice",
-    allowedRoles: ["ADMIN", "USER", "OPERATOR", "OWNER"],
+    allowedRoles: ["ADMIN", "OPERATOR", "OWNER"],
   },
 ];
 
