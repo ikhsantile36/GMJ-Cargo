@@ -73,6 +73,25 @@ export async function POST(req: NextRequest) {
     // 2. Generate STTB
     const sttb = await generateSTTB();
 
+    if (body.stt && body.penerimaId && !body.nomor_resi) {
+      try {
+        const update = await prisma.pengiriman.update({
+          where: { id: body.penerimaId },
+          data: { sttb: body.stt },
+        });
+        return NextResponse.json({
+          success: true,
+          message: "STT berhasil diperbarui",
+          data: update,
+        });
+      } catch (err) {
+        return NextResponse.json(
+          { success: false, message: "Gagal update STT", error: String(err) },
+          { status: 500 }
+        );
+      }
+    }
+
     // 3. Validasi dan transformasi data array
     const barangArray = Array.isArray(barang) ? barang : [];
     const biayaSatuanArray = Array.isArray(biaya_satuan) ? biaya_satuan : [];

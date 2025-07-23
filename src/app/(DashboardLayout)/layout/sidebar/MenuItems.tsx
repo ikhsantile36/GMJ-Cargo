@@ -14,7 +14,8 @@ import {
   IconTruckDelivery,
   IconPackage,
   IconChecklist,
-  IconReceipt 
+  IconReceipt ,
+  IconEdit 
 } from "@tabler/icons-react";
 
 import { uniqueId } from "lodash";
@@ -52,6 +53,13 @@ const Menuitems = [
     icon: IconChecklist,
     href: "/status-barang",
     allowedRoles: ["ADMIN", "USER", "OPERATOR", "OWNER"],
+  },
+  {
+    id: uniqueId(),
+    title: "Manual Input",
+    icon: IconEdit ,
+    href: "/manual-input",
+    allowedRoles: ["OPERATOR"],
   },
   // {
   //   id: uniqueId(),
